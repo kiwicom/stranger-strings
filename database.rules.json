@@ -1,0 +1,36 @@
+{
+  "rules": {
+    "itemsMetaData": {
+      ".read": "true",
+      ".write": "true"
+    },
+    "items": {
+      ".read": "true",
+      ".write": "true"
+    },
+    "translations": {
+      ".read": "true",
+      ".write": "true"
+    },
+    "lastUpdate": {
+      ".read": "true",
+      ".write": "true"
+    },
+    "updateInProgress": {
+      ".read": "true",
+      ".write": "true"
+    },
+    "dictsExpansion": {
+      ".read": "true",
+      ".write": "true"
+    },
+    "collections": {
+      ".read": "true",
+      ".write": "true"
+    },
+    "writeGood": {
+      ".read": "true",
+      ".write": "true"
+    }
+  }
+}
