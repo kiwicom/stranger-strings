@@ -3,7 +3,9 @@
 ![image 2018-10-02 13-10-15](https://user-images.githubusercontent.com/26377907/46345344-87030d00-c644-11e8-8a07-27f1eee81531.png)
 
 ## Description
-**Stranger Strings** is open-source Firebase web application for exploring inconsistencies and mistakes in translations.  The aim of this project is to create a versatile tool that will help users increase their online service qualities in terms of localization.
+**Stranger Strings** is open-source Firebase web application for exploring inconsistencies and
+ mistakes in translations.  The aim of this project is to create a versatile tool that will help
+  users increase their online service qualities in terms of localization.
 
 ## Project setup
 ### Requirements
@@ -43,12 +45,12 @@ firebase use *your_Firebase_project_ID*
 yarn deploy
 ```
 ## Source data
-For now **Stranger Strings** only supports GitHub as source and JSON as format of localization data.
+For now **Stranger Strings** only supports importing translations from GitHub in JSON format.
 
 ### GitHub repository structure
 ```
 .
-├── en-GB.json                    # file containing en-GB localization
+├── en-GB.json              # file containing en-GB localization
 ├── ...
 └── xx-XX.json
 ```
