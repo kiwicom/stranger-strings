@@ -36,6 +36,11 @@
             <octicon name="gear"></octicon>
           </template>
           <b-dropdown-item-button
+            @click=""
+          >
+            <octicon name="settings"></octicon>&nbsp; checks config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
             @click="showDictsExpansion"
           >
             <octicon name="repo"></octicon>&nbsp; spellcheck dict
