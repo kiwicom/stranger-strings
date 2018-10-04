@@ -8,7 +8,7 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "prepare": "rm -rf ./dist && webpack && cp ./../.env dist/ && cp -r ./dicts dist/ && rm ./dist/dicts/README.md && cp package.json dist/package.json"
+    "prepare": "rm -rf ./dist && webpack && cp ./../.env dist/ && cp -r ./dicts dist/ && cp package.json dist/package.json"
   },
   "jest": {
     "verbose": false,
