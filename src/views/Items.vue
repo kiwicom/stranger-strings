@@ -273,7 +273,7 @@
               <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) || "» not translated «" }}</div>
               <div
                 v-if="activeTranslations[locale]._writeGood"
-                style="color: orange; display: inline-block; margin-left: 5px"
+                style="color: #ffbb00; display: inline-block; margin-left: 5px"
                 v-b-popover.hover="getWriteGoodReasons(activeTranslations[locale]._writeGood)"
                 title="write good"
               >
@@ -598,7 +598,7 @@ export default {
         })
       }
       highlightedParts.forEach((part) => {
-        content = content.replace(new RegExp(part, "g"), match => `<span style="background: yellow">${match}</span>`)
+        content = content.replace(new RegExp(part, "g"), match => `<span style="background: #ffe18e">${match}</span>`)
       })
       return content
     },
