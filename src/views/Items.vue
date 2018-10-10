@@ -21,7 +21,9 @@
             <b-form-select size="md" v-model="errorsFilter" @change="handleChangeSelect">
               <optgroup label="Errors:">
                 <option value="all">Errors: All ({{ getErrorCount }})</option>
-                <option v-for="(count, error) in errors" :key="error" :value="error">{{ userifyInconsistency(error) }}: {{ count }}</option>
+                <option v-for="(count, error) in errors" :key="error" :value="error" v-if="allowedChecks.includes(error)">
+                  {{ userifyInconsistency(error) }}: {{ count }}
+                </option>
               </optgroup>
             </b-form-select>
           </b-input-group>
@@ -36,7 +38,7 @@
             <octicon name="gear"></octicon>
           </template>
           <b-dropdown-item-button
-            @click=""
+            @click="showChecksConfig"
           >
             <octicon name="settings"></octicon>&nbsp; checks config
           </b-dropdown-item-button>
@@ -105,7 +107,7 @@
               <!-- LANGUAGE SPECIFIC ERRORS -->
               <!-- eslint-disable-next-line vue/valid-v-for -->
               <b-badge
-                v-if="Array.isArray(val[inconsistency])"
+                v-if="Array.isArray(val[inconsistency]) && allowedChecks.includes(inconsistency)"
                 v-for="lang in val[inconsistency]"
                 size="sm"
                 style="margin-right: 2px"
@@ -115,7 +117,7 @@
               </b-badge>
               <!-- KEY SPECIFIC ERRORS -->
               <b-badge
-                v-if="!Array.isArray(val[inconsistency])"
+                v-if="!Array.isArray(val[inconsistency]) && allowedChecks.includes(inconsistency)"
                 size="sm"
                 :variant="getInconsistencyCategory(inconsistency)"
               >
@@ -164,6 +166,20 @@
       </div>
     </b-modal>
 
+    <!-- MODAL: WRITE CHECKS CONFIG -->
+    <b-modal
+      id="writeGoodSettingsModal"
+      v-model="modalChecksConfig"
+      :title="'Checks configuration'"
+      size="lg"
+      ok-only
+      no-fade
+    >
+      <b-form-checkbox-group v-model="allowedChecks" stacked>
+        <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">{{ userifyInconsistency(error) }}</b-form-checkbox>
+      </b-form-checkbox-group>
+    </b-modal>
+
     <!-- MODAL: WRITE GOOD CONFIG -->
     <b-modal
       id="writeGoodSettingsModal"
@@ -207,7 +223,7 @@
           <!-- LANGUAGE SPECIFIC ERRORS -->
           <!-- eslint-disable-next-line vue/valid-v-for -->
           <b-badge
-            v-if="Array.isArray(items[activeKey][inconsistency])"
+            v-if="Array.isArray(items[activeKey][inconsistency]) && allowedChecks.includes(inconsistency)"
             v-for="lang in items[activeKey][inconsistency]"
             style="margin-right: 2px"
             size="sm"
@@ -217,7 +233,7 @@
           </b-badge>
           <!-- KEY SPECIFIC ERRORS -->
           <b-badge
-            v-if="!Array.isArray(items[activeKey][inconsistency])"
+            v-if="!Array.isArray(items[activeKey][inconsistency]) && allowedChecks.includes(inconsistency)"
             size="sm"
             :variant="getInconsistencyCategory(inconsistency)"
           >
@@ -314,12 +330,16 @@ import * as gcFunctions from "../modules/functionsApi"
 
 import {
   IMPORTANT_LOCALES,
-  DEFAUT_WRITE_GOOD_SETTINGS,
+  DEFAULT_WRITE_GOOD_SETTINGS,
+  DEFAULT_TURNED_OFF_CHECKS,
 } from "../../common/config"
 
 export default {
   components: {
     Multiselect,
+  },
+  props: {
+    user: { type: Object, required: true },
   },
   data() {
     return {
@@ -334,16 +354,10 @@ export default {
       strict: "false",
       sort: ["key", "asc"], // key/count asc/desc
       errorsFilter: "all",
-      errors: {
-        _inconsistencies_dynamic: 0,
-        _inconsistencies_firstCharType: 0,
-        _inconsistencies_lastCharType: 0,
-        _inconsistencies_length: 0,
-        _inconsistencies_placeholders: 0,
-        _inconsistencies_tags: 0,
-        _inconsistencies_typos: 0,
-        _inconsistencies_noEnglish: 0,
-      },
+      errors: {},
+
+      // Checks configuration
+      allowedChecks: [],
 
       // Active
       activeKey: null,
@@ -373,6 +387,7 @@ export default {
       modalKeyDetail: false,
       modalDictsExpansion: false,
       modalWriteGoodSettings: false,
+      modalChecksConfig: false,
 
       // Constants
       IMPORTANT_LOCALES,
@@ -391,7 +406,8 @@ export default {
           this.items = this.sortKeys(this.allItems)
           this.itemsLoaded = true
           NProgress.done()
-          this.countErrors()
+          this.errors = this.countErrors()
+          this.allowedChecks = Object.keys(this.errors).filter(err => !DEFAULT_TURNED_OFF_CHECKS.includes(err))
         },
       },
       lastUpdate: {
@@ -410,13 +426,15 @@ export default {
     if (this.searchQuery || this.errorsFilter !== "all") {
       this.search()
     }
-    this.countErrors()
+    this.errors = this.countErrors()
     if (this.activeKey) {
       this.setActive(this.activeKey)
     }
     if (this.itemsLoaded) {
       NProgress.done()
     }
+    this.allowedChecks = Object.keys(this.errors).filter(err => !DEFAULT_TURNED_OFF_CHECKS.includes(err))
+    console.log(this.user)
   },
   computed: {
     getMaximumTranslations() {
@@ -426,7 +444,7 @@ export default {
       return helpers.getAvailableTags(this.allItems)
     },
     getErrorCount() {
-      return Object.values(this.errors).reduce((acc, val) => acc + val, 0)
+      return _.reduce(this.errors, (acc, val, err) => (this.allowedChecks.includes(err) ? acc + val : acc), 0)
     },
   },
   methods: {
@@ -459,7 +477,7 @@ export default {
           errs[inconsistency] = errs[inconsistency] ? errs[inconsistency] + 1 : 1
         })
       })
-      this.errors = errs
+      return errs
     },
     setSearch(key) {
       this.searchQuery = key
@@ -495,6 +513,9 @@ export default {
     },
     triggerUpdate() {
       gcFunctions.update()
+    },
+    showChecksConfig() {
+      this.modalChecksConfig = true
     },
     showWriteGoodSettings() {
       FbDb.ref("writeGood").once("value", (snapshot) => {
@@ -611,7 +632,7 @@ export default {
       return `${writeGood.map(lint => lint.reason).join(",\n")}`
     },
     setDefaultWriteGoodConfig() {
-      this.writeGoodSettings = JSON.parse(JSON.stringify(DEFAUT_WRITE_GOOD_SETTINGS)) // deep copy to avoid modification of constant
+      this.writeGoodSettings = JSON.parse(JSON.stringify(DEFAULT_WRITE_GOOD_SETTINGS)) // deep copy to avoid modification of constant
     },
     stripHtml(text) {
       const tmpHTML = document.createElement("div")
