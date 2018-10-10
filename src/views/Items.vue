@@ -21,7 +21,7 @@
             <b-form-select size="md" v-model="errorsFilter" @change="handleChangeSelect">
               <optgroup label="Errors:">
                 <option value="all">Errors: All ({{ getErrorCount }})</option>
-                <option v-for="(count, error) in errors" :key="error" :value="error" v-if="allowedChecks.includes(error)">
+                <option v-for="(count, error) in errors" :key="error" :value="error" v-if="allowedChecks && allowedChecks.includes(error)">
                   {{ userifyInconsistency(error) }}: {{ count }}
                 </option>
               </optgroup>
@@ -107,7 +107,7 @@
               <!-- LANGUAGE SPECIFIC ERRORS -->
               <!-- eslint-disable-next-line vue/valid-v-for -->
               <b-badge
-                v-if="Array.isArray(val[inconsistency]) && allowedChecks.includes(inconsistency)"
+                v-if="Array.isArray(val[inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
                 v-for="lang in val[inconsistency]"
                 size="sm"
                 style="margin-right: 2px"
@@ -117,7 +117,7 @@
               </b-badge>
               <!-- KEY SPECIFIC ERRORS -->
               <b-badge
-                v-if="!Array.isArray(val[inconsistency]) && allowedChecks.includes(inconsistency)"
+                v-if="!Array.isArray(val[inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
                 size="sm"
                 :variant="getInconsistencyCategory(inconsistency)"
               >
@@ -172,6 +172,7 @@
       v-model="modalChecksConfig"
       :title="'Checks configuration'"
       size="lg"
+      @ok="saveChecksConfig"
       ok-only
       no-fade
     >
@@ -223,7 +224,7 @@
           <!-- LANGUAGE SPECIFIC ERRORS -->
           <!-- eslint-disable-next-line vue/valid-v-for -->
           <b-badge
-            v-if="Array.isArray(items[activeKey][inconsistency]) && allowedChecks.includes(inconsistency)"
+            v-if="Array.isArray(items[activeKey][inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
             v-for="lang in items[activeKey][inconsistency]"
             style="margin-right: 2px"
             size="sm"
@@ -233,7 +234,7 @@
           </b-badge>
           <!-- KEY SPECIFIC ERRORS -->
           <b-badge
-            v-if="!Array.isArray(items[activeKey][inconsistency]) && allowedChecks.includes(inconsistency)"
+            v-if="!Array.isArray(items[activeKey][inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
             size="sm"
             :variant="getInconsistencyCategory(inconsistency)"
           >
@@ -331,15 +332,12 @@ import * as gcFunctions from "../modules/functionsApi"
 import {
   IMPORTANT_LOCALES,
   DEFAULT_WRITE_GOOD_SETTINGS,
-  DEFAULT_TURNED_OFF_CHECKS,
+  DEFAULT_DISABLED_CHECKS,
 } from "../../common/config"
 
 export default {
   components: {
     Multiselect,
-  },
-  props: {
-    user: { type: Object, required: true },
   },
   data() {
     return {
@@ -407,7 +405,7 @@ export default {
           this.itemsLoaded = true
           NProgress.done()
           this.errors = this.countErrors()
-          this.allowedChecks = Object.keys(this.errors).filter(err => !DEFAULT_TURNED_OFF_CHECKS.includes(err))
+          this.allowedChecks = this.loadUserChecksConfig()
         },
       },
       lastUpdate: {
@@ -419,7 +417,7 @@ export default {
       },
     }
   },
-  async created() {
+  created() {
     NProgress.start()
     this.itemsLoaded = false
     this.items = this.sortKeys(this.allItems) // sort always
@@ -430,11 +428,10 @@ export default {
     if (this.activeKey) {
       this.setActive(this.activeKey)
     }
+    this.allowedChecks = this.loadUserChecksConfig()
     if (this.itemsLoaded) {
       NProgress.done()
     }
-    this.allowedChecks = Object.keys(this.errors).filter(err => !DEFAULT_TURNED_OFF_CHECKS.includes(err))
-    console.log(this.user)
   },
   computed: {
     getMaximumTranslations() {
@@ -444,6 +441,9 @@ export default {
       return helpers.getAvailableTags(this.allItems)
     },
     getErrorCount() {
+      if (!this.allowedChecks) {
+        return 0
+      }
       return _.reduce(this.errors, (acc, val, err) => (this.allowedChecks.includes(err) ? acc + val : acc), 0)
     },
   },
@@ -647,6 +647,15 @@ export default {
     },
     getInconsistencyCategory(inconsistency) {
       return helpers.getInconsistencyCategory(inconsistency)
+    },
+    loadUserChecksConfig() {
+      if (localStorage.getItem("allowedChecks")) {
+        return JSON.parse(localStorage.getItem("allowedChecks"))
+      }
+      return Object.keys(this.errors).filter(err => !DEFAULT_DISABLED_CHECKS.includes(err))
+    },
+    saveChecksConfig() {
+      localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
     },
   },
 }

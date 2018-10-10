@@ -31,11 +31,6 @@
     "writeGood": {
       ".read": "true",
       ".write": "true"
-    },
-    "userConfig": {
-      ".read": "true",
-      ".write": "true"
-    },
     }
   }
 }
