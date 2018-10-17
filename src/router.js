@@ -10,7 +10,7 @@ export default new Router({
       redirect: "/items",
     },
     {
-      path: "/items",
+      path: "/items/:all",
       name: "items",
       // route level code-splitting
       // this generates a separate chunk (about.[hash].js) for this route

@@ -359,7 +359,7 @@ export default {
       allowedChecks: [],
 
       // Active
-      activeKey: null,
+      activeKey: this.$route.params.all === ":all" ? null : this.$route.params.all,
       activeTranslations: null,
       escapeTranslationsChecked: false,
       showTagsChecked: false,
@@ -383,7 +383,7 @@ export default {
       },
 
       // Modals
-      modalKeyDetail: false,
+      modalKeyDetail: this.$route.params.all !== ":all",
       modalDictsExpansion: false,
       modalWriteGoodSettings: false,
       modalChecksConfig: false,
@@ -487,6 +487,7 @@ export default {
     setActive(key) {
       this.modalKeyDetail = true
       this.activeKey = key
+      this.$router.push({ name: "items", params: { all: key } })
       this.activeTranslations = {}
       FbDb.ref(`translations/${key}`).once("value", (snapshot) => {
         if (snapshot.val()) {
@@ -611,6 +612,7 @@ export default {
     },
     hideKeyDetail() {
       this.activeKey = null
+      this.$router.push({ name: "items", params: { all: ":all" } })
       this.updateQuery()
     },
     lintContent(translation) {

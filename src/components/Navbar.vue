@@ -12,7 +12,7 @@
     </b-navbar-brand>
 
     <b-navbar-nav is-nav>
-        <b-link to="/items" style="color: #CCE2FC; margin-right: 15px; margin-left: 15px;" active-class="activeView">Items</b-link>
+        <b-link to="/items/:all" style="color: #CCE2FC; margin-right: 15px; margin-left: 15px;" active-class="activeView">Items</b-link>
         <b-link to="/collections" style="color: #CCE2FC;" active-class="activeView">Collections</b-link>
     </b-navbar-nav>
 
