@@ -46,7 +46,7 @@ const DEFAULT_SPELLCHECKING_DICT_SUPPORT = {
   "vi-VN": false,
 }
 
-const DEFAULT_DISABLED_CHECKS = ["_inconsistencies_lastCharType", "_inconsistencies_firstCharType", "_inconsistencies_dynamic", "_inconsistencies_tags"]
+const DEFAULT_DISABLED_CHECKS = []
 
 const DEFAULT_WRITE_GOOD_SETTINGS = {
   "de-DE": {
