@@ -193,8 +193,8 @@ export default {
         source: FbDb.ref("collections"),
         readyCallback: () => {
           this.loadingCollections = false
-          this.activeCollection = this.$route.params.all === ":all" ? {} : this.collections.find((collection) => collection[".key"] === this.$route.params.all)
-          this.modalCollectionDetail = this.$route.params.all !== ":all"
+          this.activeCollection = this.$route.params.all ? this.collections.find((collection) => collection[".key"] === this.$route.params.all) : {}
+          this.modalCollectionDetail = !!this.$route.params.all
         },
       },
     }
@@ -313,7 +313,7 @@ export default {
         .map(this.userify)
     },
     hideCollectionDetail() {
-      this.$router.push({ name: "collections", params: { all: ":all" } })
+      this.$router.push({ name: "collections" })
     },
   },
 }

@@ -359,7 +359,7 @@ export default {
       allowedChecks: [],
 
       // Active
-      activeKey: this.$route.params.all === ":all" ? null : this.$route.params.all,
+      activeKey: this.$route.params.all ? this.$route.params.all : null,
       activeTranslations: null,
       escapeTranslationsChecked: false,
       showTagsChecked: false,
@@ -383,7 +383,7 @@ export default {
       },
 
       // Modals
-      modalKeyDetail: this.$route.params.all !== ":all",
+      modalKeyDetail: !!this.$route.params.all,
       modalDictsExpansion: false,
       modalWriteGoodSettings: false,
       modalChecksConfig: false,
@@ -612,7 +612,7 @@ export default {
     },
     hideKeyDetail() {
       this.activeKey = null
-      this.$router.push({ name: "items", params: { all: ":all" } })
+      this.$router.replace({ name: "items" })
       this.updateQuery()
     },
     lintContent(translation) {
