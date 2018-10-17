@@ -176,7 +176,8 @@
       ok-only
       no-fade
     >
-      <b-form-checkbox-group v-model="allowedChecks" stacked>
+      <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Set default config</b-button></div>
+      <b-form-checkbox-group v-model="allowedChecks" stacked style="width: fit-content">
         <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">{{ userifyInconsistency(error) }}</b-form-checkbox>
       </b-form-checkbox-group>
     </b-modal>
@@ -191,7 +192,7 @@
       @ok="updateWriteGoodSettings"
       no-fade
     >
-      <div class="defaultWriteGood"><b-button variant="link" @click="setDefaultWriteGoodConfig">Set default config</b-button></div>
+      <div class="setDefault"><b-button variant="link" @click="setDefaultWriteGoodConfig">Set default config</b-button></div>
       <div v-for="(settings, lang) in writeGoodSettings" :key="lang">
         <div class="wgLangHeader">{{ lang }}:</div>
         <b-form-checkbox
@@ -657,6 +658,10 @@ export default {
     saveChecksConfig() {
       localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
     },
+    setDefaultChecksConfig() {
+      this.allowedChecks = Object.keys(this.errors).filter(err => !DEFAULT_DISABLED_CHECKS.includes(err))
+      localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
+    },
   },
 }
 </script>
@@ -735,7 +740,7 @@ td.locale {
   font-weight: bold;
   margin-top: 10px;
 }
-.defaultWriteGood {
+.setDefault {
   float: right;
 }
 </style>
