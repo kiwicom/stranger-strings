@@ -46,7 +46,9 @@ const DEFAULT_SPELLCHECKING_DICT_SUPPORT = {
   "vi-VN": false,
 }
 
-const DEFAUT_WRITE_GOOD_SETTINGS = {
+const DEFAULT_DISABLED_CHECKS = []
+
+const DEFAULT_WRITE_GOOD_SETTINGS = {
   "de-DE": {
     tooWordy: true,
     weasel: true,
@@ -67,7 +69,8 @@ const DEFAUT_WRITE_GOOD_SETTINGS = {
 module.exports = {
   IMPORTANT_LOCALES,
   DEFAULT_SPELLCHECKING_DICT_SUPPORT,
-  DEFAUT_WRITE_GOOD_SETTINGS,
+  DEFAULT_WRITE_GOOD_SETTINGS,
+  DEFAULT_DISABLED_CHECKS,
   UPDATE_FUNCTION_ENDPOINT: "https://us-central1-stranger-strings-beta-9ce56.cloudfunctions.net/update",
   INCONSISTENCIES_UPDATE_FUNCTION_ENDPOINT: "https://us-central1-stranger-strings-beta-9ce56.cloudfunctions.net/inconsistenciesUpdate",
   COLLECTIONS_UPDATE_FUNCTION_ENDPOINT: "https://us-central1-stranger-strings-beta-9ce56.cloudfunctions.net/collectionsUpdate",
