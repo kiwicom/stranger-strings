@@ -59,7 +59,7 @@ For now **Stranger Strings** only supports importing translations from GitHub in
 {
   ...
   "translation.key": "Translation content.",
-  "another.tranlation.key": "Another translation content.",
+  "another.translation.key": "Another translation content.",
   ...
 }
 ```
