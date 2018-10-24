@@ -201,8 +201,8 @@ function getLangsWithDiffFirstCharCasing(translations) {
 }
 
 // function for setting up empty instance for new languages in dictionary expansion
-function updateDictsExpansion(dictsExpansion) {
-  const activeDicts = fs.readdirSync("./dicts").filter(file => file.includes(".dic")).map(dict => dict.substring(0, 5))
+function updateDictsExpansion(dictsExpansion, dicts) {
+  const activeDicts = Object.keys(dicts).filter(lang => dicts[lang])
   const dictsExpUpdate = activeDicts.reduce((acc, val) => {
     if (!dictsExpansion || !Object.keys(dictsExpansion).includes(val)) {
       acc[val] = ["**PLACEHOLDER**"]

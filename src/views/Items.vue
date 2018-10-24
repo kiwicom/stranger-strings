@@ -143,7 +143,8 @@
       </tbody>
     </table>
 
-    <!-- MODAL: DICT EXPANSION MODIFIER -->
+    <!-- 
+    : DICT EXPANSION MODIFIER -->
     <b-modal
       id="dictsExpansionModal"
       v-model="modalDictsExpansion"
@@ -166,7 +167,7 @@
       </div>
     </b-modal>
 
-    <!-- MODAL: WRITE CHECKS CONFIG -->
+    <!-- MODAL: CHECKS CONFIG -->
     <b-modal
       id="writeGoodSettingsModal"
       v-model="modalChecksConfig"

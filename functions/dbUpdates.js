@@ -1,11 +1,8 @@
 /* eslint-disable no-param-reassign */
 // LOCAL DEBUGGING SETTINGS //
-const IMPORTED = (
-  module.parent // imported in Node
-  || module.bundle // imported in bundler Parcel
-)
+const LOCALEXEC = /dbUpdates\.js$/g.test(__filename)
 
-if (!IMPORTED) {
+if (LOCALEXEC) {
   require("dotenv").config({ path: "./../.env" }) // eslint-disable-line global-require
 }
 // //////////////////////// //
@@ -277,7 +274,9 @@ async function githubToFirebase() {
       mappedTranslations = { ...mappedTranslations, ...computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings) }
     })
 
-    const dictsExpansion = updateDictsExpansion((await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`)).body)
+    const dictsExpansion = updateDictsExpansion(
+      (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`)).body,
+      DEFAULT_SPELLCHECKING_DICT_SUPPORT)
     await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`).send(dictsExpansion)
     mappedTranslations = grammarNazi(mappedTranslations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT)
 
@@ -336,7 +335,9 @@ async function updateInconsistencies() {
       translations = { ...translations, ...computeInconsistenciesOfTranslations(val, key, writeGoodSettings) }
     })
 
-    const dictsExpansion = updateDictsExpansion((await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`)).body)
+    const dictsExpansion = updateDictsExpansion(
+      (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`)).body,
+      DEFAULT_SPELLCHECKING_DICT_SUPPORT)
     await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`).send(dictsExpansion)
     translations = grammarNazi(translations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT)
 
@@ -397,5 +398,5 @@ module.exports = {
 }
 
 // LOCAL DEBUGGING SETTINGS //
-if (!IMPORTED) githubToFirebase()
+if (LOCALEXEC) githubToFirebase()
 // //////////////////////// //
