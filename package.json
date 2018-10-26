@@ -12,6 +12,7 @@
     "deploy:functions": "yarn --cwd ./functions deploy"
   },
   "dependencies": {
+    "@babel/runtime": "^7.1.2",
     "@vue/cli-plugin-unit-jest": "^3.0.1",
     "bootstrap": "^4.1.3",
     "bootstrap-vue": "^2.0.0-rc.11",
@@ -33,6 +34,7 @@
     "vuefire": "^1.4.5"
   },
   "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.1.0",
     "@vue/cli-plugin-babel": "^3.0.1",
     "@vue/cli-plugin-eslint": "^3.0.1",
     "@vue/cli-service": "^3.0.1",
