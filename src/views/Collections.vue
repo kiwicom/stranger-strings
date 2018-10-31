@@ -193,7 +193,7 @@ export default {
         source: FbDb.ref("collections"),
         readyCallback: () => {
           this.loadingCollections = false
-          this.activeCollection = this.$route.params.all ? this.collections.find((collection) => collection[".key"] === this.$route.params.all) : {}
+          this.activeCollection = this.$route.params.all ? this.collections.find(collection => collection[".key"] === this.$route.params.all) : {}
           this.modalCollectionDetail = !!this.$route.params.all
         },
       },
@@ -277,7 +277,7 @@ export default {
       const loaded = []
       if (collection.keys) {
         collection.keys.forEach((key) => {
-          loaded.push(new Promise((res, err) => {
+          loaded.push(new Promise((res) => {
             FbDb.ref(`translations/${key}`).once("value", (snapshot) => {
               if (snapshot.val()) {
                 this.activeTranslations[key] = snapshot.val()

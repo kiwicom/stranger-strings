@@ -1,0 +1,18 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/node:8.9
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run: yarn
+      - run: yarn lint
+      - run: yarn test
+      - run: yarn build
+      - run: yarn --cwd ./functions prepare
+workflows:
+  version: 2
+  master:
+    jobs:
+      - test
