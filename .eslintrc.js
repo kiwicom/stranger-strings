@@ -3,17 +3,17 @@ module.exports = {
   env: {
     browser: true,
     node: true,
-    "jest/globals": true
+    "jest/globals": true,
   },
   extends: [
     "plugin:vue/essential",
     "@vue/airbnb",
   ],
   rules: {
-    "quotes": ["error", "double"],
-    "indent": ["error", 2],
+    quotes: ["error", "double"],
+    indent: ["error", 2],
     "max-len": ["warn", 150],
-    "semi": ["warn", "never"],
+    semi: ["warn", "never"],
     "no-underscore-dangle": ["off"],
     "no-console": ["off"],
     "no-unused-vars": ["warn"],
@@ -22,8 +22,8 @@ module.exports = {
     "no-var": ["warn"],
     "comma-dangle": ["warn"],
     "import/extensions": ["error", "always", {
-      "js": "never",
-      "vue": "never"
+      js: "never",
+      vue: "never",
     }],
   },
   parserOptions: {

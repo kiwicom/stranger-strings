@@ -21,7 +21,9 @@
             <b-form-select size="md" v-model="errorsFilter" @change="handleChangeSelect">
               <optgroup label="Errors:">
                 <option value="all">Errors: All ({{ getErrorCount }})</option>
-                <option v-for="(count, error) in errors" :key="error" :value="error">{{ userifyInconsistency(error) }}: {{ count }}</option>
+                <option v-for="(count, error) in errors" :key="error" :value="error" v-if="allowedChecks && allowedChecks.includes(error)">
+                  {{ userifyInconsistency(error) }}: {{ count }}
+                </option>
               </optgroup>
             </b-form-select>
           </b-input-group>
@@ -35,6 +37,11 @@
           <template slot="button-content">
             <octicon name="gear"></octicon>
           </template>
+          <b-dropdown-item-button
+            @click="showChecksConfig"
+          >
+            <octicon name="settings"></octicon>&nbsp; checks config
+          </b-dropdown-item-button>
           <b-dropdown-item-button
             @click="showDictsExpansion"
           >
@@ -100,7 +107,7 @@
               <!-- LANGUAGE SPECIFIC ERRORS -->
               <!-- eslint-disable-next-line vue/valid-v-for -->
               <b-badge
-                v-if="Array.isArray(val[inconsistency])"
+                v-if="Array.isArray(val[inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
                 v-for="lang in val[inconsistency]"
                 size="sm"
                 style="margin-right: 2px"
@@ -110,7 +117,7 @@
               </b-badge>
               <!-- KEY SPECIFIC ERRORS -->
               <b-badge
-                v-if="!Array.isArray(val[inconsistency])"
+                v-if="!Array.isArray(val[inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
                 size="sm"
                 :variant="getInconsistencyCategory(inconsistency)"
               >
@@ -136,7 +143,7 @@
       </tbody>
     </table>
 
-    <!-- MODAL: DICT EXPANSION MODIFIER -->
+    <!-- DICT EXPANSION MODIFIER -->
     <b-modal
       id="dictsExpansionModal"
       v-model="modalDictsExpansion"
@@ -159,6 +166,22 @@
       </div>
     </b-modal>
 
+    <!-- MODAL: CHECKS CONFIG -->
+    <b-modal
+      id="writeGoodSettingsModal"
+      v-model="modalChecksConfig"
+      :title="'Checks configuration'"
+      size="lg"
+      @ok="saveChecksConfig"
+      ok-only
+      no-fade
+    >
+      <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Set default config</b-button></div>
+      <b-form-checkbox-group v-model="allowedChecks" stacked style="width: fit-content">
+        <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">{{ userifyInconsistency(error) }}</b-form-checkbox>
+      </b-form-checkbox-group>
+    </b-modal>
+
     <!-- MODAL: WRITE GOOD CONFIG -->
     <b-modal
       id="writeGoodSettingsModal"
@@ -169,7 +192,7 @@
       @ok="updateWriteGoodSettings"
       no-fade
     >
-      <div class="defaultWriteGood"><b-button variant="link" @click="setDefaultWriteGoodConfig">Set default config</b-button></div>
+      <div class="setDefault"><b-button variant="link" @click="setDefaultWriteGoodConfig">Set default config</b-button></div>
       <div v-for="(settings, lang) in writeGoodSettings" :key="lang">
         <div class="wgLangHeader">{{ lang }}:</div>
         <b-form-checkbox
@@ -202,7 +225,7 @@
           <!-- LANGUAGE SPECIFIC ERRORS -->
           <!-- eslint-disable-next-line vue/valid-v-for -->
           <b-badge
-            v-if="Array.isArray(items[activeKey][inconsistency])"
+            v-if="Array.isArray(items[activeKey][inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
             v-for="lang in items[activeKey][inconsistency]"
             style="margin-right: 2px"
             size="sm"
@@ -212,7 +235,7 @@
           </b-badge>
           <!-- KEY SPECIFIC ERRORS -->
           <b-badge
-            v-if="!Array.isArray(items[activeKey][inconsistency])"
+            v-if="!Array.isArray(items[activeKey][inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
             size="sm"
             :variant="getInconsistencyCategory(inconsistency)"
           >
@@ -273,7 +296,7 @@
               <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) || "» not translated «" }}</div>
               <div
                 v-if="activeTranslations[locale]._writeGood"
-                style="color: orange; display: inline-block; margin-left: 5px"
+                style="color: #ffbb00; display: inline-block; margin-left: 5px"
                 v-b-popover.hover="getWriteGoodReasons(activeTranslations[locale]._writeGood)"
                 title="write good"
               >
@@ -307,10 +330,7 @@ import saveJSON from "../modules/json"
 import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"
 
-import {
-  IMPORTANT_LOCALES,
-  DEFAUT_WRITE_GOOD_SETTINGS,
-} from "../../common/config"
+import * as defaults from "../../common/config"
 
 export default {
   components: {
@@ -329,19 +349,13 @@ export default {
       strict: "false",
       sort: ["key", "asc"], // key/count asc/desc
       errorsFilter: "all",
-      errors: {
-        _inconsistencies_dynamic: 0,
-        _inconsistencies_firstCharType: 0,
-        _inconsistencies_lastCharType: 0,
-        _inconsistencies_length: 0,
-        _inconsistencies_placeholders: 0,
-        _inconsistencies_tags: 0,
-        _inconsistencies_typos: 0,
-        _inconsistencies_noEnglish: 0,
-      },
+      errors: {},
+
+      // Checks configuration
+      allowedChecks: [],
 
       // Active
-      activeKey: null,
+      activeKey: this.$route.params.all ? this.$route.params.all : null,
       activeTranslations: null,
       escapeTranslationsChecked: false,
       showTagsChecked: false,
@@ -365,12 +379,10 @@ export default {
       },
 
       // Modals
-      modalKeyDetail: false,
+      modalKeyDetail: !!this.$route.params.all,
       modalDictsExpansion: false,
       modalWriteGoodSettings: false,
-
-      // Constants
-      IMPORTANT_LOCALES,
+      modalChecksConfig: false,
     }
   },
   firebase() {
@@ -386,7 +398,8 @@ export default {
           this.items = this.sortKeys(this.allItems)
           this.itemsLoaded = true
           NProgress.done()
-          this.countErrors()
+          this.errors = this.countErrors()
+          this.allowedChecks = this.loadUserChecksConfig()
         },
       },
       lastUpdate: {
@@ -398,17 +411,18 @@ export default {
       },
     }
   },
-  async created() {
+  created() {
     NProgress.start()
     this.itemsLoaded = false
     this.items = this.sortKeys(this.allItems) // sort always
     if (this.searchQuery || this.errorsFilter !== "all") {
       this.search()
     }
-    this.countErrors()
+    this.errors = this.countErrors()
     if (this.activeKey) {
       this.setActive(this.activeKey)
     }
+    this.allowedChecks = this.loadUserChecksConfig()
     if (this.itemsLoaded) {
       NProgress.done()
     }
@@ -421,7 +435,10 @@ export default {
       return helpers.getAvailableTags(this.allItems)
     },
     getErrorCount() {
-      return Object.values(this.errors).reduce((acc, val) => acc + val, 0)
+      if (!this.allowedChecks) {
+        return 0
+      }
+      return _.reduce(this.errors, (acc, val, err) => (this.allowedChecks.includes(err) ? acc + val : acc), 0)
     },
   },
   methods: {
@@ -454,7 +471,7 @@ export default {
           errs[inconsistency] = errs[inconsistency] ? errs[inconsistency] + 1 : 1
         })
       })
-      this.errors = errs
+      return errs
     },
     setSearch(key) {
       this.searchQuery = key
@@ -463,6 +480,7 @@ export default {
     setActive(key) {
       this.modalKeyDetail = true
       this.activeKey = key
+      this.$router.push({ name: "items", params: { all: key } })
       this.activeTranslations = {}
       FbDb.ref(`translations/${key}`).once("value", (snapshot) => {
         if (snapshot.val()) {
@@ -490,6 +508,9 @@ export default {
     },
     triggerUpdate() {
       gcFunctions.update()
+    },
+    showChecksConfig() {
+      this.modalChecksConfig = true
     },
     showWriteGoodSettings() {
       FbDb.ref("writeGood").once("value", (snapshot) => {
@@ -584,6 +605,7 @@ export default {
     },
     hideKeyDetail() {
       this.activeKey = null
+      this.$router.replace({ name: "items" })
       this.updateQuery()
     },
     lintContent(translation) {
@@ -598,7 +620,7 @@ export default {
         })
       }
       highlightedParts.forEach((part) => {
-        content = content.replace(new RegExp(part, "g"), match => `<span style="background: yellow">${match}</span>`)
+        content = content.replace(new RegExp(part, "g"), match => `<span style="background: #ffe18e">${match}</span>`)
       })
       return content
     },
@@ -606,7 +628,7 @@ export default {
       return `${writeGood.map(lint => lint.reason).join(",\n")}`
     },
     setDefaultWriteGoodConfig() {
-      this.writeGoodSettings = JSON.parse(JSON.stringify(DEFAUT_WRITE_GOOD_SETTINGS)) // deep copy to avoid modification of constant
+      this.writeGoodSettings = JSON.parse(JSON.stringify(defaults.DEFAULT_WRITE_GOOD_SETTINGS)) // deep copy to avoid modification of constant
     },
     stripHtml(text) {
       const tmpHTML = document.createElement("div")
@@ -621,6 +643,19 @@ export default {
     },
     getInconsistencyCategory(inconsistency) {
       return helpers.getInconsistencyCategory(inconsistency)
+    },
+    loadUserChecksConfig() {
+      if (localStorage.getItem("allowedChecks")) {
+        return JSON.parse(localStorage.getItem("allowedChecks"))
+      }
+      return Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
+    },
+    saveChecksConfig() {
+      localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
+    },
+    setDefaultChecksConfig() {
+      this.allowedChecks = Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
+      localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
     },
   },
 }
@@ -700,7 +735,7 @@ td.locale {
   font-weight: bold;
   margin-top: 10px;
 }
-.defaultWriteGood {
+.setDefault {
   float: right;
 }
 </style>
