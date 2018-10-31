@@ -293,14 +293,22 @@
             </td>
             <td class="translation">
               <div v-if="!showTagsChecked" style="display: inline-block;" v-html="lintContent(activeTranslations[locale])"></div>
-              <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) || "» not translated «" }}</div>
+              <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>
               <div
                 v-if="activeTranslations[locale]._writeGood"
-                style="color: #ffbb00; display: inline-block; margin-left: 5px"
+                class="inline-warning"
                 v-b-popover.hover="getWriteGoodReasons(activeTranslations[locale]._writeGood)"
                 title="write good"
               >
                 <octicon name="question"></octicon>
+              </div>
+              <div
+                v-if="hasInconsistentLength(locale, activeTranslations)"
+                class="inline-warning"
+                v-b-popover.hover=""
+                title="suspiciously long translation"
+              >
+                <octicon name="stop"></octicon>
               </div>
             </td>
           </tr>
@@ -329,6 +337,7 @@ import saveJSON from "../modules/json"
 
 import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"
+import maxExpansionRatio from "../../common/maxExpansionRatio"
 
 import * as defaults from "../../common/config"
 
@@ -651,6 +660,13 @@ export default {
       this.allowedChecks = Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
       localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
     },
+    hasInconsistentLength(lang, translations) {
+      if (translations[lang] && translations["en-GB"] && translations["en-GB"].content.length > 0) {
+        const baseLength = translations["en-GB"].content.length
+        return (translations[lang].content.length / baseLength) > maxExpansionRatio(baseLength)
+      }
+      return false
+    },
   },
 }
 </script>
@@ -734,5 +750,10 @@ td.locale {
 }
 .setDefault {
   float: right;
+}
+.inline-warning {
+  color: #ffbb00;
+  display: inline-block;
+  margin-left: 5px;
 }
 </style>
