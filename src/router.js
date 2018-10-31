@@ -4,13 +4,14 @@ import Router from "vue-router"
 Vue.use(Router)
 
 export default new Router({
+  mode: "history",
   routes: [
     {
       path: "/",
-      redirect: "/items",
+      redirect: "/items/:all?",
     },
     {
-      path: "/items",
+      path: "/items/:all?",
       name: "items",
       // route level code-splitting
       // this generates a separate chunk (about.[hash].js) for this route
@@ -18,7 +19,7 @@ export default new Router({
       component: () => import(/* webpackChunkName: "about" */ "./views/Items.vue"),
     },
     {
-      path: "/collections",
+      path: "/collections/:all?",
       name: "collections",
       // route level code-splitting
       // this generates a separate chunk (about.[hash].js) for this route
