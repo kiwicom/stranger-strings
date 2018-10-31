@@ -143,8 +143,7 @@
       </tbody>
     </table>
 
-    <!-- 
-    : DICT EXPANSION MODIFIER -->
+    <!-- DICT EXPANSION MODIFIER -->
     <b-modal
       id="dictsExpansionModal"
       v-model="modalDictsExpansion"
@@ -331,11 +330,7 @@ import saveJSON from "../modules/json"
 import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"
 
-import {
-  IMPORTANT_LOCALES,
-  DEFAULT_WRITE_GOOD_SETTINGS,
-  DEFAULT_DISABLED_CHECKS,
-} from "../../common/config"
+import * as defaults from "../../common/config"
 
 export default {
   components: {
@@ -360,7 +355,7 @@ export default {
       allowedChecks: [],
 
       // Active
-      activeKey: null,
+      activeKey: this.$route.params.all ? this.$route.params.all : null,
       activeTranslations: null,
       escapeTranslationsChecked: false,
       showTagsChecked: false,
@@ -384,13 +379,10 @@ export default {
       },
 
       // Modals
-      modalKeyDetail: false,
+      modalKeyDetail: !!this.$route.params.all,
       modalDictsExpansion: false,
       modalWriteGoodSettings: false,
       modalChecksConfig: false,
-
-      // Constants
-      IMPORTANT_LOCALES,
     }
   },
   firebase() {
@@ -488,6 +480,7 @@ export default {
     setActive(key) {
       this.modalKeyDetail = true
       this.activeKey = key
+      this.$router.push({ name: "items", params: { all: key } })
       this.activeTranslations = {}
       FbDb.ref(`translations/${key}`).once("value", (snapshot) => {
         if (snapshot.val()) {
@@ -612,6 +605,7 @@ export default {
     },
     hideKeyDetail() {
       this.activeKey = null
+      this.$router.replace({ name: "items" })
       this.updateQuery()
     },
     lintContent(translation) {
@@ -634,7 +628,7 @@ export default {
       return `${writeGood.map(lint => lint.reason).join(",\n")}`
     },
     setDefaultWriteGoodConfig() {
-      this.writeGoodSettings = JSON.parse(JSON.stringify(DEFAULT_WRITE_GOOD_SETTINGS)) // deep copy to avoid modification of constant
+      this.writeGoodSettings = JSON.parse(JSON.stringify(defaults.DEFAULT_WRITE_GOOD_SETTINGS)) // deep copy to avoid modification of constant
     },
     stripHtml(text) {
       const tmpHTML = document.createElement("div")
@@ -654,13 +648,13 @@ export default {
       if (localStorage.getItem("allowedChecks")) {
         return JSON.parse(localStorage.getItem("allowedChecks"))
       }
-      return Object.keys(this.errors).filter(err => !DEFAULT_DISABLED_CHECKS.includes(err))
+      return Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
     },
     saveChecksConfig() {
       localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
     },
     setDefaultChecksConfig() {
-      this.allowedChecks = Object.keys(this.errors).filter(err => !DEFAULT_DISABLED_CHECKS.includes(err))
+      this.allowedChecks = Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
       localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
     },
   },

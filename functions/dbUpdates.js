@@ -22,7 +22,7 @@ const {
   writeGoodCheck,
   updateDictsExpansion,
 } = require("./utils")
-const { DEFAULT_SPELLCHECKING_DICT_SUPPORT, DEFAUT_WRITE_GOOD_SETTINGS } = require("../common/config") // TODO: configurable
+const { DEFAULT_SPELLCHECKING_DICT_SUPPORT, DEFAULT_WRITE_GOOD_SETTINGS } = require("../common/config") // TODO: configurable
 
 function getGithubApi(repo, path) { // just a preventions for incorrect repo path
   // TODO: write tests
@@ -266,7 +266,7 @@ async function githubToFirebase() {
 
     let mappedTranslations = {}
     const writeGoodSettings = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/writeGood.json`)).body
-      || DEFAUT_WRITE_GOOD_SETTINGS
+      || DEFAULT_WRITE_GOOD_SETTINGS
 
     _.forEach(translations, (val, key) => {
       const fbKey = key.includes(".") ? key.split(".").join("-") : key
@@ -276,7 +276,8 @@ async function githubToFirebase() {
 
     const dictsExpansion = updateDictsExpansion(
       (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`)).body,
-      DEFAULT_SPELLCHECKING_DICT_SUPPORT)
+      DEFAULT_SPELLCHECKING_DICT_SUPPORT,
+    )
     await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`).send(dictsExpansion)
     mappedTranslations = grammarNazi(mappedTranslations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT)
 
@@ -328,7 +329,7 @@ async function updateInconsistencies() {
     let items = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/items.json`)).body
     let translations = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`)).body
     const writeGoodSettings = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/writeGood.json`)).body
-      || DEFAUT_WRITE_GOOD_SETTINGS
+      || DEFAULT_WRITE_GOOD_SETTINGS
 
     _.forEach(translations, (val, key) => {
       _.forEach(val, (x, locKey) => { val[locKey] = x.content }) // strip locale of everything except translation content
@@ -337,7 +338,8 @@ async function updateInconsistencies() {
 
     const dictsExpansion = updateDictsExpansion(
       (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`)).body,
-      DEFAULT_SPELLCHECKING_DICT_SUPPORT)
+      DEFAULT_SPELLCHECKING_DICT_SUPPORT,
+    )
     await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`).send(dictsExpansion)
     translations = grammarNazi(translations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT)
 
