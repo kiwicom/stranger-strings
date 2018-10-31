@@ -94,7 +94,7 @@
         <!-- TRANSLATION KEY ROW -->
         <tr v-for="(val, key) in items" :key="val.key" v-if="val.key">
           <td class="key" scope="row">
-            <b-link @click="setActive(key); updateQuery()">
+            <b-link @click="setActive(key)">
               {{ val.key }}
             </b-link>
             <a @click="setSearch(val.key)">
@@ -305,11 +305,11 @@
             </td>
           </tr>
           <tr v-else>
-            <td class="locale" scope="row">
+            <td class="locale not-translated" scope="row">
               {{ locale }}
             </td>
-            <td colspan="5"></td>
-            <td colspan="2" class="text-muted">Not translated</td>
+            <td colspan="6"></td>
+            <td colspan="1" class="not-translated">Not translated</td>
           </tr>
         </tbody>
       </table>
@@ -442,13 +442,10 @@ export default {
     },
   },
   methods: {
-    updateQuery() { // update query params
-    },
     handleChangeSelect() {
       this.loading = true
       // need to wait for change of value
       setTimeout(() => {
-        this.updateQuery()
         this.search()
         this.loading = false
       }, 50)
@@ -461,7 +458,6 @@ export default {
         this.sort[1] = this.sort[1] === "asc" ? "desc" : "asc"
       }
       this.sort[0] = type
-      this.updateQuery()
       this.items = this.sortKeys(this.items)
     },
     countErrors() {
@@ -530,7 +526,6 @@ export default {
       gcFunctions.inconsistenciesUpdate()
     },
     search() { // event param if needed
-      this.updateQuery()
       this.items = _.reduce(this.allItems, (acc, val, key) => {
         if (this.errorsFilter === "all" || this.getItemInconsistencies(val).includes(this.errorsFilter)) {
           acc[key] = val
@@ -606,7 +601,6 @@ export default {
     hideKeyDetail() {
       this.activeKey = null
       this.$router.replace({ name: "items" })
-      this.updateQuery()
     },
     lintContent(translation) {
       let content = this.getTranslationContent(translation)
@@ -705,6 +699,9 @@ td.locale {
     max-width: 500px;
     width: 500px;
   }
+}
+.not-translated {
+  color: rgba(255, 0, 0, 0.65);
 }
 .error {
   display: inline-block;
