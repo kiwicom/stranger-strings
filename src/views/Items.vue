@@ -259,7 +259,6 @@
       <table v-if="items[activeKey]" class="table table-sm b-table table-striped detailTable">
         <thead>
           <th>Locale</th>
-          <th>Placeholders</th>
           <th>First</th>
           <th>Last</th>
           <th>Tags</th>
@@ -272,9 +271,6 @@
           <tr :key="locale" v-for="locale in locales" v-if="activeTranslations[locale]">
             <td class="locale" scope="row">
               {{ locale }}
-            </td>
-            <td class="placeholdersTd">
-              {{ getPlaceholders(activeTranslations[locale]) }}
             </td>
             <td class="firstTd">
               {{ activeTranslations[locale]._firstCharType }}
@@ -305,10 +301,18 @@
               <div
                 v-if="hasInconsistentLength(locale, activeTranslations)"
                 class="inline-warning"
-                v-b-popover.hover=""
-                title="suspiciously long translation"
+                v-b-popover.hover="'suspiciously long translation'"
+                title="length"
               >
                 <octicon name="stop"></octicon>
+              </div>
+              <div
+                v-if="getMissingPlaceholders(locale, activeTranslations).length"
+                class="inline-error"
+                v-b-popover.hover="getMissingPlaceholders(locale, activeTranslations).join('\n')"
+                title="Missing placeholders"
+              >
+                <octicon name="mention"></octicon>
               </div>
             </td>
           </tr>
@@ -316,7 +320,7 @@
             <td class="locale not-translated" scope="row">
               {{ locale }}
             </td>
-            <td colspan="6"></td>
+            <td colspan="5"></td>
             <td colspan="1" class="not-translated">Not translated</td>
           </tr>
         </tbody>
@@ -623,7 +627,7 @@ export default {
         })
       }
       highlightedParts.forEach((part) => {
-        content = content.replace(new RegExp(part, "g"), match => `<span style="background: #ffe18e">${match}</span>`)
+        content = content.replace(new RegExp(part, "g"), match => `<span style="background: rgba(255,160,0,0.4)">${match}</span>`)
       })
       return content
     },
@@ -666,6 +670,31 @@ export default {
         return (translations[lang].content.length / baseLength) > maxExpansionRatio(baseLength)
       }
       return false
+    },
+    getMissingPlaceholders(lang, translations) {
+      /*
+      e.g. for placehorlder
+      en -> ph1, ph1, ph1, ph,2
+      de -> ph1, ph1, ph2
+      cz -> ph1, ph1, ph3
+
+      allPlaceholders -> ph1, ph1. ph1, ph2, ph3
+       */
+      const allPlaceholders = _.reduce(translations, (acc, translation) => {
+        (translation._placeholders || []).forEach((placeholder) => {
+          const placeholderAppearance = translation._placeholders.filter(i => i === placeholder).length
+          if (acc.filter(i => i === placeholder).length < placeholderAppearance) {
+            acc = _.without(acc, placeholder).concat(_.fill(Array(placeholderAppearance), placeholder))
+          }
+        })
+        return acc
+      }, [])
+
+      return allPlaceholders.reduce((acc, placeholder) => {
+        const totalPlaceholderAppearance = allPlaceholders.filter(i => i === placeholder).length
+        const translationPlaceholderAppearance = (translations[lang] && translations[lang]._placeholders && translations[lang]._placeholders.filter(i => i === placeholder).length) || 0
+        return _.without(acc, placeholder).concat(_.fill(Array(totalPlaceholderAppearance - translationPlaceholderAppearance), placeholder))
+      }, allPlaceholders)
     },
   },
 }
@@ -752,7 +781,22 @@ td.locale {
   float: right;
 }
 .inline-warning {
-  color: #ffbb00;
+  color: #ffffff;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 25px;
+  background-color: orange;
+  display: inline-block;
+  margin-left: 5px;
+}
+.inline-error {
+  color: #ffffff;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 25px;
+  background-color: #ef0000;
   display: inline-block;
   margin-left: 5px;
 }
