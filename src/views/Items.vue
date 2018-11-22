@@ -178,7 +178,9 @@
     >
       <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Set default config</b-button></div>
       <b-form-checkbox-group v-model="allowedChecks" stacked style="width: fit-content">
-        <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">{{ userifyInconsistency(error) }}</b-form-checkbox>
+        <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">
+          <strong>{{ userifyInconsistency(error) }}</strong> ({{ getDescription(userifyInconsistency(error)) }})
+        </b-form-checkbox>
       </b-form-checkbox-group>
     </b-modal>
 
@@ -261,9 +263,6 @@
           <th>Locale</th>
           <th>First</th>
           <th>Last</th>
-          <th>Tags</th>
-          <th>Dynamic</th>
-          <th>Typos</th>
           <th>Translation</th>
         </thead>
 
@@ -278,28 +277,19 @@
             <td class="lastTd">
               {{ activeTranslations[locale]._lastCharType }}
             </td>
-            <td class="tagsTd">
-              {{ activeTranslations[locale]._tags }}
-            </td>
-            <td class="dynamicTd">
-              <pre>{{ getDynamic(activeTranslations[locale]) }}</pre>
-            </td>
-            <td class="typosTd">
-              <pre>{{ getTypos(activeTranslations[locale]) }}</pre>
-            </td>
             <td class="translation">
               <div v-if="!showTagsChecked" style="display: inline-block;" v-html="lintContent(activeTranslations[locale])"></div>
               <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>
               <div
-                v-if="activeTranslations[locale]._writeGood"
+                v-if="activeTranslations[locale]._writeGood && allowedChecks.includes('_inconsistencies_writeGood')"
                 class="inline-warning"
                 v-b-popover.hover="getWriteGoodReasons(activeTranslations[locale]._writeGood)"
                 title="write good"
               >
-                <octicon name="question"></octicon>
+                <octicon name="pencil"></octicon>
               </div>
               <div
-                v-if="hasInconsistentLength(locale, activeTranslations)"
+                v-if="hasInconsistentLength(locale, activeTranslations) && allowedChecks.includes('_inconsistencies_length')"
                 class="inline-warning"
                 v-b-popover.hover="'suspiciously long translation'"
                 title="length"
@@ -307,12 +297,28 @@
                 <octicon name="stop"></octicon>
               </div>
               <div
-                v-if="getMissingPlaceholders(locale, activeTranslations).length"
+                v-if="getMissingPlaceholders(locale, activeTranslations).length && allowedChecks.includes('_inconsistencies_placeholders')"
                 class="inline-error"
                 v-b-popover.hover="getMissingPlaceholders(locale, activeTranslations).join('\n')"
                 title="Missing placeholders"
               >
                 <octicon name="mention"></octicon>
+              </div>
+              <div
+                v-if="activeTranslations[locale]._typos && activeTranslations[locale]._typos !== 'unsupported language' && allowedChecks.includes('_inconsistencies_typos')"
+                class="inline-error"
+                v-b-popover.hover="activeTranslations[locale]._typos.join('\n')"
+                title="Typos"
+              >
+                <octicon name="pencil"></octicon>
+              </div>
+              <div
+                v-if="activeTranslations[locale]._dynamic && allowedChecks.includes('_inconsistencies_dynamic')"
+                class="inline-error-dynamic"
+                v-b-popover.hover="activeTranslations[locale]._dynamic.join('\n')"
+                title="Dynamic values"
+                >
+                <octicon name="clock"></octicon>
               </div>
             </td>
           </tr>
@@ -320,7 +326,7 @@
             <td class="locale not-translated" scope="row">
               {{ locale }}
             </td>
-            <td colspan="5"></td>
+            <td colspan="2"></td>
             <td colspan="1" class="not-translated">Not translated</td>
           </tr>
         </tbody>
@@ -344,8 +350,12 @@ import * as gcFunctions from "../modules/functionsApi"
 import maxExpansionRatio from "../../common/maxExpansionRatio"
 
 import * as defaults from "../../common/config"
+import ADMIN from "../consts/admin"
 
 export default {
+  props: {
+    user: { type: Object, required: true },
+  },
   components: {
     Multiselect,
   },
@@ -535,8 +545,12 @@ export default {
       this.writeGoodSettings[lang][option] = !this.writeGoodSettings[lang][option]
     },
     updateWriteGoodSettings() {
-      FbDb.ref("writeGood").update(this.writeGoodSettings)
-      gcFunctions.inconsistenciesUpdate()
+      if (ADMIN.includes(this.user.email)) {
+        FbDb.ref("writeGood").update(this.writeGoodSettings)
+        gcFunctions.inconsistenciesUpdate()
+      } else {
+        alert("You don't have permission to modify this setting")
+      }
     },
     search() { // event param if needed
       this.items = _.reduce(this.allItems, (acc, val, key) => {
@@ -603,14 +617,6 @@ export default {
       }
       return Object.keys(this.activeTranslations).length
     },
-    getTypos(translation) {
-      const typos = translation._typos
-      return Array.isArray(typos) ? typos.join("\n") : ""
-    },
-    getDynamic(translation) {
-      const dynamic = translation._dynamic
-      return Array.isArray(dynamic) ? dynamic.join("\n") : ""
-    },
     hideKeyDetail() {
       this.activeKey = null
       this.$router.replace({ name: "items" })
@@ -620,15 +626,31 @@ export default {
       if (!content) {
         return "» not translated «"
       }
-      const highlightedParts = []
-      if (Array.isArray(translation._writeGood)) {
-        translation._writeGood.forEach((suggestion) => {
-          highlightedParts.push(content.slice(suggestion.index, suggestion.index + suggestion.offset))
+      if (this.allowedChecks.includes("_inconsistencies_writeGood")) {
+        const highlightedParts = []
+        if (Array.isArray(translation._writeGood)) {
+          translation._writeGood.forEach((suggestion) => {
+            highlightedParts.push(content.slice(suggestion.index, suggestion.index + suggestion.offset))
+          })
+        }
+        highlightedParts.forEach((part) => {
+          content = content.replace(new RegExp(part, "g"), match => `<span style="background: rgba(255,160,0,0.4)">${match}</span>`)
         })
       }
-      highlightedParts.forEach((part) => {
-        content = content.replace(new RegExp(part, "g"), match => `<span style="background: rgba(255,160,0,0.4)">${match}</span>`)
-      })
+      if (this.allowedChecks.includes("_inconsistencies_dynamic")) {
+        if (Array.isArray(translation._dynamic)) {
+          translation._dynamic.forEach((dynamic) => {
+            content = content.replace(new RegExp(dynamic, "g"), match => `<span style="background: rgb(221,208,255)">${match}</span>`)
+          })
+        }
+      }
+      if (this.allowedChecks.includes("_inconsistencies_typos")) {
+        if (Array.isArray(translation._typos)) {
+          translation._typos.forEach((typo) => {
+            content = content.replace(new RegExp(typo, "g"), match => `<span style="background: rgb(255,200,200)">${match}</span>`)
+          })
+        }
+      }
       return content
     },
     getWriteGoodReasons(writeGood) {
@@ -695,6 +717,9 @@ export default {
         const translationPlaceholderAppearance = (translations[lang] && translations[lang]._placeholders && translations[lang]._placeholders.filter(i => i === placeholder).length) || 0
         return _.without(acc, placeholder).concat(_.fill(Array(totalPlaceholderAppearance - translationPlaceholderAppearance), placeholder))
       }, allPlaceholders)
+    },
+    getDescription(error) {
+      return helpers.descriptions[error] || ""
     },
   },
 }
@@ -782,9 +807,10 @@ td.locale {
 }
 .inline-warning {
   color: #ffffff;
-  padding-bottom: 2px;
-  padding-left: 4px;
-  padding-right: 4px;
+  padding-top: 2px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
   border-radius: 25px;
   background-color: orange;
   display: inline-block;
@@ -792,12 +818,24 @@ td.locale {
 }
 .inline-error {
   color: #ffffff;
-  padding-bottom: 2px;
-  padding-left: 4px;
-  padding-right: 4px;
+  padding-top: 2px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
   border-radius: 25px;
   background-color: #ef0000;
   display: inline-block;
   margin-left: 5px;
 }
+  .inline-error-dynamic {
+    color: white;
+    padding-top: 2px;
+    padding-bottom: 4px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-radius: 25px;
+    background-color: purple;
+    display: inline-block;
+    margin-left: 5px;
+  }
 </style>

@@ -161,6 +161,9 @@ import { FbDb } from "../modules/firebase"
 import * as gcFunctions from "../modules/functionsApi"
 
 export default {
+  props: {
+    user: { type: Object, required: true },
+  },
   data() {
     return {
       // Collection creator

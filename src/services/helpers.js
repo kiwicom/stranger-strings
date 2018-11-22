@@ -8,6 +8,18 @@ const mapWithoutCap = fp.map.convert({
 
 const warningCategory = ["_inconsistencies_length", "_inconsistencies_writeGood"]
 
+export const descriptions = {
+  placeholders: "detects missing placeholders in translations",
+  first: "compares types of characters in the beginning of translations",
+  last: "compares types of characters in the end of translations",
+  tags: "checks for prohibited HTML tags",
+  length: "detects suspicious variations in length",
+  typos: "performs spellchecking",
+  "write-good": "detects stylistic issues in text",
+  dynamic: "detects dynamic values e.g. numbers",
+  "no english": "looks for missing english translation"
+}
+
 // exact match for en translations
 export function strictSearch(items, query) {
   const regex = new RegExp(`.*${_.escapeRegExp(query)}.*`, "i")
