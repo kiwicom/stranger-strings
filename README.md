@@ -1,7 +1,7 @@
 # Stranger Strings
 
 ![image 2018-10-02 13-10-15](https://user-images.githubusercontent.com/26377907/46345344-87030d00-c644-11e8-8a07-27f1eee81531.png)
-##### Demo: *coming soon* 
+##### Demo: <https://stranger-strings-showcase.firebaseapp.com> 
 ## Description
 **Stranger Strings** is open-source Firebase web application for exploring inconsistencies and
  mistakes in translations.  The aim of this project is to create a versatile tool that will help
