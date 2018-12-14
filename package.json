@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service --mode=development build",
     "lint": "vue-cli-service lint",
     "test": "vue-cli-service test:unit",
     "deploy": "yarn build && yarn deploy:functions && yarn deploy:app",
