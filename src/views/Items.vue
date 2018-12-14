@@ -48,6 +48,11 @@
             <octicon name="repo"></octicon>&nbsp; spellcheck dict
           </b-dropdown-item-button>
           <b-dropdown-item-button
+            @click="showPlaceholderConfig"
+          >
+            <octicon name="mention"></octicon>&nbsp; placeholder config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
             @click="showWriteGoodSettings"
           >
             <octicon name="checklist"></octicon>&nbsp;write good settings
@@ -206,6 +211,28 @@
         >
           <strong>{{ option }}</strong> ({{ optionsDescription[option] }})
         </b-form-checkbox>
+      </div>
+    </b-modal>
+
+    <!-- MODAL: PLACEHOLDER CONFIG -->
+    <b-modal
+      id="placeholderConfigModal"
+      v-model="modalPlaceholderConfig"
+      title="Placeholder configuration"
+      size="lg"
+      ok-title="Save"
+      no-fade
+    >
+      <div class="regexInput">
+        <label for="regFormIn">Regex:</label>
+        <b-form-input
+          if="regFormIn"
+          v-model="placeholderRegex"
+          type="text"
+          placeholder="e.g. (__\w+__)"
+        ></b-form-input>
+      </div>
+      <div class="regexPreview">
       </div>
     </b-modal>
 
@@ -387,6 +414,9 @@ export default {
       // Custom dict expansion
       dictsExpansionData: {},
 
+      // Placeholder config
+      placeholderRegex: "",
+
       // Write good settings
       writeGoodSettings: {},
       optionsDescription: {
@@ -406,6 +436,7 @@ export default {
       modalDictsExpansion: false,
       modalWriteGoodSettings: false,
       modalChecksConfig: false,
+      modalPlaceholderConfig: false,
     }
   },
   firebase() {
@@ -551,6 +582,9 @@ export default {
       } else {
         alert("You don't have permission to modify this setting")
       }
+    },
+    showPlaceholderConfig() {
+      this.modalPlaceholderConfig = true
     },
     search() { // event param if needed
       this.items = _.reduce(this.allItems, (acc, val, key) => {
