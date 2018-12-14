@@ -9,7 +9,7 @@
 
 ## Project setup
 ### Requirements
-* Firebase project with (Flame/Blaze Plan*)
+* [Firebase project](https://console.firebase.google.com) with (Flame/Blaze Plan*)
 * Firebase Realtime Database
 * GitHub repository with localizations in JSON format
 
@@ -33,7 +33,7 @@ VUE_APP_FIREBASE_STORAGE_BUCKET="seeImagesBelow"
 
 **2.** Install dependencies
 ```
-yarn && yarn --cwd ./functions
+yarn install --all && yarn --cwd ./functions
 ```
 **3.** Login to Firebase and select target project
 ```
@@ -44,6 +44,10 @@ firebase use *your_Firebase_project_ID*
 ```
 yarn deploy
 ```
+**5.** Enable sign-in providers in Firebase Console (Google)
+
+![authproviderss](https://user-images.githubusercontent.com/26377907/50009509-76153700-ffb7-11e8-9666-224da7c46ca9.gif)
+
 ## Source data
 For now **Stranger Strings** only supports importing translations from GitHub in JSON format.
 
