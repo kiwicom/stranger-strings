@@ -222,6 +222,8 @@
       size="lg"
       ok-title="Save"
       no-fade
+      @ok="updatePlaceholderConfig"
+      @shown="loadCurrentPlaceholder"
     >
       <div class="regexInput">
         <label for="regFormIn">Regex:</label>
@@ -229,10 +231,24 @@
           if="regFormIn"
           v-model="placeholderRegex"
           type="text"
-          placeholder="e.g. (__\w+__)"
+          :placeholder="'e.g. ({{\\w+}})'"
         ></b-form-input>
       </div>
       <div class="regexPreview">
+        <div class="previewText">
+          <label>Preview:</label>
+          <b-form-textarea id="textarea1"
+                           v-model="regexPreviewText"
+                           :rows="6"
+                           :max-rows="6">
+          </b-form-textarea>
+        </div>
+        <div class="matchedPlaceholders">
+          <label>Matched placeholders:</label>
+          <ul>
+            <li v-for="mp in matchedPlaceholders">{{ mp }}</li>
+          </ul>
+        </div>
       </div>
     </b-modal>
 
@@ -416,6 +432,7 @@ export default {
 
       // Placeholder config
       placeholderRegex: "",
+      regexPreviewText: "Hi {{name}}, have a nice day!",
 
       // Write good settings
       writeGoodSettings: {},
@@ -493,6 +510,16 @@ export default {
         return 0
       }
       return _.reduce(this.errors, (acc, val, err) => (this.allowedChecks.includes(err) ? acc + val : acc), 0)
+    },
+    matchedPlaceholders() {
+      if (this.placeholderRegex === "" || this.placeholderRegex === null) {
+        return []
+      }
+      const matches = this.regexPreviewText.match(RegExp(this.placeholderRegex, "g"))
+      if (Array.isArray(matches) && matches.length > 10) {
+        return ["...too much matches..."]
+      }
+      return matches || []
     },
   },
   methods: {
@@ -580,11 +607,28 @@ export default {
         FbDb.ref("writeGood").update(this.writeGoodSettings)
         gcFunctions.inconsistenciesUpdate()
       } else {
-        alert("You don't have permission to modify this setting")
+        alert("You don't have permission to modify this setting") // TODO: friendlier
       }
     },
     showPlaceholderConfig() {
       this.modalPlaceholderConfig = true
+    },
+    updatePlaceholderConfig() {
+      if (ADMIN.includes(this.user.email)) {
+        FbDb.ref("placeholders").update({
+          regex: this.placeholderRegex,
+        })
+        gcFunctions.inconsistenciesUpdate()
+      } else {
+        alert("You don't have permission to modify this setting") // TODO: friendlier
+      }
+    },
+    loadCurrentPlaceholder() {
+      FbDb.ref("placeholders/regex").once("value", (snapshot) => {
+        if (snapshot.val()) {
+          this.placeholderRegex = snapshot.val()
+        }
+      })
     },
     search() { // event param if needed
       this.items = _.reduce(this.allItems, (acc, val, key) => {
@@ -871,5 +915,20 @@ td.locale {
     background-color: purple;
     display: inline-block;
     margin-left: 5px;
+  }
+  .regexPreview {
+    margin-top: 50px;
+  }
+  .regexPreview label {
+    font-size: larger;
+    padding-left: 5px;
+  }
+  .previewText {
+    display: inline-block;
+    width: 50%;
+  }
+  .matchedPlaceholders {
+    width: 50%;
+    display: inline-grid;
   }
 </style>
