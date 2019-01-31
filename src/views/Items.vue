@@ -718,14 +718,17 @@ export default {
       if (this.allowedChecks.includes("_inconsistencies_dynamic")) {
         if (Array.isArray(translation._dynamic)) {
           translation._dynamic.forEach((dynamic) => {
-            content = content.replace(new RegExp(`\\s${dynamic}`, "g"), match => `<span style="background: rgb(221,208,255)">${match}</span>`)
+            content = content.replace(
+              new RegExp(`(§|#|±|~|-|^|–|\\s)${dynamic}`, "gm"),
+              match => `<span style="background: rgb(221,208,255)">${match}</span>`
+            )
           })
         }
       }
       if (this.allowedChecks.includes("_inconsistencies_typos")) {
         if (Array.isArray(translation._typos)) {
           translation._typos.forEach((typo) => {
-            content = content.replace(new RegExp(`\\s${typo}`, "g"), match => `<span style="background: rgb(255,200,200)">${match}</span>`)
+            content = content.replace(new RegExp(`(^|\\s)${typo}`, "g"), match => `<span style="background: rgb(255,200,200)">${match}</span>`)
           })
         }
       }
