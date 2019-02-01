@@ -125,7 +125,7 @@ function loadDicts(dictsExpansion, activatedDicts) {
     }, {})
 }
 
-function grammarNazi(locales, dictsExpansion, activatedDicts) {
+function grammarNazi(locales, dictsExpansion, activatedDicts, placeholderRegex) {
   // {
   //   'en-GB': NspellDictinary
   //   …
@@ -135,7 +135,9 @@ function grammarNazi(locales, dictsExpansion, activatedDicts) {
   _.forEach(locales, (loc) => {
     _.forEach(loc, (locData, file) => {
       const lang = file.substr(0, 5)
-      const txt = locData.content.replace(/<(?:.|\n)*?>/gm, " ").replace(/(__\w+__)/g, "") // replace tags with space and remove placeholders
+      const txt = locData.content
+        .replace(/<(?:.|\n)*?>/gm, " ")
+        .replace(RegExp(placeholderRegex, "g"), "") // replace tags with space and remove placeholders
       let unrecognized
       if (lang in dicts) {
         unrecognized = []

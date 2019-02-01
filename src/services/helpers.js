@@ -17,7 +17,7 @@ export const descriptions = {
   typos: "performs spellchecking",
   "write-good": "detects stylistic issues in text",
   dynamic: "detects dynamic values e.g. numbers",
-  "no english": "looks for missing english translation"
+  "no english": "looks for missing english translation",
 }
 
 // exact match for en translations
