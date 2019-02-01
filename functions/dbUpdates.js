@@ -22,7 +22,7 @@ const {
   writeGoodCheck,
   updateDictsExpansion,
 } = require("./utils")
-const { DEFAULT_SPELLCHECKING_DICT_SUPPORT, DEFAULT_WRITE_GOOD_SETTINGS } = require("../common/config") // TODO: configurable
+const { DEFAULT_SPELLCHECKING_DICT_SUPPORT, DEFAULT_WRITE_GOOD_SETTINGS, DEFAULT_PLACEHOLDER_REGEX } = require("../common/config") // TODO: configurable
 
 function getGithubApi(repo, path) { // just a preventions for incorrect repo path
   // TODO: write tests
@@ -138,7 +138,7 @@ function processTranslations(translations) {
   }, {})
 }
 
-function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings) {
+function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex) {
   const mappedTranslations = {}
   _.forEach(val, (_val, _key) => {
     let trimmed
@@ -151,10 +151,10 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings) {
       trimmed = _val.trim()
     }
 
-    const interpolated = trimmed.replace(/(__\w+__)/g, "XXX")
+    const interpolated = trimmed.replace(RegExp(placeholderRegex, "g"), "XXX")
     _.set(mappedTranslations, [fbKey, _key], {
       content: _val,
-      _placeholders: trimmed.match(/(__\w+__)/g) || [],
+      _placeholders: trimmed.match(RegExp(placeholderRegex, "g")) || [],
       _firstCharType: determineCharType(interpolated[0]),
       _lastCharType: determineCharType(interpolated[interpolated.length - 1]),
       _tags: validateHtml(_val),
@@ -267,11 +267,13 @@ async function githubToFirebase() {
     let mappedTranslations = {}
     const writeGoodSettings = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/writeGood.json`)).body
       || DEFAULT_WRITE_GOOD_SETTINGS
+    const placeholderRegex = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/placeholders/regex.json`)).body
+      || DEFAULT_PLACEHOLDER_REGEX
 
     _.forEach(translations, (val, key) => {
       const fbKey = key.includes(".") ? key.split(".").join("-") : key
 
-      mappedTranslations = { ...mappedTranslations, ...computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings) }
+      mappedTranslations = { ...mappedTranslations, ...computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex) }
     })
 
     const dictsExpansion = updateDictsExpansion(
@@ -279,7 +281,7 @@ async function githubToFirebase() {
       DEFAULT_SPELLCHECKING_DICT_SUPPORT,
     )
     await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`).send(dictsExpansion)
-    mappedTranslations = grammarNazi(mappedTranslations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT)
+    mappedTranslations = grammarNazi(mappedTranslations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT, placeholderRegex)
 
     _.forEach(items, (val, key) => {
       const fbKey = key.includes(".") ? key.split(".").join("-") : key
@@ -330,10 +332,12 @@ async function updateInconsistencies() {
     let translations = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`)).body
     const writeGoodSettings = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/writeGood.json`)).body
       || DEFAULT_WRITE_GOOD_SETTINGS
+    const placeholderRegex = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/placeholders/regex.json`)).body
+      || DEFAULT_PLACEHOLDER_REGEX
 
     _.forEach(translations, (val, key) => {
       _.forEach(val, (x, locKey) => { val[locKey] = x.content }) // strip locale of everything except translation content
-      translations = { ...translations, ...computeInconsistenciesOfTranslations(val, key, writeGoodSettings) }
+      translations = { ...translations, ...computeInconsistenciesOfTranslations(val, key, writeGoodSettings, placeholderRegex) }
     })
 
     const dictsExpansion = updateDictsExpansion(
@@ -341,7 +345,7 @@ async function updateInconsistencies() {
       DEFAULT_SPELLCHECKING_DICT_SUPPORT,
     )
     await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`).send(dictsExpansion)
-    translations = grammarNazi(translations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT)
+    translations = grammarNazi(translations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT, placeholderRegex)
 
     _.forEach(items, (val, key) => {
       items[key] = { ...val, ...computeInconsistenciesOfKey(translations, key) }

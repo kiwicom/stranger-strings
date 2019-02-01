@@ -66,12 +66,17 @@ const DEFAULT_WRITE_GOOD_SETTINGS = {
   },
 }
 
+const DEFAULT_PLACEHOLDER_REGEX = "({{\\w+}})"
+
+const baseUrl = `https://us-central1-${process.env.VUE_APP_FIREBASE_PROJECT_ID}.cloudfunctions.net`
+
 module.exports = {
   IMPORTANT_LOCALES,
   DEFAULT_SPELLCHECKING_DICT_SUPPORT,
   DEFAULT_WRITE_GOOD_SETTINGS,
   DEFAULT_DISABLED_CHECKS,
-  UPDATE_FUNCTION_ENDPOINT: "https://us-central1-stranger-strings-beta-9ce56.cloudfunctions.net/update",
-  INCONSISTENCIES_UPDATE_FUNCTION_ENDPOINT: "https://us-central1-stranger-strings-beta-9ce56.cloudfunctions.net/inconsistenciesUpdate",
-  COLLECTIONS_UPDATE_FUNCTION_ENDPOINT: "https://us-central1-stranger-strings-beta-9ce56.cloudfunctions.net/collectionsUpdate",
+  DEFAULT_PLACEHOLDER_REGEX,
+  UPDATE_FUNCTION_ENDPOINT: `${baseUrl}/update`,
+  INCONSISTENCIES_UPDATE_FUNCTION_ENDPOINT: `${baseUrl}/inconsistenciesUpdate`,
+  COLLECTIONS_UPDATE_FUNCTION_ENDPOINT: `${baseUrl}/collectionsUpdate`,
 }
