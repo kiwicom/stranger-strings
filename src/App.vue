@@ -12,7 +12,7 @@
       v-if="!loading && !user.email"
       :onSignIn="handleSignIn"
     />
-    <router-view v-if="!loading && user.email"/>
+    <router-view :user="user" v-if="!loading && user.email"/>
   </div>
 </template>
 

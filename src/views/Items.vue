@@ -48,6 +48,11 @@
             <octicon name="repo"></octicon>&nbsp; spellcheck dict
           </b-dropdown-item-button>
           <b-dropdown-item-button
+            @click="showPlaceholderConfig"
+          >
+            <octicon name="mention"></octicon>&nbsp; placeholder config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
             @click="showWriteGoodSettings"
           >
             <octicon name="checklist"></octicon>&nbsp;write good settings
@@ -94,7 +99,7 @@
         <!-- TRANSLATION KEY ROW -->
         <tr v-for="(val, key) in items" :key="val.key" v-if="val.key">
           <td class="key" scope="row">
-            <b-link @click="setActive(key); updateQuery()">
+            <b-link @click="setActive(key)">
               {{ val.key }}
             </b-link>
             <a @click="setSearch(val.key)">
@@ -178,7 +183,9 @@
     >
       <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Set default config</b-button></div>
       <b-form-checkbox-group v-model="allowedChecks" stacked style="width: fit-content">
-        <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">{{ userifyInconsistency(error) }}</b-form-checkbox>
+        <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">
+          <strong>{{ userifyInconsistency(error) }}</strong> ({{ getDescription(userifyInconsistency(error)) }})
+        </b-form-checkbox>
       </b-form-checkbox-group>
     </b-modal>
 
@@ -204,6 +211,44 @@
         >
           <strong>{{ option }}</strong> ({{ optionsDescription[option] }})
         </b-form-checkbox>
+      </div>
+    </b-modal>
+
+    <!-- MODAL: PLACEHOLDER CONFIG -->
+    <b-modal
+      id="placeholderConfigModal"
+      v-model="modalPlaceholderConfig"
+      title="Placeholder configuration"
+      size="lg"
+      ok-title="Save"
+      no-fade
+      @ok="updatePlaceholderConfig"
+      @shown="loadCurrentPlaceholder"
+    >
+      <div class="regexInput">
+        <label for="regFormIn">Regex:</label>
+        <b-form-input
+          if="regFormIn"
+          v-model="placeholderRegex"
+          type="text"
+          :placeholder="'e.g. ({{\\w+}})'"
+        ></b-form-input>
+      </div>
+      <div class="regexPreview">
+        <div class="previewText">
+          <label>Preview:</label>
+          <b-form-textarea id="textarea1"
+                           v-model="regexPreviewText"
+                           :rows="6"
+                           :max-rows="6">
+          </b-form-textarea>
+        </div>
+        <div class="matchedPlaceholders">
+          <label>Matched placeholders:</label>
+          <ul>
+            <li v-for="mp in matchedPlaceholders">{{ mp }}</li>
+          </ul>
+        </div>
       </div>
     </b-modal>
 
@@ -259,12 +304,8 @@
       <table v-if="items[activeKey]" class="table table-sm b-table table-striped detailTable">
         <thead>
           <th>Locale</th>
-          <th>Placeholders</th>
           <th>First</th>
           <th>Last</th>
-          <th>Tags</th>
-          <th>Dynamic</th>
-          <th>Typos</th>
           <th>Translation</th>
         </thead>
 
@@ -273,43 +314,63 @@
             <td class="locale" scope="row">
               {{ locale }}
             </td>
-            <td class="placeholdersTd">
-              {{ getPlaceholders(activeTranslations[locale]) }}
-            </td>
             <td class="firstTd">
               {{ activeTranslations[locale]._firstCharType }}
             </td>
             <td class="lastTd">
               {{ activeTranslations[locale]._lastCharType }}
             </td>
-            <td class="tagsTd">
-              {{ activeTranslations[locale]._tags }}
-            </td>
-            <td class="dynamicTd">
-              <pre>{{ getDynamic(activeTranslations[locale]) }}</pre>
-            </td>
-            <td class="typosTd">
-              <pre>{{ getTypos(activeTranslations[locale]) }}</pre>
-            </td>
             <td class="translation">
               <div v-if="!showTagsChecked" style="display: inline-block;" v-html="lintContent(activeTranslations[locale])"></div>
-              <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) || "» not translated «" }}</div>
+              <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>
               <div
-                v-if="activeTranslations[locale]._writeGood"
-                style="color: #ffbb00; display: inline-block; margin-left: 5px"
+                v-if="activeTranslations[locale]._writeGood && allowedChecks.includes('_inconsistencies_writeGood')"
+                class="inline-warning"
                 v-b-popover.hover="getWriteGoodReasons(activeTranslations[locale]._writeGood)"
                 title="write good"
               >
-                <octicon name="question"></octicon>
+                <octicon name="pencil"></octicon>
+              </div>
+              <div
+                v-if="hasInconsistentLength(locale, activeTranslations) && allowedChecks.includes('_inconsistencies_length')"
+                class="inline-warning"
+                v-b-popover.hover="'suspiciously long translation'"
+                title="length"
+              >
+                <octicon name="stop"></octicon>
+              </div>
+              <div
+                v-if="getMissingPlaceholders(locale, activeTranslations).length && allowedChecks.includes('_inconsistencies_placeholders')"
+                class="inline-error"
+                v-b-popover.hover="getMissingPlaceholders(locale, activeTranslations).join('\n')"
+                title="Missing placeholders"
+              >
+                <octicon name="mention"></octicon>
+              </div>
+              <div
+                v-if="activeTranslations[locale]._typos && activeTranslations[locale]._typos !== 'unsupported language' && allowedChecks.includes('_inconsistencies_typos')"
+                class="inline-error"
+                v-b-popover.hover="activeTranslations[locale]._typos.join('\n')"
+                title="Typos"
+              >
+                <octicon name="pencil"></octicon>
+              </div>
+              <div
+                v-if="activeTranslations[locale]._dynamic && allowedChecks.includes('_inconsistencies_dynamic')"
+                class="inline-error-dynamic"
+                v-b-popover.hover="activeTranslations[locale]._dynamic.join('\n')"
+                title="Dynamic values"
+                >
+                <octicon name="clock"></octicon>
               </div>
             </td>
           </tr>
           <tr v-else>
-            <td class="locale" scope="row">
+            <td class="locale not-translated" scope="row">
               {{ locale }}
             </td>
-            <td colspan="5"></td>
-            <td colspan="2" class="text-muted">Not translated</td>
+            <td colspan="2"></td>
+            <td colspan="1" class="not-translated">Not translated</td>
           </tr>
         </tbody>
       </table>
@@ -329,10 +390,15 @@ import saveJSON from "../modules/json"
 
 import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"
+import maxExpansionRatio from "../../common/maxExpansionRatio"
 
 import * as defaults from "../../common/config"
+import ADMIN from "../consts/admin"
 
 export default {
+  props: {
+    user: { type: Object, required: true },
+  },
   components: {
     Multiselect,
   },
@@ -364,6 +430,10 @@ export default {
       // Custom dict expansion
       dictsExpansionData: {},
 
+      // Placeholder config
+      placeholderRegex: "",
+      regexPreviewText: "Hi {{name}}, have a nice day!",
+
       // Write good settings
       writeGoodSettings: {},
       optionsDescription: {
@@ -383,6 +453,7 @@ export default {
       modalDictsExpansion: false,
       modalWriteGoodSettings: false,
       modalChecksConfig: false,
+      modalPlaceholderConfig: false,
     }
   },
   firebase() {
@@ -440,15 +511,22 @@ export default {
       }
       return _.reduce(this.errors, (acc, val, err) => (this.allowedChecks.includes(err) ? acc + val : acc), 0)
     },
+    matchedPlaceholders() {
+      if (this.placeholderRegex === "" || this.placeholderRegex === null) {
+        return []
+      }
+      const matches = this.regexPreviewText.match(RegExp(this.placeholderRegex, "g"))
+      if (Array.isArray(matches) && matches.length > 10) {
+        return ["...too much matches..."]
+      }
+      return matches || []
+    },
   },
   methods: {
-    updateQuery() { // update query params
-    },
     handleChangeSelect() {
       this.loading = true
       // need to wait for change of value
       setTimeout(() => {
-        this.updateQuery()
         this.search()
         this.loading = false
       }, 50)
@@ -461,7 +539,6 @@ export default {
         this.sort[1] = this.sort[1] === "asc" ? "desc" : "asc"
       }
       this.sort[0] = type
-      this.updateQuery()
       this.items = this.sortKeys(this.items)
     },
     countErrors() {
@@ -526,11 +603,34 @@ export default {
       this.writeGoodSettings[lang][option] = !this.writeGoodSettings[lang][option]
     },
     updateWriteGoodSettings() {
-      FbDb.ref("writeGood").update(this.writeGoodSettings)
-      gcFunctions.inconsistenciesUpdate()
+      if (ADMIN.includes(this.user.email)) {
+        FbDb.ref("writeGood").update(this.writeGoodSettings)
+        gcFunctions.inconsistenciesUpdate()
+      } else {
+        alert("You don't have permission to modify this setting") // TODO: friendlier
+      }
+    },
+    showPlaceholderConfig() {
+      this.modalPlaceholderConfig = true
+    },
+    updatePlaceholderConfig() {
+      if (ADMIN.includes(this.user.email)) {
+        FbDb.ref("placeholders").update({
+          regex: this.placeholderRegex,
+        })
+        gcFunctions.inconsistenciesUpdate()
+      } else {
+        alert("You don't have permission to modify this setting") // TODO: friendlier
+      }
+    },
+    loadCurrentPlaceholder() {
+      FbDb.ref("placeholders/regex").once("value", (snapshot) => {
+        if (snapshot.val()) {
+          this.placeholderRegex = snapshot.val()
+        }
+      })
     },
     search() { // event param if needed
-      this.updateQuery()
       this.items = _.reduce(this.allItems, (acc, val, key) => {
         if (this.errorsFilter === "all" || this.getItemInconsistencies(val).includes(this.errorsFilter)) {
           acc[key] = val
@@ -595,33 +695,43 @@ export default {
       }
       return Object.keys(this.activeTranslations).length
     },
-    getTypos(translation) {
-      const typos = translation._typos
-      return Array.isArray(typos) ? typos.join("\n") : ""
-    },
-    getDynamic(translation) {
-      const dynamic = translation._dynamic
-      return Array.isArray(dynamic) ? dynamic.join("\n") : ""
-    },
     hideKeyDetail() {
       this.activeKey = null
       this.$router.replace({ name: "items" })
-      this.updateQuery()
     },
     lintContent(translation) {
       let content = this.getTranslationContent(translation)
       if (!content) {
         return "» not translated «"
       }
-      const highlightedParts = []
-      if (Array.isArray(translation._writeGood)) {
-        translation._writeGood.forEach((suggestion) => {
-          highlightedParts.push(content.slice(suggestion.index, suggestion.index + suggestion.offset))
+      if (this.allowedChecks.includes("_inconsistencies_writeGood")) {
+        const highlightedParts = []
+        if (Array.isArray(translation._writeGood)) {
+          translation._writeGood.forEach((suggestion) => {
+            highlightedParts.push(content.slice(suggestion.index, suggestion.index + suggestion.offset))
+          })
+        }
+        highlightedParts.forEach((part) => {
+          content = content.replace(new RegExp(part, "g"), match => `<span style="background: rgba(255,160,0,0.4)">${match}</span>`)
         })
       }
-      highlightedParts.forEach((part) => {
-        content = content.replace(new RegExp(part, "g"), match => `<span style="background: #ffe18e">${match}</span>`)
-      })
+      if (this.allowedChecks.includes("_inconsistencies_dynamic")) {
+        if (Array.isArray(translation._dynamic)) {
+          translation._dynamic.forEach((dynamic) => {
+            content = content.replace(
+              new RegExp(`(§|#|±|~|-|^|–|\\s)${dynamic}`, "gm"),
+              match => `<span style="background: rgb(221,208,255)">${match}</span>`
+            )
+          })
+        }
+      }
+      if (this.allowedChecks.includes("_inconsistencies_typos")) {
+        if (Array.isArray(translation._typos)) {
+          translation._typos.forEach((typo) => {
+            content = content.replace(new RegExp(`(^|\\s)${typo}`, "g"), match => `<span style="background: rgb(255,200,200)">${match}</span>`)
+          })
+        }
+      }
       return content
     },
     getWriteGoodReasons(writeGood) {
@@ -656,6 +766,41 @@ export default {
     setDefaultChecksConfig() {
       this.allowedChecks = Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
       localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
+    },
+    hasInconsistentLength(lang, translations) {
+      if (translations[lang] && translations["en-GB"] && translations["en-GB"].content.length > 0) {
+        const baseLength = translations["en-GB"].content.length
+        return (translations[lang].content.length / baseLength) > maxExpansionRatio(baseLength)
+      }
+      return false
+    },
+    getMissingPlaceholders(lang, translations) {
+      /*
+      e.g. for placehorlder
+      en -> ph1, ph1, ph1, ph,2
+      de -> ph1, ph1, ph2
+      cz -> ph1, ph1, ph3
+
+      allPlaceholders -> ph1, ph1. ph1, ph2, ph3
+       */
+      const allPlaceholders = _.reduce(translations, (acc, translation) => {
+        (translation._placeholders || []).forEach((placeholder) => {
+          const placeholderAppearance = translation._placeholders.filter(i => i === placeholder).length
+          if (acc.filter(i => i === placeholder).length < placeholderAppearance) {
+            acc = _.without(acc, placeholder).concat(_.fill(Array(placeholderAppearance), placeholder))
+          }
+        })
+        return acc
+      }, [])
+
+      return allPlaceholders.reduce((acc, placeholder) => {
+        const totalPlaceholderAppearance = allPlaceholders.filter(i => i === placeholder).length
+        const translationPlaceholderAppearance = (translations[lang] && translations[lang]._placeholders && translations[lang]._placeholders.filter(i => i === placeholder).length) || 0
+        return _.without(acc, placeholder).concat(_.fill(Array(totalPlaceholderAppearance - translationPlaceholderAppearance), placeholder))
+      }, allPlaceholders)
+    },
+    getDescription(error) {
+      return helpers.descriptions[error] || ""
     },
   },
 }
@@ -706,6 +851,9 @@ td.locale {
     width: 500px;
   }
 }
+.not-translated {
+  color: rgba(255, 0, 0, 0.65);
+}
 .error {
   display: inline-block;
   margin: 1px;
@@ -738,4 +886,52 @@ td.locale {
 .setDefault {
   float: right;
 }
+.inline-warning {
+  color: #ffffff;
+  padding-top: 2px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-radius: 25px;
+  background-color: orange;
+  display: inline-block;
+  margin-left: 5px;
+}
+.inline-error {
+  color: #ffffff;
+  padding-top: 2px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-radius: 25px;
+  background-color: #ef0000;
+  display: inline-block;
+  margin-left: 5px;
+}
+  .inline-error-dynamic {
+    color: white;
+    padding-top: 2px;
+    padding-bottom: 4px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-radius: 25px;
+    background-color: purple;
+    display: inline-block;
+    margin-left: 5px;
+  }
+  .regexPreview {
+    margin-top: 50px;
+  }
+  .regexPreview label {
+    font-size: larger;
+    padding-left: 5px;
+  }
+  .previewText {
+    display: inline-block;
+    width: 50%;
+  }
+  .matchedPlaceholders {
+    width: 50%;
+    display: inline-grid;
+  }
 </style>
