@@ -68,17 +68,19 @@
     <!-- </SUBHEADER -->
 
     <!-- KEYS - MAIN TABLE -->
-    <table class="table table-sm b-table table-striped table-hover table-keys">
+    <table class="table table-sm b-table table-striped table-hover table-keys table-fixed">
       <thead>
         <tr>
           <th
             @click="changeSort('key')"
-            class="sorting"
+            class="sorting table-fixed"
             :class="{ 'sorting_asc' : sort[0] === 'key' && sort[1] === 'asc', 'sorting_desc' : sort[0] === 'key' && sort[1] === 'desc' }"
           >
             Key (showing {{ Object.keys(items).length }} / {{ Object.keys(allItems).length }})
           </th>
-          <th>Suspected errors</th>
+          <th class="th-errors" v-for="(count, error) in errors" v-if="allowedChecks && allowedChecks.includes(error)">
+            <div><span>{{ userifyInconsistency(error) }}</span></div>
+          </th>
           <th
             @click="changeSort('count')"
             class="sorting"
@@ -107,28 +109,8 @@
             </a>
           </td>
 
-          <td class="errors">
-            <div v-for="inconsistency in getItemInconsistencies(val)" :key="inconsistency" class="error">
-              <!-- LANGUAGE SPECIFIC ERRORS -->
-              <!-- eslint-disable-next-line vue/valid-v-for -->
-              <b-badge
-                v-if="Array.isArray(val[inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
-                v-for="lang in val[inconsistency]"
-                size="sm"
-                style="margin-right: 2px"
-                :variant="getInconsistencyCategory(inconsistency)"
-              >
-                {{ userifyInconsistency(inconsistency) }} ({{ lang }})
-              </b-badge>
-              <!-- KEY SPECIFIC ERRORS -->
-              <b-badge
-                v-if="!Array.isArray(val[inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
-                size="sm"
-                :variant="getInconsistencyCategory(inconsistency)"
-              >
-                {{ userifyInconsistency(inconsistency) }}
-              </b-badge>
-            </div>
+          <td v-for="(c, e) in errors" v-if="allowedChecks && allowedChecks.includes(e)">
+            <div>x</div>
           </td>
 
           <td class="translationProgress">
@@ -807,6 +789,30 @@ export default {
 </script>
 
 <style scoped>
+  .table-fixed {
+    width: 100%;
+  }
+
+  .table-fixed thead {
+    position: sticky;
+    position: -webkit-sticky;
+    top: 0;
+    z-index: 999;
+    height: 100px;
+  }
+
+  .table-fixed thead tr {
+    background-color: #ffff;
+  }
+
+  .table-fixed thead th {
+    position: sticky;
+    position: -webkit-sticky;
+    top: 0;
+    z-index: 998;
+    background-color: white;
+    height: 100px;
+  }
 td {
   vertical-align: middle;
   font-size: 12px;
@@ -814,6 +820,19 @@ td {
 th {
   font-size: 13px;
 }
+.th-errors {
+  white-space: nowrap;
+}
+  th.th-errors div {
+    transform:  translate(-5px, -5px) rotate(-45deg);
+    width: 30px;
+  }
+  th.th-errors span {
+    z-index: 999;
+    background-color: white;
+    border-bottom: 1px solid #ccc;
+    padding: 5px 10px;
+  }
 th a {
   cursor: pointer;
 }
@@ -826,10 +845,6 @@ td.key {
 }
 td.translationProgress {
   width: 50px;
-}
-td.errors {
-  max-width: 500px;
-  width: 500px;
 }
 td.locale {
   max-height: 200px;
