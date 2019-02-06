@@ -33,7 +33,7 @@
         </b-button-toolbar>
       </b-row>
       <b-button-group right>
-        <b-dropdown right variant="info" size="md" no-caret>
+        <b-dropdown right variant="link" size="lg" no-caret>
           <template slot="button-content">
             <octicon name="gear"></octicon>
           </template>
@@ -851,7 +851,7 @@ td.translationProgress {
   width: 50px;
 }
 .locale {
-  padding-left: 25px;
+  padding-left: 30px;
 }
 td.locale {
   max-height: 200px;
@@ -959,9 +959,10 @@ td.locale {
   .sticky-header-hack {
     width: 100%;
     height: 95px;
-    z-index: 100;
+    z-index: 1;
     position: sticky;
     top: 0;
     background-color: white;
+    border-top: solid 1px #ccc;
   }
 </style>
