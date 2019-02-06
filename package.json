@@ -28,6 +28,7 @@
     "particles.js": "^2.0.0",
     "ramda": "^0.25.0",
     "vue": "^2.5.17",
+    "vue-material-design-icons": "^3.0.0",
     "vue-multiselect": "^2.1.0",
     "vue-octicon": "^2.1.1",
     "vue-router": "^3.0.1",

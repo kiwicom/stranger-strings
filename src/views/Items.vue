@@ -68,6 +68,7 @@
     <!-- </SUBHEADER -->
 
     <!-- KEYS - MAIN TABLE -->
+    <div class="sticky-header-hack"></div>
     <table class="table table-sm b-table table-striped table-hover table-keys table-fixed">
       <thead>
         <tr>
@@ -78,9 +79,6 @@
           >
             Key (showing {{ Object.keys(items).length }} / {{ Object.keys(allItems).length }})
           </th>
-          <th class="th-errors" v-for="(count, error) in errors" v-if="allowedChecks && allowedChecks.includes(error)">
-            <div><span>{{ userifyInconsistency(error) }}</span></div>
-          </th>
           <th
             @click="changeSort('count')"
             class="sorting"
@@ -88,9 +86,12 @@
           >
             Progress
           </th>
+          <th class="th-errors" v-for="(count, error) in errors" v-if="allowedChecks && allowedChecks.includes(error)">
+            <div><span>{{ userifyInconsistency(error) }}</span></div>
+          </th>
           <th
             @click="changeSort('en-GB')"
-            class="sorting"
+            class="sorting locale"
             :class="{ 'sorting_asc' : sort[0] === 'en-GB' && sort[1] === 'en-GB', 'sorting_desc' : sort[0] === 'en-GB' && sort[1] === 'desc' }"
           >
             English
@@ -109,10 +110,6 @@
             </a>
           </td>
 
-          <td v-for="(c, e) in errors" v-if="allowedChecks && allowedChecks.includes(e)">
-            <div>x</div>
-          </td>
-
           <td class="translationProgress">
             <b-progress :max="getMaximumTranslations">
               <b-progress-bar
@@ -121,6 +118,10 @@
               >
               </b-progress-bar>
             </b-progress>
+          </td>
+
+          <td v-for="(c, e) in errors" v-if="allowedChecks && allowedChecks.includes(e)" style="text-align: center; border-right: 1px solid #ccc;">
+            <WarningIcon v-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
           </td>
 
           <td class="locale">
@@ -363,6 +364,7 @@
 <script type="text/javascript">
 import NProgress from "nprogress"
 import "vue-octicon/icons"
+import WarningIcon from "vue-material-design-icons/AlertOutline"
 
 import Multiselect from "vue-multiselect"
 import _ from "lodash"
@@ -383,6 +385,7 @@ export default {
   },
   components: {
     Multiselect,
+    WarningIcon,
   },
   data() {
     return {
@@ -791,27 +794,26 @@ export default {
 <style scoped>
   .table-fixed {
     width: 100%;
+    margin-top: -95px;
   }
 
   .table-fixed thead {
-    position: sticky;
-    position: -webkit-sticky;
     top: 0;
     z-index: 999;
-    height: 100px;
+    height: 95px;
   }
 
   .table-fixed thead tr {
     background-color: #ffff;
+    height: 95px;
   }
 
   .table-fixed thead th {
-    position: sticky;
-    position: -webkit-sticky;
     top: 0;
     z-index: 998;
-    background-color: white;
-    height: 100px;
+    position: sticky;
+    position: -webkit-sticky;
+    background-color: rgb(0,0,0,0)
   }
 td {
   vertical-align: middle;
@@ -819,19 +821,21 @@ td {
 }
 th {
   font-size: 13px;
+  background-color: white;
 }
 .th-errors {
   white-space: nowrap;
 }
   th.th-errors div {
-    transform:  translate(-5px, -5px) rotate(-45deg);
+    transform:  translate(22px, -5px) rotate(-45deg);
+    z-index: 999;
     width: 30px;
   }
   th.th-errors span {
-    z-index: 999;
-    background-color: white;
+    z-index: 1000;
     border-bottom: 1px solid #ccc;
     padding: 5px 10px;
+    background-color: white;
   }
 th a {
   cursor: pointer;
@@ -845,6 +849,9 @@ td.key {
 }
 td.translationProgress {
   width: 50px;
+}
+.locale {
+  padding-left: 25px;
 }
 td.locale {
   max-height: 200px;
@@ -948,5 +955,13 @@ td.locale {
   .matchedPlaceholders {
     width: 50%;
     display: inline-grid;
+  }
+  .sticky-header-hack {
+    width: 100%;
+    height: 95px;
+    z-index: 100;
+    position: sticky;
+    top: 0;
+    background-color: white;
   }
 </style>
