@@ -68,7 +68,7 @@
     <!-- </SUBHEADER -->
 
     <!-- KEYS - MAIN TABLE -->
-    <div class="sticky-header-hack"></div>
+    <div class="sticky-header-hack"><div class="ss-name">Stranger Strings</div></div>
     <table class="table table-sm b-table table-striped table-hover table-keys table-fixed">
       <thead>
         <tr>
@@ -479,6 +479,7 @@ export default {
       this.setActive(this.activeKey)
     }
     this.allowedChecks = this.loadUserChecksConfig()
+    window.addEventListener("scroll", this.toggleSSNameVisibility)
     if (this.itemsLoaded) {
       NProgress.done()
     }
@@ -705,7 +706,7 @@ export default {
           translation._dynamic.forEach((dynamic) => {
             content = content.replace(
               new RegExp(`(§|#|±|~|-|^|–|\\s)${dynamic}`, "gm"),
-              match => `<span style="background: rgb(221,208,255)">${match}</span>`
+              match => `<span style="background: rgb(221,208,255)">${match}</span>`,
             )
           })
         }
@@ -787,11 +788,23 @@ export default {
     getDescription(error) {
       return helpers.descriptions[error] || ""
     },
+    toggleSSNameVisibility() {
+      if (window.scrollY > 200) {
+        document.getElementsByClassName("ss-name").item(0).setAttribute("style", "visibility: visible; opacity: 1;")
+      } else {
+        document.getElementsByClassName("ss-name").item(0).setAttribute("style", "visibility: hidden; opacity: 0;")
+      }
+    },
+  },
+  destroyed() {
+    window.removeEventListener("scroll", this.toggleSSNameVisibility)
   },
 }
 </script>
 
 <style scoped>
+  @import url('https://fonts.googleapis.com/css?family=Megrim');
+
   .table-fixed {
     width: 100%;
     margin-top: -95px;
@@ -835,7 +848,6 @@ th {
     z-index: 1000;
     border-bottom: 1px solid #ccc;
     padding: 5px 10px;
-    background-color: white;
   }
 th a {
   cursor: pointer;
@@ -962,7 +974,16 @@ td.locale {
     z-index: 1;
     position: sticky;
     top: 0;
-    background-color: white;
+    background-image: linear-gradient(rgba(255,255,255,0.95) 30%, rgba(255,255,255,1) 100%);
     border-top: solid 1px #ccc;
+  }
+  .ss-name {
+    visibility: hidden;
+    color: darkgrey;
+    font-family: 'Megrim', cursive;
+    font-size: 30px;
+    padding: 10px;
+    opacity: 0;
+    transition: visibility 0.5s, opacity 0.5s linear;
   }
 </style>
