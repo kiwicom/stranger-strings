@@ -120,8 +120,17 @@
             </b-progress>
           </td>
 
-          <td v-for="(c, e) in errors" v-if="allowedChecks && allowedChecks.includes(e)" style="text-align: center; border-right: 1px solid #ccc;">
-            <WarningIcon v-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
+          <td v-for="(c, e) in errors" v-if="allowedChecks && allowedChecks.includes(e)" style="text-align: center; border-right: 1px solid #ccc; font-size: 20px;">
+            <PlaceholderIcon :size="30" v-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_placeholders'"></PlaceholderIcon>
+            <NoEnglishIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_noEnglish'"></NoEnglishIcon>
+            <LengthIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_length'"></LengthIcon>
+            <FirstIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_firstCharType'"></FirstIcon>
+            <LastIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_lastCharType'"></LastIcon>
+            <DynamicIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_dynamic'"></DynamicIcon>
+            <WriteGoodIcon size="40" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_writeGood'"></WriteGoodIcon>
+            <TyposIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_typos'"></TyposIcon>
+            <TagIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_tags'"></TagIcon>
+            <WarningIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
           </td>
 
           <td class="locale">
@@ -365,6 +374,16 @@
 import NProgress from "nprogress"
 import "vue-octicon/icons"
 import WarningIcon from "vue-material-design-icons/AlertOutline"
+import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
+import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
+import TyposIcon from "vue-material-design-icons/Pencil"
+import DynamicIcon from "vue-material-design-icons/Resistor"
+import NoEnglishIcon from "vue-material-design-icons/EarthOff"
+import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
+import FirstIcon from "vue-material-design-icons/PageFirst"
+import LastIcon from "vue-material-design-icons/PageLast"
+import TagIcon from "vue-material-design-icons/Tag"
+
 
 import Multiselect from "vue-multiselect"
 import _ from "lodash"
@@ -386,6 +405,15 @@ export default {
   components: {
     Multiselect,
     WarningIcon,
+    PlaceholderIcon,
+    WriteGoodIcon,
+    TyposIcon,
+    DynamicIcon,
+    NoEnglishIcon,
+    LengthIcon,
+    FirstIcon,
+    LastIcon,
+    TagIcon,
   },
   data() {
     return {
