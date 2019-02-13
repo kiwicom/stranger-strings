@@ -259,25 +259,36 @@
       <div class="keyOverview" v-if="items[activeKey]">
         <strong>Translations:</strong> {{ getTranslationsCount() }} / {{ getMaximumTranslations }}<br/>
         <div v-for="inconsistency in getItemInconsistencies(items[activeKey])" :key="inconsistency" class="error">
-          <!-- LANGUAGE SPECIFIC ERRORS -->
-          <!-- eslint-disable-next-line vue/valid-v-for -->
-          <b-badge
-            v-if="Array.isArray(items[activeKey][inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
-            v-for="lang in items[activeKey][inconsistency]"
-            style="margin-right: 2px"
-            size="sm"
-            :variant="getInconsistencyCategory(inconsistency)"
-          >
-            {{ userifyInconsistency(inconsistency) }} ({{ lang }})
-          </b-badge>
-          <!-- KEY SPECIFIC ERRORS -->
-          <b-badge
-            v-if="!Array.isArray(items[activeKey][inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
-            size="sm"
-            :variant="getInconsistencyCategory(inconsistency)"
-          >
-            {{ userifyInconsistency(inconsistency) }}
-          </b-badge>
+          <div v-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_placeholders'">
+            <div class="inline-error"><PlaceholderIcon :size="30"></PlaceholderIcon></div> - {{ userifyInconsistency(inconsistency) }}
+          </div>
+          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_noEnglish'">
+            <div class="inline-error"><NoEnglishIcon :size="30"></NoEnglishIcon></div> - {{ userifyInconsistency(inconsistency) }}
+          </div>
+          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_length'">
+            <div  class="inline-warning"><LengthIcon :size="30"></LengthIcon></div> - {{ userifyInconsistency(inconsistency) }}
+          </div>
+          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_firstCharType'">
+            <div class="inline-warning"><FirstIcon :size="30"></FirstIcon></div> - {{ userifyInconsistency(inconsistency) }}
+          </div>
+          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_lastCharType'">
+            <div class="inline-warning"><LastIcon :size="30"></LastIcon></div> - {{ userifyInconsistency(inconsistency) }}
+          </div>
+          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_dynamic'">
+            <div class="inline-error-dynamic"><DynamicIcon :size="30"></DynamicIcon></div> - {{ userifyInconsistency(inconsistency) }}
+          </div>
+          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_writeGood'">
+            <div class="inline-warning"><WriteGoodIcon :size="30"></WriteGoodIcon></div> - {{ userifyInconsistency(inconsistency) }} ({{ items[activeKey][inconsistency].join(", ") }})
+          </div>
+          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_typos'">
+            <div class="inline-error"><TyposIcon :size="30"></TyposIcon></div> - {{ userifyInconsistency(inconsistency) }} ({{ items[activeKey][inconsistency].join(", ") }})
+          </div>
+          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_tags'">
+            <div class="inline-warning"><TagIcon :size="30"></TagIcon></div> - {{ userifyInconsistency(inconsistency) }}
+          </div>
+          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency)">
+            <div class="inline-warning"><WarningIcon :size="30"></WarningIcon></div> - {{ userifyInconsistency(inconsistency) }}
+          </div>
         </div>
       </div>
 
@@ -321,7 +332,7 @@
                 v-b-popover.hover="getWriteGoodReasons(activeTranslations[locale]._writeGood)"
                 title="write good"
               >
-                <octicon name="pencil"></octicon>
+                <WriteGoodIcon></WriteGoodIcon>
               </div>
               <div
                 v-if="hasInconsistentLength(locale, activeTranslations) && allowedChecks.includes('_inconsistencies_length')"
@@ -329,7 +340,7 @@
                 v-b-popover.hover="'suspiciously long translation'"
                 title="length"
               >
-                <octicon name="stop"></octicon>
+                <LengthIcon></LengthIcon>
               </div>
               <div
                 v-if="getMissingPlaceholders(locale, activeTranslations).length && allowedChecks.includes('_inconsistencies_placeholders')"
@@ -337,7 +348,7 @@
                 v-b-popover.hover="getMissingPlaceholders(locale, activeTranslations).join('\n')"
                 title="Missing placeholders"
               >
-                <octicon name="mention"></octicon>
+                <PlaceholderIcon fill-color="#ef0000"></PlaceholderIcon>
               </div>
               <div
                 v-if="activeTranslations[locale]._typos && activeTranslations[locale]._typos !== 'unsupported language' && allowedChecks.includes('_inconsistencies_typos')"
@@ -345,7 +356,7 @@
                 v-b-popover.hover="activeTranslations[locale]._typos.join('\n')"
                 title="Typos"
               >
-                <octicon name="pencil"></octicon>
+                <TyposIcon fill-color="#ef0000"></TyposIcon>
               </div>
               <div
                 v-if="activeTranslations[locale]._dynamic && allowedChecks.includes('_inconsistencies_dynamic')"
@@ -353,7 +364,7 @@
                 v-b-popover.hover="activeTranslations[locale]._dynamic.join('\n')"
                 title="Dynamic values"
                 >
-                <octicon name="clock"></octicon>
+                <DynamicIcon fill-color="#800080"></DynamicIcon>
               </div>
             </td>
           </tr>
@@ -376,13 +387,13 @@ import "vue-octicon/icons"
 import WarningIcon from "vue-material-design-icons/AlertOutline"
 import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
 import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
-import TyposIcon from "vue-material-design-icons/Pencil"
+import TyposIcon from "vue-material-design-icons/Spellcheck"
 import DynamicIcon from "vue-material-design-icons/Resistor"
 import NoEnglishIcon from "vue-material-design-icons/EarthOff"
 import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
 import FirstIcon from "vue-material-design-icons/PageFirst"
 import LastIcon from "vue-material-design-icons/PageLast"
-import TagIcon from "vue-material-design-icons/Tag"
+import TagIcon from "vue-material-design-icons/CodeTags"
 
 
 import Multiselect from "vue-multiselect"
@@ -899,8 +910,15 @@ td.locale {
   width: 38vw;
   max-width: 38vw;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-x: scroll;
+  white-space: nowrap;
+  -ms-overflow-style: none;
+  overflow: -moz-scrollbars-none;
+  padding-right: 10px;
 }
+  td.locale::-webkit-scrollbar {
+    display: none;
+  }
 .row-visited td {
   background-color: #DFE7F2;
 }
@@ -919,10 +937,11 @@ td.locale {
   color: rgba(255, 0, 0, 0.65);
 }
 .error {
-  display: inline-block;
+  display: list-item;
   margin: 1px;
   font-size: 16px;
   border: 1px;
+  list-style: none;
 }
 .textInput {
   max-width: 100%;
@@ -951,35 +970,32 @@ td.locale {
   float: right;
 }
 .inline-warning {
-  color: #ffffff;
-  padding-top: 2px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
+  color: orange;
+  font-size: 12px;
   border-radius: 25px;
-  background-color: orange;
+  padding-left: 3px;
+  padding-right: 3px;
+  border: solid 1px orange;
   display: inline-block;
   margin-left: 5px;
 }
 .inline-error {
-  color: #ffffff;
-  padding-top: 2px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
+  color: #ef0000;
+  font-size: 12px;
   border-radius: 25px;
-  background-color: #ef0000;
+  padding-left: 3px;
+  padding-right: 3px;
+  border: solid 1px #ef0000;
   display: inline-block;
   margin-left: 5px;
 }
   .inline-error-dynamic {
-    color: white;
-    padding-top: 2px;
-    padding-bottom: 4px;
-    padding-left: 5px;
-    padding-right: 5px;
+    color: purple;
+    font-size: 12px;
     border-radius: 25px;
-    background-color: purple;
+    padding-left: 3px;
+    padding-right: 3px;
+    border: solid 1px purple;
     display: inline-block;
     margin-left: 5px;
   }
