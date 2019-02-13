@@ -6,8 +6,6 @@ const mapWithoutCap = fp.map.convert({
   cap: false,
 })
 
-const warningCategory = ["_inconsistencies_length", "_inconsistencies_writeGood"]
-
 export const descriptions = {
   placeholders: "detects missing placeholders in translations",
   first: "compares types of characters in the beginning of translations",
@@ -81,10 +79,6 @@ export function getItemInconsistencies(key) {
     _inconsistencies.push("_inconsistencies_noEnglish")
   }
   return _inconsistencies
-}
-
-export function getInconsistencyCategory(inconsistency) {
-  return warningCategory.includes(inconsistency) ? "warning" : "danger"
 }
 
 export function userifyInconsistency(inconsistency) {

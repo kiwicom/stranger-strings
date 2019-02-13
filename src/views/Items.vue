@@ -260,31 +260,31 @@
         <strong>Translations:</strong> {{ getTranslationsCount() }} / {{ getMaximumTranslations }}<br/>
         <div v-for="inconsistency in getItemInconsistencies(items[activeKey])" :key="inconsistency" class="error">
           <div v-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_placeholders'">
-            <div class="inline-error"><PlaceholderIcon :size="30"></PlaceholderIcon></div> - {{ userifyInconsistency(inconsistency) }}
+            <div class="inline-error"><PlaceholderIcon :size="30"></PlaceholderIcon></div> - missing placeholders
           </div>
           <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_noEnglish'">
-            <div class="inline-error"><NoEnglishIcon :size="30"></NoEnglishIcon></div> - {{ userifyInconsistency(inconsistency) }}
+            <div class="inline-error"><NoEnglishIcon :size="30"></NoEnglishIcon></div> - missing english localisation
           </div>
           <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_length'">
-            <div  class="inline-warning"><LengthIcon :size="30"></LengthIcon></div> - {{ userifyInconsistency(inconsistency) }}
+            <div  class="inline-warning"><LengthIcon :size="30"></LengthIcon></div> - big differences in length
           </div>
           <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_firstCharType'">
-            <div class="inline-warning"><FirstIcon :size="30"></FirstIcon></div> - {{ userifyInconsistency(inconsistency) }}
+            <div class="inline-warning"><FirstIcon :size="30"></FirstIcon></div> - inconsistent first characters
           </div>
           <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_lastCharType'">
-            <div class="inline-warning"><LastIcon :size="30"></LastIcon></div> - {{ userifyInconsistency(inconsistency) }}
+            <div class="inline-warning"><LastIcon :size="30"></LastIcon></div> - inconsistent last characters
           </div>
           <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_dynamic'">
-            <div class="inline-error-dynamic"><DynamicIcon :size="30"></DynamicIcon></div> - {{ userifyInconsistency(inconsistency) }}
+            <div class="inline-error-dynamic"><DynamicIcon :size="30"></DynamicIcon></div> - contains dynamic values
           </div>
           <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_writeGood'">
-            <div class="inline-warning"><WriteGoodIcon :size="30"></WriteGoodIcon></div> - {{ userifyInconsistency(inconsistency) }} ({{ items[activeKey][inconsistency].join(", ") }})
+            <div class="inline-warning"><WriteGoodIcon :size="30"></WriteGoodIcon></div> - write-good suggestions (in locales: {{ items[activeKey][inconsistency].join(", ") }})
           </div>
           <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_typos'">
-            <div class="inline-error"><TyposIcon :size="30"></TyposIcon></div> - {{ userifyInconsistency(inconsistency) }} ({{ items[activeKey][inconsistency].join(", ") }})
+            <div class="inline-error"><TyposIcon :size="30"></TyposIcon></div> - typos (in locales: {{ items[activeKey][inconsistency].join(", ") }})
           </div>
           <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_tags'">
-            <div class="inline-warning"><TagIcon :size="30"></TagIcon></div> - {{ userifyInconsistency(inconsistency) }}
+            <div class="inline-warning"><TagIcon :size="30"></TagIcon></div> - blacklisted HTML tags
           </div>
           <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency)">
             <div class="inline-warning"><WarningIcon :size="30"></WarningIcon></div> - {{ userifyInconsistency(inconsistency) }}
@@ -776,9 +776,6 @@ export default {
     userifyInconsistency(inconsistency) {
       return helpers.userifyInconsistency(inconsistency)
     },
-    getInconsistencyCategory(inconsistency) {
-      return helpers.getInconsistencyCategory(inconsistency)
-    },
     loadUserChecksConfig() {
       if (localStorage.getItem("allowedChecks")) {
         return JSON.parse(localStorage.getItem("allowedChecks"))
@@ -950,6 +947,8 @@ td.locale {
 }
 .keyOverview {
   font-size: 14px;
+  margin-bottom: 15px;
+  margin-top: 15px;
 }
 .translationsForm {
   margin-bottom: 16px;
