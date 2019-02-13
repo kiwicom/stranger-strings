@@ -120,14 +120,14 @@
             </b-progress>
           </td>
 
-          <td v-for="(c, e) in errors" v-if="allowedChecks && allowedChecks.includes(e)" style="text-align: center; border-right: 1px solid #ccc; font-size: 20px;">
+          <td v-for="(c, e) in errors" v-if="allowedChecks && allowedChecks.includes(e)" class="indicators">
             <PlaceholderIcon :size="30" v-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_placeholders'"></PlaceholderIcon>
             <NoEnglishIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_noEnglish'"></NoEnglishIcon>
             <LengthIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_length'"></LengthIcon>
             <FirstIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_firstCharType'"></FirstIcon>
             <LastIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_lastCharType'"></LastIcon>
             <DynamicIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_dynamic'"></DynamicIcon>
-            <WriteGoodIcon size="40" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_writeGood'"></WriteGoodIcon>
+            <WriteGoodIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_writeGood'"></WriteGoodIcon>
             <TyposIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_typos'"></TyposIcon>
             <TagIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_tags'"></TagIcon>
             <WarningIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
@@ -859,6 +859,7 @@ export default {
 td {
   vertical-align: middle;
   font-size: 12px;
+  padding: 5px;
 }
 th {
   font-size: 13px;
@@ -881,8 +882,8 @@ th a {
   cursor: pointer;
 }
 td.key {
-  width: 500px;
-  max-width: 500px;
+  width: 30vw;
+  max-width: 30vw;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -894,8 +895,9 @@ td.translationProgress {
   padding-left: 30px;
 }
 td.locale {
-  max-height: 200px;
-  max-width: 700px;
+  max-height: 50px;
+  width: 38vw;
+  max-width: 38vw;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -1013,5 +1015,10 @@ td.locale {
     padding: 10px;
     opacity: 0;
     transition: visibility 0.5s, opacity 0.5s linear;
+  }
+  .indicators {
+    text-align: center;
+    border-right: 1px solid #ccc;
+    font-size: 20px;
   }
 </style>
