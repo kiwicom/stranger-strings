@@ -87,7 +87,7 @@
             Progress
           </th>
           <th class="th-errors" v-for="(count, error) in errors" v-if="allowedChecks && allowedChecks.includes(error)">
-            <div><span>{{ userifyInconsistency(error) }}</span></div>
+            <div><span @click="changeSort(error === '_inconsistencies_noEnglish' ? 'en-GB' : error)">{{ userifyInconsistency(error) }}</span></div>
           </th>
           <th
             @click="changeSort('en-GB')"
@@ -557,7 +557,11 @@ export default {
       }, 50)
     },
     sortKeys(translations) {
-      return helpers.sortTranslationKeys(translations, this.sort[0], this.sort[1])
+      NProgress.start()
+      console.log("triggered")
+      const res = helpers.sortTranslationKeys(translations, this.sort[0], this.sort[1])
+      NProgress.done()
+      return res
     },
     changeSort(type) {
       if (this.sort[0] === type) {
@@ -843,7 +847,7 @@ export default {
 
   .table-fixed {
     width: 100%;
-    margin-top: -95px;
+    margin-top: -25px;
   }
 
   .table-fixed thead {
@@ -854,11 +858,10 @@ export default {
 
   .table-fixed thead tr {
     background-color: #ffff;
-    height: 95px;
   }
 
   .table-fixed thead th {
-    top: 0;
+    top: 67px;
     z-index: 998;
     position: sticky;
     position: -webkit-sticky;
@@ -880,11 +883,13 @@ th {
     transform:  translate(22px, -5px) rotate(-45deg);
     z-index: 999;
     width: 30px;
+    cursor: pointer;
   }
   th.th-errors span {
     z-index: 1000;
     border-bottom: 1px solid #ccc;
     padding: 5px 10px;
+    cursor: pointer;
   }
 th a {
   cursor: pointer;
