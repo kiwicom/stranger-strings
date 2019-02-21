@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- SUBHEADER -->
-    <b-navbar>
+    <b-navbar v-if="searchBarExpanded" class="subheader">
       <b-row>
         <b-button-toolbar>
           <b-input-group size="md">
@@ -27,48 +27,62 @@
               </optgroup>
             </b-form-select>
           </b-input-group>
-          <b-button-group>
-            <b-button @click="exportKeys">Export</b-button>
-          </b-button-group>
         </b-button-toolbar>
       </b-row>
-      <b-button-group right>
-        <b-dropdown right variant="link" size="lg" no-caret>
-          <template slot="button-content">
-            <octicon name="gear"></octicon>
-          </template>
-          <b-dropdown-item-button
-            @click="showChecksConfig"
-          >
-            <octicon name="settings"></octicon>&nbsp; checks config
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="showDictsExpansion"
-          >
-            <octicon name="repo"></octicon>&nbsp; spellcheck dict
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="showPlaceholderConfig"
-          >
-            <octicon name="mention"></octicon>&nbsp; placeholder config
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="showWriteGoodSettings"
-          >
-            <octicon name="checklist"></octicon>&nbsp;write good settings
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="triggerUpdate"
-          >
-            <octicon name="sync"></octicon>&nbsp; update
-          </b-dropdown-item-button>
-        </b-dropdown>
-      </b-button-group>
     </b-navbar>
     <!-- </SUBHEADER -->
 
+    <!-- EXPAND BUTTON -->
+    <div class="expand-bar">
+      <div class="search-expand-button" @click="searchBarExpanded = !searchBarExpanded">
+        <octicon v-if="!searchBarExpanded" name="chevron-down"></octicon>
+        <octicon v-else name="chevron-up"></octicon>
+      </div>
+    </div>
+
     <!-- KEYS - MAIN TABLE -->
-    <div class="sticky-header-hack"><div class="ss-name">Stranger Strings</div></div>
+    <div class="sticky-header-hack">
+      <div class="ss-name">Stranger Strings</div>
+      <div class="settings">
+        <b-button-group>
+          <b-dropdown down right variant="link" size="lg" no-caret>
+            <template slot="button-content">
+              <octicon name="gear"></octicon>
+            </template>
+            <b-dropdown-item-button
+              @click="showChecksConfig"
+            >
+              <octicon name="settings"></octicon>&nbsp; checks config
+            </b-dropdown-item-button>
+            <b-dropdown-item-button
+              @click="showDictsExpansion"
+            >
+              <octicon name="repo"></octicon>&nbsp; spellcheck dict
+            </b-dropdown-item-button>
+            <b-dropdown-item-button
+              @click="showPlaceholderConfig"
+            >
+              <octicon name="mention"></octicon>&nbsp; placeholder config
+            </b-dropdown-item-button>
+            <b-dropdown-item-button
+              @click="showWriteGoodSettings"
+            >
+              <octicon name="checklist"></octicon>&nbsp;write good settings
+            </b-dropdown-item-button>
+            <b-dropdown-item-button
+              @click="exportKeys"
+            >
+              <octicon name="desktop-download"></octicon>&nbsp; export
+            </b-dropdown-item-button>
+            <b-dropdown-item-button
+              @click="triggerUpdate"
+            >
+              <octicon name="sync"></octicon>&nbsp; update
+            </b-dropdown-item-button>
+          </b-dropdown>
+        </b-button-group>
+      </div>
+    </div>
     <table class="table table-sm b-table table-striped table-hover table-keys table-fixed">
       <thead>
         <tr>
@@ -432,11 +446,12 @@ export default {
       items: {}, // filtered items with search query
       itemsLoaded: false,
       locales: [],
+      searchBarExpanded: false,
 
 
       // Searching, sorting, filtering
       searchQuery: "",
-      strict: "false",
+      strict: false,
       sort: ["key", "asc"], // key/count asc/desc
       errorsFilter: "all",
       errors: {},
@@ -558,7 +573,6 @@ export default {
     },
     sortKeys(translations) {
       NProgress.start()
-      console.log("triggered")
       const res = helpers.sortTranslationKeys(translations, this.sort[0], this.sort[1])
       NProgress.done()
       return res
@@ -677,7 +691,6 @@ export default {
           keys: ["en-GB", "key"],
         }
         if (this.strict) {
-          console.log(this.searchQuery)
           this.items = helpers.strictSearch(this.items, this.searchQuery)
         } else {
           // need to map to array and then back to object for fuse to work
@@ -960,6 +973,7 @@ td.locale {
 }
 .alignCenter {
   align-self: center;
+  margin-left: 10px;
 }
 .transparentClickableIcon {
   opacity: .5;
@@ -1025,7 +1039,6 @@ td.locale {
     position: sticky;
     top: 0;
     background-image: linear-gradient(rgba(255,255,255,0.95) 30%, rgba(255,255,255,1) 100%);
-    border-top: solid 1px #ccc;
   }
   .ss-name {
     visibility: hidden;
@@ -1040,5 +1053,25 @@ td.locale {
     text-align: center;
     border-right: 1px solid #ccc;
     font-size: 20px;
+  }
+  .settings {
+    float: right;
+    margin-top: -65px;
+    z-index: 999;
+    width: max-content;
+    position: relative;
+  }
+  .subheader {
+    border-bottom: solid 1px #ccc;
+  }
+  .expand-bar {
+    vertical-align: center;
+  }
+  .search-expand-button {
+    text-align: center;
+    margin-bottom: -20px;
+    z-index: 999;
+    cursor: pointer;
+    position: relative;
   }
 </style>
