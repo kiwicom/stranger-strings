@@ -40,48 +40,50 @@
       </div>
     </div>
 
+    <!-- SETTINGS BUTTON -->
+    <div class="settings">
+      <b-button-group>
+        <b-dropdown down right variant="link" size="lg" no-caret>
+          <template slot="button-content">
+            <octicon name="gear"></octicon>
+          </template>
+          <b-dropdown-item-button
+            @click="showUserConfig"
+          >
+            <octicon name="settings"></octicon>&nbsp; user config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
+            @click="showDictsExpansion"
+          >
+            <octicon name="repo"></octicon>&nbsp; spellcheck dict
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
+            @click="showPlaceholderConfig"
+          >
+            <octicon name="mention"></octicon>&nbsp; placeholder config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
+            @click="showWriteGoodSettings"
+          >
+            <octicon name="checklist"></octicon>&nbsp;write good settings
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
+            @click="exportKeys"
+          >
+            <octicon name="desktop-download"></octicon>&nbsp; export
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
+            @click="triggerUpdate"
+          >
+            <octicon name="sync"></octicon>&nbsp; update
+          </b-dropdown-item-button>
+        </b-dropdown>
+      </b-button-group>
+    </div>
+
     <!-- KEYS - MAIN TABLE -->
     <div class="sticky-header-hack">
       <div class="ss-name">Stranger Strings</div>
-      <div class="settings">
-        <b-button-group>
-          <b-dropdown down right variant="link" size="lg" no-caret>
-            <template slot="button-content">
-              <octicon name="gear"></octicon>
-            </template>
-            <b-dropdown-item-button
-              @click="showChecksConfig"
-            >
-              <octicon name="settings"></octicon>&nbsp; checks config
-            </b-dropdown-item-button>
-            <b-dropdown-item-button
-              @click="showDictsExpansion"
-            >
-              <octicon name="repo"></octicon>&nbsp; spellcheck dict
-            </b-dropdown-item-button>
-            <b-dropdown-item-button
-              @click="showPlaceholderConfig"
-            >
-              <octicon name="mention"></octicon>&nbsp; placeholder config
-            </b-dropdown-item-button>
-            <b-dropdown-item-button
-              @click="showWriteGoodSettings"
-            >
-              <octicon name="checklist"></octicon>&nbsp;write good settings
-            </b-dropdown-item-button>
-            <b-dropdown-item-button
-              @click="exportKeys"
-            >
-              <octicon name="desktop-download"></octicon>&nbsp; export
-            </b-dropdown-item-button>
-            <b-dropdown-item-button
-              @click="triggerUpdate"
-            >
-              <octicon name="sync"></octicon>&nbsp; update
-            </b-dropdown-item-button>
-          </b-dropdown>
-        </b-button-group>
-      </div>
     </div>
     <table class="table table-sm b-table table-striped table-hover table-keys table-fixed">
       <thead>
@@ -177,22 +179,35 @@
       </div>
     </b-modal>
 
-    <!-- MODAL: CHECKS CONFIG -->
+    <!-- MODAL: USER CONFIG -->
     <b-modal
       id="writeGoodSettingsModal"
       v-model="modalChecksConfig"
-      :title="'Checks configuration'"
+      :title="'User configuration'"
       size="lg"
       @ok="saveChecksConfig"
       ok-only
       no-fade
     >
-      <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Set default config</b-button></div>
-      <b-form-checkbox-group v-model="allowedChecks" stacked style="width: fit-content">
-        <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">
-          <strong>{{ userifyInconsistency(error) }}</strong> ({{ getDescription(userifyInconsistency(error)) }})
-        </b-form-checkbox>
-      </b-form-checkbox-group>
+      <div class="config-group">
+        <h4>Checks</h4>
+        <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Set default config</b-button></div>
+        <b-form-checkbox-group v-model="allowedChecks" stacked style="width: fit-content">
+          <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">
+            <strong>{{ userifyInconsistency(error) }}</strong> ({{ getDescription(userifyInconsistency(error)) }})
+          </b-form-checkbox>
+        </b-form-checkbox-group>
+      </div>
+      <div class="config-group">
+        <h4>Locales</h4>
+        <b-form-group v-for="loc in locales" label-cols="4" label-cols-lg="2">
+          <b-form-radio-group v-model="importantLocales[loc]">
+            <div class="loc-label">{{ loc }}</div>
+            <b-form-radio :value="true">Important</b-form-radio>
+            <b-form-radio :value="false">Normal</b-form-radio>
+          </b-form-radio-group>
+        </b-form-group>
+      </div>
     </b-modal>
 
     <!-- MODAL: WRITE GOOD CONFIG -->
@@ -459,6 +474,9 @@ export default {
       // Checks configuration
       allowedChecks: [],
 
+      // Locacel configuration
+      importantLocales: {},
+
       // Active
       activeKey: this.$route.params.all ? this.$route.params.all : null,
       activeTranslations: null,
@@ -497,10 +515,6 @@ export default {
   },
   firebase() {
     return {
-      itemsMetaData: {
-        source: FbDb.ref("itemsMetaData"),
-        asObject: true,
-      },
       allItems: {
         source: FbDb.ref("items"),
         asObject: true,
@@ -517,6 +531,7 @@ export default {
         asObject: true,
         readyCallback: () => {
           this.locales = this.lastUpdate.locales
+          this.importantLocales = this.loadUserLocalesConfig()
         },
       },
     }
@@ -629,7 +644,7 @@ export default {
     triggerUpdate() {
       gcFunctions.update()
     },
-    showChecksConfig() {
+    showUserConfig() {
       this.modalChecksConfig = true
     },
     showWriteGoodSettings() {
@@ -802,6 +817,12 @@ export default {
     saveChecksConfig() {
       localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
     },
+    loadUserLocalesConfig() { // TODO localstorage
+      return this.locales.reduce((acc, loc) => {
+        acc[loc] = defaults.IMPORTANT_LOCALES.includes(loc)
+        return acc
+      }, {})
+    },
     setDefaultChecksConfig() {
       this.allowedChecks = Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
       localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
@@ -865,7 +886,7 @@ export default {
 
   .table-fixed thead {
     top: 0;
-    z-index: 999;
+    z-index: 1;
     height: 95px;
   }
 
@@ -875,7 +896,7 @@ export default {
 
   .table-fixed thead th {
     top: 67px;
-    z-index: 998;
+    z-index: 1;
     position: sticky;
     position: -webkit-sticky;
     background-color: rgb(0,0,0,0)
@@ -894,7 +915,7 @@ th {
 }
   th.th-errors div {
     transform:  translate(22px, -5px) rotate(-45deg);
-    z-index: 999;
+    z-index: 3;
     width: 30px;
     cursor: pointer;
   }
@@ -1060,10 +1081,12 @@ td.locale {
   }
   .settings {
     float: right;
-    margin-top: -65px;
-    z-index: 999;
+    margin-top: 10px;
+    top: 5px;
+    z-index: 3;
     width: max-content;
-    position: relative;
+    margin-right: 3px;
+    position: sticky;
   }
   .subheader {
     border-bottom: solid 1px #ccc;
@@ -1074,8 +1097,19 @@ td.locale {
   .search-expand-button {
     text-align: center;
     margin-bottom: -20px;
-    z-index: 999;
+    z-index: 2;
     cursor: pointer;
     position: relative;
+    width: 30px;
+    right: 50%;
+    left: 50%;
+  }
+  .config-group {
+    margin-top: 20px;
+  }
+  .loc-label {
+    float: left;
+    width: 200px;
+    font-weight: bolder;
   }
 </style>
