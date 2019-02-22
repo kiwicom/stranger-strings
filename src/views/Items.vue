@@ -200,6 +200,7 @@
       </div>
       <div class="config-group">
         <h4>Locales</h4>
+        <div class="setDefault"><b-button variant="link" @click="setDefaultLocalesConfig">Set default config</b-button></div>
         <b-form-group v-for="loc in locales" label-cols="4" label-cols-lg="2">
           <b-form-radio-group v-model="importantLocales[loc]">
             <div class="loc-label">{{ loc }}</div>
@@ -826,6 +827,12 @@ export default {
     setDefaultChecksConfig() {
       this.allowedChecks = Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
       localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
+    },
+    setDefaultLocalesConfig() {
+      this.importantLocales = this.locales.reduce((acc, loc) => {
+        acc[loc] = defaults.IMPORTANT_LOCALES.includes(loc)
+        return acc
+      }, {})
     },
     hasInconsistentLength(lang, translations) {
       if (translations[lang] && translations["en-GB"] && translations["en-GB"].content.length > 0) {
