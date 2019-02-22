@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- SUBHEADER -->
-    <b-navbar v-if="searchBarExpanded" class="subheader">
+    <b-navbar v-show="searchBarExpanded" class="subheader">
       <b-row>
         <b-button-toolbar>
           <b-input-group size="md">
@@ -328,7 +328,7 @@
 
         <tbody>
           <tr :key="locale" v-for="locale in locales" v-if="activeTranslations[locale]">
-            <td class="locale" scope="row">
+            <td class="locale-id" scope="row">
               {{ locale }}
             </td>
             <td class="firstTd">
@@ -383,7 +383,7 @@
             </td>
           </tr>
           <tr v-else>
-            <td class="locale not-translated" scope="row">
+            <td class="locale-id not-translated" scope="row">
               {{ locale }}
             </td>
             <td colspan="2"></td>
@@ -948,6 +948,10 @@ td.locale {
     width: 500px;
   }
 }
+  .locale-id {
+    font-weight: bolder;
+    width: 150px;
+  }
 .not-translated {
   color: rgba(255, 0, 0, 0.65);
 }
