@@ -127,12 +127,10 @@
           </td>
 
           <td class="translationProgress">
-            <b-progress :max="getMaximumTranslations">
-              <b-progress-bar
-                :value="val.count"
-                :label="val.count && val.count.toFixed(0)"
-              >
-              </b-progress-bar>
+            <b-progress class="mt-2" :max="getMaximumTranslations" show-value>
+              <b-progress-bar :value="val.count" variant="success" />
+              <b-progress-bar :value="getMaximumTranslations - val.count - imporantLoc.filter(l => !val.translated.includes(l)).length" variant="warning" />
+              <b-progress-bar :value="imporantLoc.filter(l => !val.translated.includes(l)).length" variant="danger" />
             </b-progress>
           </td>
 
@@ -185,7 +183,7 @@
       v-model="modalChecksConfig"
       :title="'User configuration'"
       size="lg"
-      @ok="saveChecksConfig"
+      @ok="saveUserConfig"
       ok-only
       no-fade
     >
@@ -577,6 +575,14 @@ export default {
       }
       return matches || []
     },
+    imporantLoc() {
+      return _.reduce(this.importantLocales, (acc, val, key) => {
+        if (val) {
+          acc.push(key)
+        }
+        return acc
+      }, [])
+    },
   },
   methods: {
     handleChangeSelect() {
@@ -815,10 +821,14 @@ export default {
       }
       return Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
     },
-    saveChecksConfig() {
+    saveUserConfig() {
       localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
+      localStorage.setItem("importantLocales", JSON.stringify(this.importantLocales))
     },
-    loadUserLocalesConfig() { // TODO localstorage
+    loadUserLocalesConfig() {
+      if (localStorage.getItem("importantLocales")) {
+        return JSON.parse(localStorage.getItem("importantLocales"))
+      }
       return this.locales.reduce((acc, loc) => {
         acc[loc] = defaults.IMPORTANT_LOCALES.includes(loc)
         return acc
