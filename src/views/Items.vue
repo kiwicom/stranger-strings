@@ -1159,6 +1159,7 @@ td.locale {
   }
   .unimportant {
     opacity: 0.6;
+    display: contents;
   }
   .progress-chart {
     width: 33%;
