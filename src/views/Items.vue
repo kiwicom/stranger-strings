@@ -128,8 +128,8 @@
 
           <td class="translationProgress">
             <b-progress class="mt-2" :max="getMaximumTranslations" show-value>
-              <b-progress-bar :value="val.count" variant="success" />
-              <b-progress-bar :value="getMaximumTranslations - val.count - imporantLoc.filter(l => !val.translated.includes(l)).length" variant="warning" />
+              <b-progress-bar :value="val.translated.length" variant="success" />
+              <b-progress-bar :value="getMaximumTranslations - val.translated.length - imporantLoc.filter(l => !val.translated.includes(l)).length" variant="warning" />
               <b-progress-bar :value="imporantLoc.filter(l => !val.translated.includes(l)).length" variant="danger" />
             </b-progress>
           </td>
@@ -285,37 +285,57 @@
       @hidden="hideKeyDetail"
     >
       <div class="keyOverview" v-if="items[activeKey]">
-        <strong>Translations:</strong> {{ getTranslationsCount() }} / {{ getMaximumTranslations }}<br/>
-        <div v-for="inconsistency in getItemInconsistencies(items[activeKey])" :key="inconsistency" class="error">
-          <div v-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_placeholders'">
-            <div class="inline-error"><PlaceholderIcon :size="30"></PlaceholderIcon></div> - missing placeholders
+        <div class="errors-overview" v-if="getItemInconsistencies(items[activeKey]).length > 0">
+          <strong>Errors:</strong><br/>
+          <div v-for="inconsistency in getItemInconsistencies(items[activeKey])" :key="inconsistency" class="error">
+            <div v-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_placeholders'">
+              <div class="inline-error"><PlaceholderIcon :size="30"></PlaceholderIcon></div> - missing placeholders
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_noEnglish'">
+              <div class="inline-error"><NoEnglishIcon :size="30"></NoEnglishIcon></div> - missing english localisation
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_length'">
+              <div  class="inline-warning"><LengthIcon :size="30"></LengthIcon></div> - big differences in length
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_firstCharType'">
+              <div class="inline-warning"><FirstIcon :size="30"></FirstIcon></div> - inconsistent first characters
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_lastCharType'">
+              <div class="inline-warning"><LastIcon :size="30"></LastIcon></div> - inconsistent last characters
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_dynamic'">
+              <div class="inline-error-dynamic"><DynamicIcon :size="30"></DynamicIcon></div> - contains dynamic values
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_writeGood'">
+              <div class="inline-warning"><WriteGoodIcon :size="30"></WriteGoodIcon></div> - write-good suggestions (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_typos'">
+              <div class="inline-error"><TyposIcon :size="30"></TyposIcon></div> - typos (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_tags'">
+              <div class="inline-warning"><TagIcon :size="30"></TagIcon></div> - blacklisted HTML tags
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency)">
+              <div class="inline-warning"><WarningIcon :size="30"></WarningIcon></div> - {{ userifyInconsistency(inconsistency) }}
+            </div>
           </div>
-          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_noEnglish'">
-            <div class="inline-error"><NoEnglishIcon :size="30"></NoEnglishIcon></div> - missing english localisation
+        </div>
+        <div class="progress-chart">
+          <LocalizationProgressChart
+            :translated="items[activeKey].translated.length"
+            :missingImportant="imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
+            :missingNormal="getMaximumTranslations - items[activeKey].translated.length - imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
+          ></LocalizationProgressChart>
+        </div>
+        <div class="progress-legend">
+          <div v-if="imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length > 0">
+            <strong class="missing-important">Missing important locales: </strong><strong>{{ imporantLoc.filter(l => !items[activeKey].translated.includes(l)).join(", ") }}</strong>
           </div>
-          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_length'">
-            <div  class="inline-warning"><LengthIcon :size="30"></LengthIcon></div> - big differences in length
+          <div v-if="locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).length > 0">
+            <strong class="missing-normal">Missing normal locales: </strong>{{ locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).join(", ") }}
           </div>
-          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_firstCharType'">
-            <div class="inline-warning"><FirstIcon :size="30"></FirstIcon></div> - inconsistent first characters
-          </div>
-          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_lastCharType'">
-            <div class="inline-warning"><LastIcon :size="30"></LastIcon></div> - inconsistent last characters
-          </div>
-          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_dynamic'">
-            <div class="inline-error-dynamic"><DynamicIcon :size="30"></DynamicIcon></div> - contains dynamic values
-          </div>
-          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_writeGood'">
-            <div class="inline-warning"><WriteGoodIcon :size="30"></WriteGoodIcon></div> - write-good suggestions (in locales: {{ items[activeKey][inconsistency].join(", ") }})
-          </div>
-          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_typos'">
-            <div class="inline-error"><TyposIcon :size="30"></TyposIcon></div> - typos (in locales: {{ items[activeKey][inconsistency].join(", ") }})
-          </div>
-          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_tags'">
-            <div class="inline-warning"><TagIcon :size="30"></TagIcon></div> - blacklisted HTML tags
-          </div>
-          <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency)">
-            <div class="inline-warning"><WarningIcon :size="30"></WarningIcon></div> - {{ userifyInconsistency(inconsistency) }}
+          <div v-if="getMaximumTranslations > items[activeKey].translated.length">
+            <strong class="translated">Translated: </strong><div class="unimportant">{{ items[activeKey].translated.join(", ") }}</div>
           </div>
         </div>
       </div>
@@ -437,6 +457,8 @@ import maxExpansionRatio from "../../common/maxExpansionRatio"
 import * as defaults from "../../common/config"
 import ADMIN from "../consts/admin"
 
+import LocalizationProgressChart from "../components/LocalizationProgressChart"
+
 export default {
   props: {
     user: { type: Object, required: true },
@@ -453,6 +475,7 @@ export default {
     FirstIcon,
     LastIcon,
     TagIcon,
+    LocalizationProgressChart,
   },
   data() {
     return {
@@ -753,12 +776,6 @@ export default {
       }
       return this.showTagsChecked ? content : this.stripHtml(content)
     },
-    getTranslationsCount() {
-      if (!this.activeKey || !this.activeTranslations) {
-        return 0
-      }
-      return Object.keys(this.activeTranslations).length
-    },
     hideKeyDetail() {
       this.activeKey = null
       this.$router.replace({ name: "items" })
@@ -1009,6 +1026,8 @@ td.locale {
   font-size: 14px;
   margin-bottom: 15px;
   margin-top: 15px;
+  width: 100%;
+  display: flex;
 }
 .translationsForm {
   margin-bottom: 16px;
@@ -1128,5 +1147,29 @@ td.locale {
     float: left;
     width: 200px;
     font-weight: bolder;
+  }
+  .missing-important {
+    color: #DC3545;
+  }
+  .missing-normal {
+    color: #FFC107;
+  }
+  .translated {
+    color: #28A745;
+  }
+  .unimportant {
+    opacity: 0.6;
+  }
+  .progress-chart {
+    width: 33%;
+  }
+  .progress-legend {
+    font-size: 14px;
+    display: inline-block;
+    width: 33%;
+    float: right;
+  }
+  .errors-overview {
+    width: 33%;
   }
 </style>
