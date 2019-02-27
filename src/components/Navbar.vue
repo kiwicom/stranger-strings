@@ -3,11 +3,12 @@
     <b-navbar-brand href="#" v-b-popover.hover.bottom="lastUpdate.updated && 'Last update: ' + lastUpdate.updated.replace(/-/g,'/')">
       Stranger Strings
     </b-navbar-brand>
-
     <b-navbar-nav is-nav>
         <b-link to="/items" style="color: #CCE2FC; margin-right: 15px; margin-left: 15px;" active-class="activeView">Items</b-link>
         <b-link to="/collections" style="color: #CCE2FC;" active-class="activeView">Collections</b-link>
     </b-navbar-nav>
+
+    <div class="updating" v-if="updateInProgress.info">Update in progress ({{ updateInProgress.info.state }}...)</div>
 
     <!-- Right aligned nav items -->
     <b-navbar-nav is-nav class="ml-auto">
@@ -34,6 +35,10 @@ export default {
   firebase: {
     lastUpdate: {
       source: FbDb.ref("lastUpdate"),
+      asObject: true,
+    },
+    updateInProgress: {
+      source: FbDb.ref("updateInProgress"),
       asObject: true,
     },
   },
@@ -66,5 +71,18 @@ export default {
   }
   .activeView {
     color: white !important;
+  }
+
+  .updating {
+    right: 0;
+    left: 0;
+    margin-left: auto;
+    margin-right: auto;
+    position: absolute;
+    margin-top: 18px;
+    color: white;
+    text-align: center;
+    font-weight: lighter;
+    width: max-content;
   }
 </style>
