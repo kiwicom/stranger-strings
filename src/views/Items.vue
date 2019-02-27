@@ -147,7 +147,7 @@
             <WarningIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
           </td>
 
-          <td class="locale">
+          <td v-bind:class="{ 'locale-hard-wrap': hardWrap, 'locale': !hardWrap }">
             {{ getTranslation(val, "en-GB") || '» not translated «' }}
           </td>
         </tr>
@@ -202,10 +202,19 @@
         <b-form-group v-for="loc in locales" label-cols="4" label-cols-lg="2">
           <b-form-radio-group v-model="importantLocales[loc]">
             <div class="loc-label">{{ loc }}</div>
-            <b-form-radio :value="true">Important</b-form-radio>
-            <b-form-radio :value="false">Normal</b-form-radio>
+            <b-form-radio :value="true">Primary</b-form-radio>
+            <b-form-radio :value="false">Secondary</b-form-radio>
           </b-form-radio-group>
         </b-form-group>
+      </div>
+      <div class="config-group">
+        <h4>View</h4>
+        <div class="setDefault"><b-button variant="link" @click="setDefaultViewConfig">Set default config</b-button></div>
+        <b-form-checkbox-group v-model="hardWrap" stacked style="width: fit-content">
+          <b-form-checkbox :value="!hardWrap">
+            <strong>hard wrap</strong> (show english preview in main table with line breaks)
+          </b-form-checkbox>
+        </b-form-checkbox-group>
       </div>
     </b-modal>
 
@@ -323,16 +332,16 @@
         <div class="progress-chart">
           <LocalizationProgressChart
             :translated="items[activeKey].translated.length"
-            :missingImportant="imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
-            :missingNormal="getMaximumTranslations - items[activeKey].translated.length - imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
+            :missingPrimary="imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
+            :missingSecondary="getMaximumTranslations - items[activeKey].translated.length - imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
           ></LocalizationProgressChart>
         </div>
         <div class="progress-legend">
           <div v-if="imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length > 0">
-            <strong class="missing-important">Missing important locales: </strong><strong>{{ imporantLoc.filter(l => !items[activeKey].translated.includes(l)).join(", ") }}</strong>
+            <strong class="missing-important">Missing primary locales: </strong><strong>{{ imporantLoc.filter(l => !items[activeKey].translated.includes(l)).join(", ") }}</strong>
           </div>
           <div v-if="locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).length > 0">
-            <strong class="missing-normal">Missing normal locales: </strong>{{ locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).join(", ") }}
+            <strong class="missing-normal">Missing secondary locales: </strong>{{ locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).join(", ") }}
           </div>
           <div v-if="getMaximumTranslations > items[activeKey].translated.length">
             <strong class="translated">Translated: </strong><div class="unimportant">{{ items[activeKey].translated.join(", ") }}</div>
@@ -355,9 +364,8 @@
       <table v-if="items[activeKey]" class="table table-sm b-table table-striped detailTable">
         <thead>
           <th>Locale</th>
-          <th>First</th>
-          <th>Last</th>
           <th>Translation</th>
+          <th>Errors</th>
         </thead>
 
         <tbody>
@@ -365,15 +373,11 @@
             <td class="locale-id" scope="row">
               {{ locale }}
             </td>
-            <td class="firstTd">
-              {{ activeTranslations[locale]._firstCharType }}
-            </td>
-            <td class="lastTd">
-              {{ activeTranslations[locale]._lastCharType }}
-            </td>
             <td class="translation">
               <div v-if="!showTagsChecked" style="display: inline-block;" v-html="lintContent(activeTranslations[locale])"></div>
               <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>
+            </td>
+            <td class="errors-col">
               <div
                 v-if="activeTranslations[locale]._writeGood && allowedChecks.includes('_inconsistencies_writeGood')"
                 class="inline-warning"
@@ -411,8 +415,24 @@
                 class="inline-error-dynamic"
                 v-b-popover.hover="activeTranslations[locale]._dynamic.join('\n')"
                 title="Dynamic values"
-                >
+              >
                 <DynamicIcon fill-color="#800080"></DynamicIcon>
+              </div>
+              <div
+                v-if="allowedChecks.includes('_inconsistencies_firstCharType') && activeTranslations[locale]._firstCharType !== getExpectedFirstCharType(activeTranslations)"
+                class="inline-warning"
+                v-b-popover.hover="'First character is ' + activeTranslations[locale]._firstCharType + ' but expected ' + getExpectedFirstCharType(activeTranslations)"
+                title="First character inconsistency"
+              >
+                <FirstIcon></FirstIcon>
+              </div>
+              <div
+                v-if="allowedChecks.includes('_inconsistencies_lastCharType') && activeTranslations[locale]._lastCharType !== getExpectedLastCharType(activeTranslations)"
+                class="inline-warning"
+                v-b-popover.hover="'Last character is ' + activeTranslations[locale]._lastCharType + ' but expected ' + getExpectedLastCharType(activeTranslations)"
+                title="Last character inconsistency"
+              >
+                <LastIcon></LastIcon>
               </div>
             </td>
           </tr>
@@ -420,8 +440,7 @@
             <td class="locale-id not-translated" scope="row">
               {{ locale }}
             </td>
-            <td colspan="2"></td>
-            <td colspan="1" class="not-translated">Not translated</td>
+            <td colspan="2" class="not-translated">Not translated</td>
           </tr>
         </tbody>
       </table>
@@ -496,8 +515,11 @@ export default {
       // Checks configuration
       allowedChecks: [],
 
-      // Locacel configuration
+      // Locales configuration
       importantLocales: {},
+
+      // View configuration
+      hardWrap: false,
 
       // Active
       activeKey: this.$route.params.all ? this.$route.params.all : null,
@@ -561,6 +583,7 @@ export default {
   created() {
     NProgress.start()
     this.itemsLoaded = false
+    this.hardWrap = localStorage.getItem("hardWrap") ? JSON.parse(localStorage.getItem("hardWrap")) : false
     this.items = this.sortKeys(this.allItems) // sort always
     if (this.searchQuery || this.errorsFilter !== "all") {
       this.search()
@@ -841,6 +864,7 @@ export default {
     saveUserConfig() {
       localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
       localStorage.setItem("importantLocales", JSON.stringify(this.importantLocales))
+      localStorage.setItem("hardWrap", JSON.stringify(this.hardWrap))
     },
     loadUserLocalesConfig() {
       if (localStorage.getItem("importantLocales")) {
@@ -853,13 +877,15 @@ export default {
     },
     setDefaultChecksConfig() {
       this.allowedChecks = Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
-      localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
     },
     setDefaultLocalesConfig() {
       this.importantLocales = this.locales.reduce((acc, loc) => {
         acc[loc] = defaults.IMPORTANT_LOCALES.includes(loc)
         return acc
       }, {})
+    },
+    setDefaultViewConfig() {
+      this.hardWrap = defaults.DEFAULT_VIEW.hardWrap
     },
     hasInconsistentLength(lang, translations) {
       if (translations[lang] && translations["en-GB"] && translations["en-GB"].content.length > 0) {
@@ -902,6 +928,12 @@ export default {
       } else {
         document.getElementsByClassName("ss-name").item(0).setAttribute("style", "visibility: hidden; opacity: 0;")
       }
+    },
+    getExpectedFirstCharType(activeTranslations) {
+      return _.uniq(Object.values(activeTranslations).map(t => t._firstCharType))[0]
+    },
+    getExpectedLastCharType(activeTranslations) {
+      return _.uniq(Object.values(activeTranslations).map(t => t._lastCharType))[0]
     },
   },
   destroyed() {
@@ -986,6 +1018,13 @@ td.locale {
   overflow: -moz-scrollbars-none;
   padding-right: 10px;
 }
+  td.locale-hard-wrap {
+    max-height: max-content;
+    width: 38vw;
+    max-width: 38vw;
+    overflow: hidden;
+    padding-right: 10px;
+  }
   td.locale::-webkit-scrollbar {
     display: none;
   }
@@ -1001,6 +1040,9 @@ td.locale {
   td.translation {
     max-width: 500px;
     width: 500px;
+  }
+  td.errors-col {
+    width: 9vw;
   }
 }
   .locale-id {
@@ -1105,8 +1147,10 @@ td.locale {
     visibility: hidden;
     color: darkgrey;
     font-family: 'Megrim', cursive;
+    font-weight: 900;
     font-size: 30px;
-    padding: 10px;
+    letter-spacing: 1px;
+    padding: 14px;
     opacity: 0;
     transition: visibility 0.5s, opacity 0.5s linear;
   }
@@ -1158,7 +1202,7 @@ td.locale {
     color: #28A745;
   }
   .unimportant {
-    opacity: 0.6;
+    color: gray;
     display: contents;
   }
   .progress-chart {

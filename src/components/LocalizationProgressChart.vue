@@ -1,6 +1,6 @@
 <template>
   <div>
-    <VueApexCharts width="350" type="donut" :options="options" :series="[missingImportant, missingNormal, translated]"></VueApexCharts>
+    <VueApexCharts width="300" type="donut" :options="options" :series="[missingPrimary, missingSecondary, translated]"></VueApexCharts>
   </div>
 </template>
 
@@ -14,8 +14,8 @@ export default {
   },
   props: {
     translated: { type: Number, required: true },
-    missingImportant: { type: Number, required: true },
-    missingNormal: { type: Number, required: true },
+    missingPrimary: { type: Number, required: true },
+    missingSecondary: { type: Number, required: true },
   },
   data() {
     return {
@@ -73,7 +73,7 @@ export default {
             colors: undefined,
           },
         },
-        labels: ["Missing important", "Missing normal", "Translated"],
+        labels: ["Missing primary", "Missing secondary", "Translated"],
         legend: {
           show: false,
           markers: {

@@ -1,14 +1,7 @@
 <template>
   <b-navbar type="dark" variant="info" class="navbar-expand-md">
-    <b-navbar-brand href="#">
+    <b-navbar-brand href="#" v-b-popover.hover.bottom="lastUpdate.updated && 'Last update: ' + lastUpdate.updated.replace(/-/g,'/')">
       Stranger Strings
-      <a
-        class="last-update"
-        v-if="lastUpdate.updated"
-        target="_blank"
-      >
-        Last update: <strong>{{ lastUpdate.updated.replace(/-/g,"/") }}</strong>
-      </a>
     </b-navbar-brand>
 
     <b-navbar-nav is-nav>
@@ -47,19 +40,18 @@ export default {
 }
 </script>
 
-<style>
-  /* Find out why scoped attr on <style> does not work */
+<style scoped>
+  @import url('https://fonts.googleapis.com/css?family=Megrim');
 
   .navbar-dark {
-    background: linear-gradient(to left, #28a5f5, #1e87f0);
+    background-color: #007bff !important;
   }
 
   .navbar-brand {
-    font-family: 'Roboto Condensed', sans-serif;
-    font-weight: 700;
-    font-style: italic;
-    position: relative;
-    text-transform: uppercase;
+    font-family: 'Megrim', cursive;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 2px;
   }
 
   .navbar-brand a.last-update {
