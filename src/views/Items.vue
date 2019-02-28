@@ -1,43 +1,19 @@
 <template>
   <div>
-    <!-- SUBHEADER -->
-    <b-navbar v-show="searchBarExpanded" class="subheader">
-      <b-row>
-        <b-button-toolbar>
-          <b-input-group size="md">
-            <b-input-group size="md" class="mx-1">
-              <input
-                type="search"
-                placeholder="Search keys and translations..."
-                class="textInput form-control"
-                v-model.lazy="searchQuery"
-                @change="search"
-                @keyup.enter="search"
-              >
-            </b-input-group>
-            <div class="alignCenter">
-              <b-form-checkbox :disabled="loading" @change="handleChangeSelect" v-model="strict">Strict</b-form-checkbox>
-            </div>
-            <b-form-select size="md" v-model="errorsFilter" @change="handleChangeSelect">
-              <optgroup label="Errors:">
-                <option value="all">Errors: All ({{ getErrorCount }})</option>
-                <option v-for="(count, error) in errors" :key="error" :value="error" v-if="allowedChecks && allowedChecks.includes(error)">
-                  {{ userifyInconsistency(error) }}: {{ count }}
-                </option>
-              </optgroup>
-            </b-form-select>
-          </b-input-group>
-        </b-button-toolbar>
-      </b-row>
-    </b-navbar>
-    <!-- </SUBHEADER -->
-
-    <!-- EXPAND BUTTON -->
-    <div class="expand-bar">
-      <div class="search-expand-button" @click="searchBarExpanded = !searchBarExpanded">
-        <octicon v-if="!searchBarExpanded" name="chevron-down"></octicon>
-        <octicon v-else name="chevron-up"></octicon>
-      </div>
+    <!-- SEARCH INPUT -->
+    <div class="search-input">
+      <b-input-group size="md">
+        <b-input-group size="md" class="mx-1">
+          <input
+            type="search"
+            placeholder="Search keys and translations..."
+            class="textInput form-control"
+            v-model.lazy="searchQuery"
+            @change="search"
+            @keyup.enter="search"
+          >
+        </b-input-group>
+      </b-input-group>
     </div>
 
     <!-- SETTINGS BUTTON -->
@@ -499,12 +475,10 @@ export default {
       items: {}, // filtered items with search query
       itemsLoaded: false,
       locales: [],
-      searchBarExpanded: false,
 
 
       // Searching, sorting, filtering
       searchQuery: "",
-      strict: false,
       sort: ["key", "asc"], // key/count asc/desc
       errorsFilter: "all",
       errors: {},
@@ -523,7 +497,6 @@ export default {
       activeTranslations: null,
       escapeTranslationsChecked: false,
       showTagsChecked: false,
-      loading: false,
 
       // Custom dict expansion
       dictsExpansionData: {},
@@ -629,14 +602,6 @@ export default {
     },
   },
   methods: {
-    handleChangeSelect() {
-      this.loading = true
-      // need to wait for change of value
-      setTimeout(() => {
-        this.search()
-        this.loading = false
-      }, 50)
-    },
     sortKeys(translations) {
       NProgress.start()
       const res = helpers.sortTranslationKeys(translations, this.sort[0], this.sort[1])
@@ -753,18 +718,14 @@ export default {
           minMatchCharLength: 1,
           keys: ["en-GB", "key"],
         }
-        if (this.strict) {
-          this.items = helpers.strictSearch(this.items, this.searchQuery)
-        } else {
-          // need to map to array and then back to object for fuse to work
-          const fuse = new Fuse(Object.values(this.items), searchOptions)
-          const result = fuse.search(this.searchQuery)
-          const mappedResult = {}
-          result.forEach((e) => {
-            mappedResult[e.key.includes(".") ? e.key.split(".").join("-") : e.key] = e
-          })
-          this.items = mappedResult
-        }
+        // need to map to array and then back to object for fuse to work
+        const fuse = new Fuse(Object.values(this.items), searchOptions)
+        const result = fuse.search(this.searchQuery)
+        const mappedResult = {}
+        result.forEach((e) => {
+          mappedResult[e.key.includes(".") ? e.key.split(".").join("-") : e.key] = e
+        })
+        this.items = mappedResult
       }
       NProgress.done()
     },
@@ -1080,14 +1041,6 @@ td.locale {
 .translationsForm {
   margin-bottom: 16px;
 }
-.alignCenter {
-  align-self: center;
-  margin-left: 10px;
-}
-.transparentClickableIcon {
-  opacity: .5;
-  cursor: pointer;
-}
 .wgLangHeader {
   font-size: larger;
   font-weight: bold;
@@ -1174,22 +1127,6 @@ td.locale {
     margin-right: 3px;
     position: sticky;
   }
-  .subheader {
-    border-bottom: solid 1px #ccc;
-  }
-  .expand-bar {
-    vertical-align: center;
-  }
-  .search-expand-button {
-    text-align: center;
-    margin-bottom: -20px;
-    z-index: 2;
-    cursor: pointer;
-    position: relative;
-    width: 30px;
-    right: 50%;
-    left: 50%;
-  }
   .config-group {
     margin-top: 20px;
   }
@@ -1222,5 +1159,11 @@ td.locale {
   }
   .errors-overview {
     width: 33%;
+  }
+  .search-input {
+    position: absolute;
+    left: 475px;
+    width: 300px;
+    top: 15px;
   }
 </style>
