@@ -585,6 +585,7 @@ export default {
     this.itemsLoaded = false
     this.hardWrap = localStorage.getItem("hardWrap") ? JSON.parse(localStorage.getItem("hardWrap")) : false
     this.items = this.sortKeys(this.allItems) // sort always
+    NProgress.start()
     if (this.searchQuery || this.errorsFilter !== "all") {
       this.search()
     }
