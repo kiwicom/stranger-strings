@@ -162,7 +162,7 @@
     >
       <div class="config-group">
         <h4>Checks</h4>
-        <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Set default config</b-button></div>
+        <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Reset to default</b-button></div>
         <b-form-checkbox-group v-model="allowedChecks" stacked style="width: fit-content">
           <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">
             <strong>{{ userifyInconsistency(error) }}</strong> ({{ getDescription(userifyInconsistency(error)) }})
@@ -171,7 +171,7 @@
       </div>
       <div class="config-group">
         <h4>Locales</h4>
-        <div class="setDefault"><b-button variant="link" @click="setDefaultLocalesConfig">Set default config</b-button></div>
+        <div class="setDefault"><b-button variant="link" @click="setDefaultLocalesConfig">Reset to default</b-button></div>
         <b-form-group v-for="loc in locales" label-cols="4" label-cols-lg="2">
           <b-form-radio-group v-model="importantLocales[loc]">
             <div class="loc-label">{{ loc }}</div>
@@ -182,7 +182,7 @@
       </div>
       <div class="config-group">
         <h4>View</h4>
-        <div class="setDefault"><b-button variant="link" @click="setDefaultViewConfig">Set default config</b-button></div>
+        <div class="setDefault"><b-button variant="link" @click="setDefaultViewConfig">Reset to default</b-button></div>
         <b-form-checkbox-group v-model="hardWrap" stacked style="width: fit-content">
           <b-form-checkbox :value="!hardWrap">
             <strong>hard wrap</strong> (show english preview in main table with line breaks)
@@ -1047,7 +1047,12 @@ td.locale {
   margin-top: 10px;
 }
 .setDefault {
-  float: right;
+  display: inline-block;
+}
+h4 {
+  vertical-align: bottom;
+  width: fit-content;
+  display: inline-block;
 }
 .inline-warning {
   color: orange;
