@@ -79,8 +79,10 @@ export default {
     margin-left: auto;
     margin-right: auto;
     position: absolute;
-    margin-top: 18px;
-    color: white;
+    margin-top: 45px;
+    z-index: 4;
+    color: grey;
+    font-size: 12px;
     text-align: center;
     font-weight: lighter;
     width: max-content;
