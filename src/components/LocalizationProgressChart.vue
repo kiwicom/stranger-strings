@@ -1,6 +1,6 @@
 <template>
   <div>
-    <VueApexCharts width="300" type="donut" :options="options" :series="[missingPrimary, missingSecondary, translated]"></VueApexCharts>
+    <VueApexCharts width="270" type="donut" :options="options" :series="[missingPrimary, missingSecondary, translated]"></VueApexCharts>
   </div>
 </template>
 
@@ -31,14 +31,14 @@ export default {
                 show: true,
                 name: {
                   show: true,
-                  fontSize: "17px",
+                  fontSize: "14px",
                   fontFamily: undefined,
                   color: undefined,
                   offsetY: -10,
                 },
                 value: {
                   show: true,
-                  fontSize: "20px",
+                  fontSize: "24px",
                   fontFamily: undefined,
                   color: undefined,
                   offsetY: 10,

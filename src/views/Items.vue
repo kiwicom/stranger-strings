@@ -103,7 +103,7 @@
             Progress
           </th>
           <th class="th-errors" v-for="(count, error) in errors" v-if="allowedChecks && allowedChecks.includes(error)">
-            <div><span @click="changeSort(error === '_inconsistencies_noEnglish' ? 'en-GB' : error)">{{ userifyInconsistency(error) }}</span></div>
+            <div><span @click="toggleErrorsFilter(error)">{{ userifyInconsistency(error) }}</span></div>
           </th>
           <th
             @click="changeSort('en-GB')"
@@ -121,9 +121,6 @@
             <b-link @click="setActive(key)">
               {{ val.key }}
             </b-link>
-            <a @click="setSearch(val.key)">
-              <octicon class="transparentClickableIcon" name="search"/>
-            </a>
           </td>
 
           <td class="translationProgress">
@@ -437,10 +434,10 @@
             </td>
           </tr>
           <tr v-else>
-            <td class="locale-id not-translated" scope="row">
+            <td :class="imporantLoc.includes(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'" scope="row">
               {{ locale }}
             </td>
-            <td colspan="2" class="not-translated">Not translated</td>
+            <td colspan="2" :class="imporantLoc.includes(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">Not translated</td>
           </tr>
         </tbody>
       </table>
@@ -662,10 +659,6 @@ export default {
       })
       return errs
     },
-    setSearch(key) {
-      this.searchQuery = key
-      this.search()
-    },
     setActive(key) {
       this.modalKeyDetail = true
       this.activeKey = key
@@ -743,6 +736,7 @@ export default {
       })
     },
     search() { // event param if needed
+      NProgress.start()
       this.items = _.reduce(this.allItems, (acc, val, key) => {
         if (this.errorsFilter === "all" || this.getItemInconsistencies(val).includes(this.errorsFilter)) {
           acc[key] = val
@@ -772,6 +766,7 @@ export default {
           this.items = mappedResult
         }
       }
+      NProgress.done()
     },
     exportKeys() {
       saveJSON(Object.keys(this.items).map(k => this.items[k].key), "export.json")
@@ -936,6 +931,10 @@ export default {
     getExpectedLastCharType(activeTranslations) {
       return _.uniq(Object.values(activeTranslations).map(t => t._lastCharType))[0]
     },
+    toggleErrorsFilter(error) {
+      this.errorsFilter = this.errorsFilter === error ? "all" : error
+      this.search()
+    },
   },
   destroyed() {
     window.removeEventListener("scroll", this.toggleSSNameVisibility)
@@ -1004,6 +1003,7 @@ td.key {
 }
 td.translationProgress {
   width: 50px;
+  border-right: 1px solid #ccc;
 }
 .locale {
   padding-left: 30px;
@@ -1012,6 +1012,7 @@ td.locale {
   max-height: 50px;
   width: 38vw;
   max-width: 38vw;
+  min-width: 38vw;
   overflow: hidden;
   overflow-x: scroll;
   white-space: nowrap;
@@ -1023,6 +1024,7 @@ td.locale {
     max-height: max-content;
     width: 38vw;
     max-width: 38vw;
+    min-width: 38vw;
     overflow: hidden;
     padding-right: 10px;
   }
@@ -1050,8 +1052,11 @@ td.locale {
     font-weight: bolder;
     width: 150px;
   }
-.not-translated {
+.not-translated-primary {
   color: rgba(255, 0, 0, 0.65);
+}
+.not-translated-secondary {
+  color: #FFC107;
 }
 .error {
   display: list-item;
