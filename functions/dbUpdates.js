@@ -260,6 +260,7 @@ async function githubToFirebase() {
       acc[_key].key = key
       acc[_key]["en-GB"] = val["en-GB"] || null
       acc[_key].count = Object.keys(val).length
+      acc[_key].translated = Object.keys(val)
 
       return acc
     }, {})
