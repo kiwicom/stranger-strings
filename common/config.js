@@ -66,6 +66,10 @@ const DEFAULT_WRITE_GOOD_SETTINGS = {
   },
 }
 
+const DEFAULT_VIEW = {
+  hardWrap: false,
+}
+
 const DEFAULT_PLACEHOLDER_REGEX = "({{\\w+}})"
 
 const baseUrl = `https://us-central1-${process.env.VUE_APP_FIREBASE_PROJECT_ID}.cloudfunctions.net`
@@ -75,6 +79,7 @@ module.exports = {
   DEFAULT_SPELLCHECKING_DICT_SUPPORT,
   DEFAULT_WRITE_GOOD_SETTINGS,
   DEFAULT_DISABLED_CHECKS,
+  DEFAULT_VIEW,
   DEFAULT_PLACEHOLDER_REGEX,
   UPDATE_FUNCTION_ENDPOINT: `${baseUrl}/update`,
   INCONSISTENCIES_UPDATE_FUNCTION_ENDPOINT: `${baseUrl}/inconsistenciesUpdate`,

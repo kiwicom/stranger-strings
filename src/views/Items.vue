@@ -1,46 +1,32 @@
 <template>
   <div>
-    <!-- SUBHEADER -->
-    <b-navbar>
-      <b-row>
-        <b-button-toolbar>
-          <b-input-group size="md">
-            <b-input-group size="md" class="mx-1">
-              <input
-                type="search"
-                placeholder="Search keys and translations..."
-                class="textInput form-control"
-                v-model.lazy="searchQuery"
-                @change="search"
-                @keyup.enter="search"
-              >
-            </b-input-group>
-            <div class="alignCenter">
-              <b-form-checkbox :disabled="loading" @change="handleChangeSelect" v-model="strict">Strict</b-form-checkbox>
-            </div>
-            <b-form-select size="md" v-model="errorsFilter" @change="handleChangeSelect">
-              <optgroup label="Errors:">
-                <option value="all">Errors: All ({{ getErrorCount }})</option>
-                <option v-for="(count, error) in errors" :key="error" :value="error" v-if="allowedChecks && allowedChecks.includes(error)">
-                  {{ userifyInconsistency(error) }}: {{ count }}
-                </option>
-              </optgroup>
-            </b-form-select>
-          </b-input-group>
-          <b-button-group>
-            <b-button @click="exportKeys">Export</b-button>
-          </b-button-group>
-        </b-button-toolbar>
-      </b-row>
-      <b-button-group right>
-        <b-dropdown right variant="info" size="md" no-caret>
+    <!-- SEARCH INPUT -->
+    <div class="search-input">
+      <b-input-group size="md">
+        <b-input-group size="md" class="mx-1">
+          <input
+            type="search"
+            placeholder="Search keys and translations..."
+            class="textInput form-control"
+            v-model.lazy="searchQuery"
+            @change="search"
+            @keyup.enter="search"
+          >
+        </b-input-group>
+      </b-input-group>
+    </div>
+
+    <!-- SETTINGS BUTTON -->
+    <div class="settings">
+      <b-button-group>
+        <b-dropdown down right variant="link" size="lg" no-caret>
           <template slot="button-content">
             <octicon name="gear"></octicon>
           </template>
           <b-dropdown-item-button
-            @click="showChecksConfig"
+            @click="showUserConfig"
           >
-            <octicon name="settings"></octicon>&nbsp; checks config
+            <octicon name="settings"></octicon>&nbsp; user config
           </b-dropdown-item-button>
           <b-dropdown-item-button
             @click="showDictsExpansion"
@@ -58,27 +44,33 @@
             <octicon name="checklist"></octicon>&nbsp;write good settings
           </b-dropdown-item-button>
           <b-dropdown-item-button
+            @click="exportKeys"
+          >
+            <octicon name="desktop-download"></octicon>&nbsp; export
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
             @click="triggerUpdate"
           >
             <octicon name="sync"></octicon>&nbsp; update
           </b-dropdown-item-button>
         </b-dropdown>
       </b-button-group>
-    </b-navbar>
-    <!-- </SUBHEADER -->
+    </div>
 
     <!-- KEYS - MAIN TABLE -->
-    <table class="table table-sm b-table table-striped table-hover table-keys">
+    <div class="sticky-header-hack">
+      <div class="ss-name">Stranger Strings</div>
+    </div>
+    <table class="table table-sm b-table table-striped table-hover table-keys table-fixed">
       <thead>
         <tr>
           <th
             @click="changeSort('key')"
-            class="sorting"
+            class="sorting table-fixed"
             :class="{ 'sorting_asc' : sort[0] === 'key' && sort[1] === 'asc', 'sorting_desc' : sort[0] === 'key' && sort[1] === 'desc' }"
           >
             Key (showing {{ Object.keys(items).length }} / {{ Object.keys(allItems).length }})
           </th>
-          <th>Suspected errors</th>
           <th
             @click="changeSort('count')"
             class="sorting"
@@ -86,9 +78,12 @@
           >
             Progress
           </th>
+          <th class="th-errors" v-for="(count, error) in errors" v-if="allowedChecks && allowedChecks.includes(error)">
+            <div><span @click="toggleErrorsFilter(error)">{{ userifyInconsistency(error) }}</span></div>
+          </th>
           <th
             @click="changeSort('en-GB')"
-            class="sorting"
+            class="sorting locale"
             :class="{ 'sorting_asc' : sort[0] === 'en-GB' && sort[1] === 'en-GB', 'sorting_desc' : sort[0] === 'en-GB' && sort[1] === 'desc' }"
           >
             English
@@ -102,46 +97,30 @@
             <b-link @click="setActive(key)">
               {{ val.key }}
             </b-link>
-            <a @click="setSearch(val.key)">
-              <octicon class="transparentClickableIcon" name="search"/>
-            </a>
-          </td>
-
-          <td class="errors">
-            <div v-for="inconsistency in getItemInconsistencies(val)" :key="inconsistency" class="error">
-              <!-- LANGUAGE SPECIFIC ERRORS -->
-              <!-- eslint-disable-next-line vue/valid-v-for -->
-              <b-badge
-                v-if="Array.isArray(val[inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
-                v-for="lang in val[inconsistency]"
-                size="sm"
-                style="margin-right: 2px"
-                :variant="getInconsistencyCategory(inconsistency)"
-              >
-                {{ userifyInconsistency(inconsistency) }} ({{ lang }})
-              </b-badge>
-              <!-- KEY SPECIFIC ERRORS -->
-              <b-badge
-                v-if="!Array.isArray(val[inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
-                size="sm"
-                :variant="getInconsistencyCategory(inconsistency)"
-              >
-                {{ userifyInconsistency(inconsistency) }}
-              </b-badge>
-            </div>
           </td>
 
           <td class="translationProgress">
-            <b-progress :max="getMaximumTranslations">
-              <b-progress-bar
-                :value="val.count"
-                :label="val.count && val.count.toFixed(0)"
-              >
-              </b-progress-bar>
+            <b-progress class="mt-2" :max="getMaximumTranslations" show-value>
+              <b-progress-bar :value="val.translated.length" variant="success" />
+              <b-progress-bar :value="getMaximumTranslations - val.translated.length - imporantLoc.filter(l => !val.translated.includes(l)).length" variant="warning" />
+              <b-progress-bar :value="imporantLoc.filter(l => !val.translated.includes(l)).length" variant="danger" />
             </b-progress>
           </td>
 
-          <td class="locale">
+          <td v-for="(c, e) in errors" v-if="allowedChecks && allowedChecks.includes(e)" class="indicators">
+            <PlaceholderIcon :size="30" v-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_placeholders'"></PlaceholderIcon>
+            <NoEnglishIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_noEnglish'"></NoEnglishIcon>
+            <LengthIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_length'"></LengthIcon>
+            <FirstIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_firstCharType'"></FirstIcon>
+            <LastIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_lastCharType'"></LastIcon>
+            <DynamicIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_dynamic'"></DynamicIcon>
+            <WriteGoodIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_writeGood'"></WriteGoodIcon>
+            <TyposIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_typos'"></TyposIcon>
+            <TagIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_tags'"></TagIcon>
+            <WarningIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
+          </td>
+
+          <td v-bind:class="{ 'locale-hard-wrap': hardWrap, 'locale': !hardWrap }">
             {{ getTranslation(val, "en-GB") || '» not translated «' }}
           </td>
         </tr>
@@ -171,22 +150,45 @@
       </div>
     </b-modal>
 
-    <!-- MODAL: CHECKS CONFIG -->
+    <!-- MODAL: USER CONFIG -->
     <b-modal
       id="writeGoodSettingsModal"
       v-model="modalChecksConfig"
-      :title="'Checks configuration'"
+      :title="'User configuration'"
       size="lg"
-      @ok="saveChecksConfig"
+      @ok="saveUserConfig"
       ok-only
       no-fade
     >
-      <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Set default config</b-button></div>
-      <b-form-checkbox-group v-model="allowedChecks" stacked style="width: fit-content">
-        <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">
-          <strong>{{ userifyInconsistency(error) }}</strong> ({{ getDescription(userifyInconsistency(error)) }})
-        </b-form-checkbox>
-      </b-form-checkbox-group>
+      <div class="config-group">
+        <h4>Checks</h4>
+        <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Reset to default</b-button></div>
+        <b-form-checkbox-group v-model="allowedChecks" stacked style="width: fit-content">
+          <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">
+            <strong>{{ userifyInconsistency(error) }}</strong> ({{ getDescription(userifyInconsistency(error)) }})
+          </b-form-checkbox>
+        </b-form-checkbox-group>
+      </div>
+      <div class="config-group">
+        <h4>Locales</h4>
+        <div class="setDefault"><b-button variant="link" @click="setDefaultLocalesConfig">Reset to default</b-button></div>
+        <b-form-group v-for="loc in locales" label-cols="4" label-cols-lg="2">
+          <b-form-radio-group v-model="importantLocales[loc]">
+            <div class="loc-label">{{ loc }}</div>
+            <b-form-radio :value="true">Primary</b-form-radio>
+            <b-form-radio :value="false">Secondary</b-form-radio>
+          </b-form-radio-group>
+        </b-form-group>
+      </div>
+      <div class="config-group">
+        <h4>View</h4>
+        <div class="setDefault"><b-button variant="link" @click="setDefaultViewConfig">Reset to default</b-button></div>
+        <b-form-checkbox-group v-model="hardWrap" stacked style="width: fit-content">
+          <b-form-checkbox :value="!hardWrap">
+            <strong>hard wrap</strong> (show english preview in main table with line breaks)
+          </b-form-checkbox>
+        </b-form-checkbox-group>
+      </div>
     </b-modal>
 
     <!-- MODAL: WRITE GOOD CONFIG -->
@@ -265,27 +267,58 @@
       @hidden="hideKeyDetail"
     >
       <div class="keyOverview" v-if="items[activeKey]">
-        <strong>Translations:</strong> {{ getTranslationsCount() }} / {{ getMaximumTranslations }}<br/>
-        <div v-for="inconsistency in getItemInconsistencies(items[activeKey])" :key="inconsistency" class="error">
-          <!-- LANGUAGE SPECIFIC ERRORS -->
-          <!-- eslint-disable-next-line vue/valid-v-for -->
-          <b-badge
-            v-if="Array.isArray(items[activeKey][inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
-            v-for="lang in items[activeKey][inconsistency]"
-            style="margin-right: 2px"
-            size="sm"
-            :variant="getInconsistencyCategory(inconsistency)"
-          >
-            {{ userifyInconsistency(inconsistency) }} ({{ lang }})
-          </b-badge>
-          <!-- KEY SPECIFIC ERRORS -->
-          <b-badge
-            v-if="!Array.isArray(items[activeKey][inconsistency]) && allowedChecks && allowedChecks.includes(inconsistency)"
-            size="sm"
-            :variant="getInconsistencyCategory(inconsistency)"
-          >
-            {{ userifyInconsistency(inconsistency) }}
-          </b-badge>
+        <div class="errors-overview" v-if="getItemInconsistencies(items[activeKey]).length > 0">
+          <strong>Errors:</strong><br/>
+          <div v-for="inconsistency in getItemInconsistencies(items[activeKey])" :key="inconsistency" class="error">
+            <div v-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_placeholders'">
+              <div class="inline-error"><PlaceholderIcon :size="30"></PlaceholderIcon></div> - missing placeholders
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_noEnglish'">
+              <div class="inline-error"><NoEnglishIcon :size="30"></NoEnglishIcon></div> - missing english localisation
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_length'">
+              <div  class="inline-warning"><LengthIcon :size="30"></LengthIcon></div> - big differences in length
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_firstCharType'">
+              <div class="inline-warning"><FirstIcon :size="30"></FirstIcon></div> - inconsistent first characters
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_lastCharType'">
+              <div class="inline-warning"><LastIcon :size="30"></LastIcon></div> - inconsistent last characters
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_dynamic'">
+              <div class="inline-error-dynamic"><DynamicIcon :size="30"></DynamicIcon></div> - contains dynamic values
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_writeGood'">
+              <div class="inline-warning"><WriteGoodIcon :size="30"></WriteGoodIcon></div> - write-good suggestions (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_typos'">
+              <div class="inline-error"><TyposIcon :size="30"></TyposIcon></div> - typos (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_tags'">
+              <div class="inline-warning"><TagIcon :size="30"></TagIcon></div> - blacklisted HTML tags
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency)">
+              <div class="inline-warning"><WarningIcon :size="30"></WarningIcon></div> - {{ userifyInconsistency(inconsistency) }}
+            </div>
+          </div>
+        </div>
+        <div class="progress-chart">
+          <LocalizationProgressChart
+            :translated="items[activeKey].translated.length"
+            :missingPrimary="imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
+            :missingSecondary="getMaximumTranslations - items[activeKey].translated.length - imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
+          ></LocalizationProgressChart>
+        </div>
+        <div class="progress-legend">
+          <div v-if="imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length > 0">
+            <strong class="missing-important">Missing primary locales: </strong><strong>{{ imporantLoc.filter(l => !items[activeKey].translated.includes(l)).join(", ") }}</strong>
+          </div>
+          <div v-if="locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).length > 0">
+            <strong class="missing-normal">Missing secondary locales: </strong>{{ locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).join(", ") }}
+          </div>
+          <div v-if="getMaximumTranslations > items[activeKey].translated.length">
+            <strong class="translated">Translated: </strong><div class="unimportant">{{ items[activeKey].translated.join(", ") }}</div>
+          </div>
         </div>
       </div>
 
@@ -304,32 +337,27 @@
       <table v-if="items[activeKey]" class="table table-sm b-table table-striped detailTable">
         <thead>
           <th>Locale</th>
-          <th>First</th>
-          <th>Last</th>
           <th>Translation</th>
+          <th>Errors</th>
         </thead>
 
         <tbody>
           <tr :key="locale" v-for="locale in locales" v-if="activeTranslations[locale]">
-            <td class="locale" scope="row">
+            <td class="locale-id" scope="row">
               {{ locale }}
             </td>
-            <td class="firstTd">
-              {{ activeTranslations[locale]._firstCharType }}
-            </td>
-            <td class="lastTd">
-              {{ activeTranslations[locale]._lastCharType }}
-            </td>
             <td class="translation">
-              <div v-if="!showTagsChecked" style="display: inline-block;" v-html="lintContent(activeTranslations[locale])"></div>
+              <div v-if="!showTagsChecked" style="display: inline-block;" v-html="highlightContent(activeTranslations[locale])"></div>
               <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>
+            </td>
+            <td class="errors-col">
               <div
                 v-if="activeTranslations[locale]._writeGood && allowedChecks.includes('_inconsistencies_writeGood')"
                 class="inline-warning"
                 v-b-popover.hover="getWriteGoodReasons(activeTranslations[locale]._writeGood)"
                 title="write good"
               >
-                <octicon name="pencil"></octicon>
+                <WriteGoodIcon></WriteGoodIcon>
               </div>
               <div
                 v-if="hasInconsistentLength(locale, activeTranslations) && allowedChecks.includes('_inconsistencies_length')"
@@ -337,7 +365,7 @@
                 v-b-popover.hover="'suspiciously long translation'"
                 title="length"
               >
-                <octicon name="stop"></octicon>
+                <LengthIcon></LengthIcon>
               </div>
               <div
                 v-if="getMissingPlaceholders(locale, activeTranslations).length && allowedChecks.includes('_inconsistencies_placeholders')"
@@ -345,7 +373,7 @@
                 v-b-popover.hover="getMissingPlaceholders(locale, activeTranslations).join('\n')"
                 title="Missing placeholders"
               >
-                <octicon name="mention"></octicon>
+                <PlaceholderIcon fill-color="#ef0000"></PlaceholderIcon>
               </div>
               <div
                 v-if="activeTranslations[locale]._typos && activeTranslations[locale]._typos !== 'unsupported language' && allowedChecks.includes('_inconsistencies_typos')"
@@ -353,24 +381,39 @@
                 v-b-popover.hover="activeTranslations[locale]._typos.join('\n')"
                 title="Typos"
               >
-                <octicon name="pencil"></octicon>
+                <TyposIcon fill-color="#ef0000"></TyposIcon>
               </div>
               <div
                 v-if="activeTranslations[locale]._dynamic && allowedChecks.includes('_inconsistencies_dynamic')"
                 class="inline-error-dynamic"
                 v-b-popover.hover="activeTranslations[locale]._dynamic.join('\n')"
                 title="Dynamic values"
-                >
-                <octicon name="clock"></octicon>
+              >
+                <DynamicIcon fill-color="#800080"></DynamicIcon>
+              </div>
+              <div
+                v-if="allowedChecks.includes('_inconsistencies_firstCharType') && activeTranslations[locale]._firstCharType !== getExpectedFirstCharType(activeTranslations)"
+                class="inline-warning"
+                v-b-popover.hover="'First character is ' + activeTranslations[locale]._firstCharType + ' but expected ' + getExpectedFirstCharType(activeTranslations)"
+                title="First character inconsistency"
+              >
+                <FirstIcon></FirstIcon>
+              </div>
+              <div
+                v-if="allowedChecks.includes('_inconsistencies_lastCharType') && activeTranslations[locale]._lastCharType !== getExpectedLastCharType(activeTranslations)"
+                class="inline-warning"
+                v-b-popover.hover="'Last character is ' + activeTranslations[locale]._lastCharType + ' but expected ' + getExpectedLastCharType(activeTranslations)"
+                title="Last character inconsistency"
+              >
+                <LastIcon></LastIcon>
               </div>
             </td>
           </tr>
           <tr v-else>
-            <td class="locale not-translated" scope="row">
+            <td :class="imporantLoc.includes(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'" scope="row">
               {{ locale }}
             </td>
-            <td colspan="2"></td>
-            <td colspan="1" class="not-translated">Not translated</td>
+            <td colspan="2" :class="imporantLoc.includes(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">Not translated</td>
           </tr>
         </tbody>
       </table>
@@ -381,6 +424,17 @@
 <script type="text/javascript">
 import NProgress from "nprogress"
 import "vue-octicon/icons"
+import WarningIcon from "vue-material-design-icons/AlertOutline"
+import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
+import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
+import TyposIcon from "vue-material-design-icons/Spellcheck"
+import DynamicIcon from "vue-material-design-icons/Resistor"
+import NoEnglishIcon from "vue-material-design-icons/EarthOff"
+import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
+import FirstIcon from "vue-material-design-icons/PageFirst"
+import LastIcon from "vue-material-design-icons/PageLast"
+import TagIcon from "vue-material-design-icons/CodeTags"
+
 
 import Multiselect from "vue-multiselect"
 import _ from "lodash"
@@ -395,12 +449,25 @@ import maxExpansionRatio from "../../common/maxExpansionRatio"
 import * as defaults from "../../common/config"
 import ADMIN from "../consts/admin"
 
+import LocalizationProgressChart from "../components/LocalizationProgressChart"
+
 export default {
   props: {
     user: { type: Object, required: true },
   },
   components: {
     Multiselect,
+    WarningIcon,
+    PlaceholderIcon,
+    WriteGoodIcon,
+    TyposIcon,
+    DynamicIcon,
+    NoEnglishIcon,
+    LengthIcon,
+    FirstIcon,
+    LastIcon,
+    TagIcon,
+    LocalizationProgressChart,
   },
   data() {
     return {
@@ -412,7 +479,6 @@ export default {
 
       // Searching, sorting, filtering
       searchQuery: "",
-      strict: "false",
       sort: ["key", "asc"], // key/count asc/desc
       errorsFilter: "all",
       errors: {},
@@ -420,12 +486,17 @@ export default {
       // Checks configuration
       allowedChecks: [],
 
+      // Locales configuration
+      importantLocales: {},
+
+      // View configuration
+      hardWrap: false,
+
       // Active
       activeKey: this.$route.params.all ? this.$route.params.all : null,
       activeTranslations: null,
       escapeTranslationsChecked: false,
       showTagsChecked: false,
-      loading: false,
 
       // Custom dict expansion
       dictsExpansionData: {},
@@ -458,10 +529,6 @@ export default {
   },
   firebase() {
     return {
-      itemsMetaData: {
-        source: FbDb.ref("itemsMetaData"),
-        asObject: true,
-      },
       allItems: {
         source: FbDb.ref("items"),
         asObject: true,
@@ -478,6 +545,7 @@ export default {
         asObject: true,
         readyCallback: () => {
           this.locales = this.lastUpdate.locales
+          this.importantLocales = this.loadUserLocalesConfig()
         },
       },
     }
@@ -485,7 +553,9 @@ export default {
   created() {
     NProgress.start()
     this.itemsLoaded = false
+    this.hardWrap = localStorage.getItem("hardWrap") ? JSON.parse(localStorage.getItem("hardWrap")) : false
     this.items = this.sortKeys(this.allItems) // sort always
+    NProgress.start()
     if (this.searchQuery || this.errorsFilter !== "all") {
       this.search()
     }
@@ -494,6 +564,7 @@ export default {
       this.setActive(this.activeKey)
     }
     this.allowedChecks = this.loadUserChecksConfig()
+    window.addEventListener("scroll", this.toggleSSNameVisibility)
     if (this.itemsLoaded) {
       NProgress.done()
     }
@@ -505,12 +576,6 @@ export default {
     availableTags() {
       return helpers.getAvailableTags(this.allItems)
     },
-    getErrorCount() {
-      if (!this.allowedChecks) {
-        return 0
-      }
-      return _.reduce(this.errors, (acc, val, err) => (this.allowedChecks.includes(err) ? acc + val : acc), 0)
-    },
     matchedPlaceholders() {
       if (this.placeholderRegex === "" || this.placeholderRegex === null) {
         return []
@@ -521,18 +586,21 @@ export default {
       }
       return matches || []
     },
+    imporantLoc() {
+      return _.reduce(this.importantLocales, (acc, val, key) => {
+        if (val) {
+          acc.push(key)
+        }
+        return acc
+      }, [])
+    },
   },
   methods: {
-    handleChangeSelect() {
-      this.loading = true
-      // need to wait for change of value
-      setTimeout(() => {
-        this.search()
-        this.loading = false
-      }, 50)
-    },
     sortKeys(translations) {
-      return helpers.sortTranslationKeys(translations, this.sort[0], this.sort[1])
+      NProgress.start()
+      const res = helpers.sortTranslationKeys(translations, this.sort[0], this.sort[1])
+      NProgress.done()
+      return res
     },
     changeSort(type) {
       if (this.sort[0] === type) {
@@ -549,10 +617,6 @@ export default {
         })
       })
       return errs
-    },
-    setSearch(key) {
-      this.searchQuery = key
-      this.search()
     },
     setActive(key) {
       this.modalKeyDetail = true
@@ -586,7 +650,7 @@ export default {
     triggerUpdate() {
       gcFunctions.update()
     },
-    showChecksConfig() {
+    showUserConfig() {
       this.modalChecksConfig = true
     },
     showWriteGoodSettings() {
@@ -631,6 +695,7 @@ export default {
       })
     },
     search() { // event param if needed
+      NProgress.start()
       this.items = _.reduce(this.allItems, (acc, val, key) => {
         if (this.errorsFilter === "all" || this.getItemInconsistencies(val).includes(this.errorsFilter)) {
           acc[key] = val
@@ -647,20 +712,16 @@ export default {
           minMatchCharLength: 1,
           keys: ["en-GB", "key"],
         }
-        if (this.strict) {
-          console.log(this.searchQuery)
-          this.items = helpers.strictSearch(this.items, this.searchQuery)
-        } else {
-          // need to map to array and then back to object for fuse to work
-          const fuse = new Fuse(Object.values(this.items), searchOptions)
-          const result = fuse.search(this.searchQuery)
-          const mappedResult = {}
-          result.forEach((e) => {
-            mappedResult[e.key.includes(".") ? e.key.split(".").join("-") : e.key] = e
-          })
-          this.items = mappedResult
-        }
+        // need to map to array and then back to object for fuse to work
+        const fuse = new Fuse(Object.values(this.items), searchOptions)
+        const result = fuse.search(this.searchQuery)
+        const mappedResult = {}
+        result.forEach((e) => {
+          mappedResult[e.key.includes(".") ? e.key.split(".").join("-") : e.key] = e
+        })
+        this.items = mappedResult
       }
+      NProgress.done()
     },
     exportKeys() {
       saveJSON(Object.keys(this.items).map(k => this.items[k].key), "export.json")
@@ -684,22 +745,16 @@ export default {
       }
       const { content } = translation
       if (this.escapeTranslationsChecked && content) {
-        this.showTagsChecked = true // cause linting would mess
+        this.showTagsChecked = true // cause highlighting would be mess
         return JSON.stringify(content)
       }
       return this.showTagsChecked ? content : this.stripHtml(content)
-    },
-    getTranslationsCount() {
-      if (!this.activeKey || !this.activeTranslations) {
-        return 0
-      }
-      return Object.keys(this.activeTranslations).length
     },
     hideKeyDetail() {
       this.activeKey = null
       this.$router.replace({ name: "items" })
     },
-    lintContent(translation) {
+    highlightContent(translation) {
       let content = this.getTranslationContent(translation)
       if (!content) {
         return "» not translated «"
@@ -708,19 +763,19 @@ export default {
         const highlightedParts = []
         if (Array.isArray(translation._writeGood)) {
           translation._writeGood.forEach((suggestion) => {
-            highlightedParts.push(content.slice(suggestion.index, suggestion.index + suggestion.offset))
+            highlightedParts.push(_.escape(content).slice(suggestion.index, suggestion.index + suggestion.offset))
           })
         }
         highlightedParts.forEach((part) => {
-          content = content.replace(new RegExp(part, "g"), match => `<span style="background: rgba(255,160,0,0.4)">${match}</span>`)
+          content = content.replace(new RegExp(part, "g"), match => `<span class="inline-highlight-wg">${match}</span>`)
         })
       }
       if (this.allowedChecks.includes("_inconsistencies_dynamic")) {
         if (Array.isArray(translation._dynamic)) {
           translation._dynamic.forEach((dynamic) => {
             content = content.replace(
-              new RegExp(`(§|#|±|~|-|^|–|\\s)${dynamic}`, "gm"),
-              match => `<span style="background: rgb(221,208,255)">${match}</span>`
+              new RegExp(dynamic, "gm"),
+              match => `<span class="inline-highlight-dynamic">${match}</span>`,
             )
           })
         }
@@ -728,7 +783,7 @@ export default {
       if (this.allowedChecks.includes("_inconsistencies_typos")) {
         if (Array.isArray(translation._typos)) {
           translation._typos.forEach((typo) => {
-            content = content.replace(new RegExp(`(^|\\s)${typo}`, "g"), match => `<span style="background: rgb(255,200,200)">${match}</span>`)
+            content = content.replace(new RegExp(`(?<=^|\\s)${typo}`, "g"), match => `<span class="inline-highlight-typos">${match}</span>`)
           })
         }
       }
@@ -751,21 +806,37 @@ export default {
     userifyInconsistency(inconsistency) {
       return helpers.userifyInconsistency(inconsistency)
     },
-    getInconsistencyCategory(inconsistency) {
-      return helpers.getInconsistencyCategory(inconsistency)
-    },
     loadUserChecksConfig() {
       if (localStorage.getItem("allowedChecks")) {
         return JSON.parse(localStorage.getItem("allowedChecks"))
       }
       return Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
     },
-    saveChecksConfig() {
+    saveUserConfig() {
       localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
+      localStorage.setItem("importantLocales", JSON.stringify(this.importantLocales))
+      localStorage.setItem("hardWrap", JSON.stringify(this.hardWrap))
+    },
+    loadUserLocalesConfig() {
+      if (localStorage.getItem("importantLocales")) {
+        return JSON.parse(localStorage.getItem("importantLocales"))
+      }
+      return this.locales.reduce((acc, loc) => {
+        acc[loc] = defaults.IMPORTANT_LOCALES.includes(loc)
+        return acc
+      }, {})
     },
     setDefaultChecksConfig() {
       this.allowedChecks = Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
-      localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
+    },
+    setDefaultLocalesConfig() {
+      this.importantLocales = this.locales.reduce((acc, loc) => {
+        acc[loc] = defaults.IMPORTANT_LOCALES.includes(loc)
+        return acc
+      }, {})
+    },
+    setDefaultViewConfig() {
+      this.hardWrap = defaults.DEFAULT_VIEW.hardWrap
     },
     hasInconsistentLength(lang, translations) {
       if (translations[lang] && translations["en-GB"] && translations["en-GB"].content.length > 0) {
@@ -802,41 +873,119 @@ export default {
     getDescription(error) {
       return helpers.descriptions[error] || ""
     },
+    toggleSSNameVisibility() {
+      if (window.scrollY > 200) {
+        document.getElementsByClassName("ss-name").item(0).setAttribute("style", "visibility: visible; opacity: 1;")
+      } else {
+        document.getElementsByClassName("ss-name").item(0).setAttribute("style", "visibility: hidden; opacity: 0;")
+      }
+    },
+    getExpectedFirstCharType(activeTranslations) {
+      return _.uniq(Object.values(activeTranslations).map(t => t._firstCharType))[0]
+    },
+    getExpectedLastCharType(activeTranslations) {
+      return _.uniq(Object.values(activeTranslations).map(t => t._lastCharType))[0]
+    },
+    toggleErrorsFilter(error) {
+      this.errorsFilter = this.errorsFilter === error ? "all" : error
+      this.search()
+    },
+  },
+  destroyed() {
+    window.removeEventListener("scroll", this.toggleSSNameVisibility)
   },
 }
 </script>
 
 <style scoped>
+  @import url('https://fonts.googleapis.com/css?family=Megrim');
+
+  .table-fixed {
+    width: 100%;
+    margin-top: -25px;
+  }
+
+  .table-fixed thead {
+    top: 0;
+    z-index: 1;
+    height: 95px;
+  }
+
+  .table-fixed thead tr {
+    background-color: #ffff;
+  }
+
+  .table-fixed thead th {
+    top: 67px;
+    z-index: 1;
+    position: sticky;
+    position: -webkit-sticky;
+    background-color: rgb(0,0,0,0)
+  }
 td {
   vertical-align: middle;
   font-size: 12px;
+  padding: 5px;
 }
 th {
   font-size: 13px;
+  background-color: white;
 }
+.th-errors {
+  white-space: nowrap;
+}
+  th.th-errors div {
+    transform:  translate(22px, -5px) rotate(-45deg);
+    z-index: 3;
+    width: 30px;
+    cursor: pointer;
+  }
+  th.th-errors span {
+    z-index: 1000;
+    border-bottom: 1px solid #ccc;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
 th a {
   cursor: pointer;
 }
 td.key {
-  width: 500px;
-  max-width: 500px;
+  width: 30vw;
+  max-width: 30vw;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 td.translationProgress {
   width: 50px;
+  border-right: 1px solid #ccc;
 }
-td.errors {
-  max-width: 500px;
-  width: 500px;
+.locale {
+  padding-left: 30px;
 }
 td.locale {
-  max-height: 200px;
-  max-width: 700px;
+  max-height: 50px;
+  width: 38vw;
+  max-width: 38vw;
+  min-width: 38vw;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-x: scroll;
+  white-space: nowrap;
+  -ms-overflow-style: none;
+  overflow: -moz-scrollbars-none;
+  padding-right: 10px;
 }
+  td.locale-hard-wrap {
+    max-height: max-content;
+    width: 38vw;
+    max-width: 38vw;
+    min-width: 38vw;
+    overflow: hidden;
+    padding-right: 10px;
+  }
+  td.locale::-webkit-scrollbar {
+    display: none;
+  }
 .row-visited td {
   background-color: #DFE7F2;
 }
@@ -850,15 +999,26 @@ td.locale {
     max-width: 500px;
     width: 500px;
   }
+  td.errors-col {
+    width: 9vw;
+  }
 }
-.not-translated {
+  .locale-id {
+    font-weight: bolder;
+    width: 150px;
+  }
+.not-translated-primary {
   color: rgba(255, 0, 0, 0.65);
 }
+.not-translated-secondary {
+  color: #FFC107;
+}
 .error {
-  display: inline-block;
+  display: list-item;
   margin: 1px;
   font-size: 16px;
   border: 1px;
+  list-style: none;
 }
 .textInput {
   max-width: 100%;
@@ -867,16 +1027,13 @@ td.locale {
 }
 .keyOverview {
   font-size: 14px;
+  margin-bottom: 15px;
+  margin-top: 15px;
+  width: 100%;
+  display: flex;
 }
 .translationsForm {
   margin-bottom: 16px;
-}
-.alignCenter {
-  align-self: center;
-}
-.transparentClickableIcon {
-  opacity: .5;
-  cursor: pointer;
 }
 .wgLangHeader {
   font-size: larger;
@@ -884,38 +1041,40 @@ td.locale {
   margin-top: 10px;
 }
 .setDefault {
-  float: right;
+  display: inline-block;
+}
+h4 {
+  vertical-align: bottom;
+  width: fit-content;
+  display: inline-block;
 }
 .inline-warning {
-  color: #ffffff;
-  padding-top: 2px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
+  color: orange;
+  font-size: 12px;
   border-radius: 25px;
-  background-color: orange;
+  padding-left: 3px;
+  padding-right: 3px;
+  border: solid 1px orange;
   display: inline-block;
   margin-left: 5px;
 }
 .inline-error {
-  color: #ffffff;
-  padding-top: 2px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
+  color: #ef0000;
+  font-size: 12px;
   border-radius: 25px;
-  background-color: #ef0000;
+  padding-left: 3px;
+  padding-right: 3px;
+  border: solid 1px #ef0000;
   display: inline-block;
   margin-left: 5px;
 }
   .inline-error-dynamic {
-    color: white;
-    padding-top: 2px;
-    padding-bottom: 4px;
-    padding-left: 5px;
-    padding-right: 5px;
+    color: purple;
+    font-size: 12px;
     border-radius: 25px;
-    background-color: purple;
+    padding-left: 3px;
+    padding-right: 3px;
+    border: solid 1px purple;
     display: inline-block;
     margin-left: 5px;
   }
@@ -933,5 +1092,77 @@ td.locale {
   .matchedPlaceholders {
     width: 50%;
     display: inline-grid;
+  }
+  .sticky-header-hack {
+    width: 100%;
+    height: 95px;
+    z-index: 1;
+    position: sticky;
+    top: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.95) 30%, rgba(255,255,255,1) 100%);
+  }
+  .ss-name {
+    visibility: hidden;
+    color: darkgrey;
+    font-family: 'Megrim', cursive;
+    font-weight: 900;
+    font-size: 30px;
+    letter-spacing: 1px;
+    padding: 14px;
+    opacity: 0;
+    transition: visibility 0.5s, opacity 0.5s linear;
+  }
+  .indicators {
+    text-align: center;
+    border-right: 1px solid #ccc;
+    font-size: 20px;
+  }
+  .settings {
+    float: right;
+    margin-top: 10px;
+    top: 5px;
+    z-index: 3;
+    width: max-content;
+    margin-right: 3px;
+    position: sticky;
+  }
+  .config-group {
+    margin-top: 20px;
+  }
+  .loc-label {
+    float: left;
+    width: 200px;
+    font-weight: bolder;
+  }
+  .missing-important {
+    color: #DC3545;
+  }
+  .missing-normal {
+    color: #FFC107;
+  }
+  .translated {
+    color: #28A745;
+  }
+  .unimportant {
+    color: gray;
+    display: contents;
+  }
+  .progress-chart {
+    width: 33%;
+  }
+  .progress-legend {
+    font-size: 14px;
+    display: inline-block;
+    width: 33%;
+    float: right;
+  }
+  .errors-overview {
+    width: 33%;
+  }
+  .search-input {
+    position: absolute;
+    left: 475px;
+    width: 300px;
+    top: 15px;
   }
 </style>
