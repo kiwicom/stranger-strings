@@ -347,7 +347,7 @@
               {{ locale }}
             </td>
             <td class="translation">
-              <div v-if="!showTagsChecked" style="display: inline-block;" v-html="lintContent(activeTranslations[locale])"></div>
+              <div v-if="!showTagsChecked" style="display: inline-block;" v-html="highlightContent(activeTranslations[locale])"></div>
               <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>
             </td>
             <td class="errors-col">
@@ -576,12 +576,6 @@ export default {
     availableTags() {
       return helpers.getAvailableTags(this.allItems)
     },
-    getErrorCount() {
-      if (!this.allowedChecks) {
-        return 0
-      }
-      return _.reduce(this.errors, (acc, val, err) => (this.allowedChecks.includes(err) ? acc + val : acc), 0)
-    },
     matchedPlaceholders() {
       if (this.placeholderRegex === "" || this.placeholderRegex === null) {
         return []
@@ -751,7 +745,7 @@ export default {
       }
       const { content } = translation
       if (this.escapeTranslationsChecked && content) {
-        this.showTagsChecked = true // cause linting would mess
+        this.showTagsChecked = true // cause highlighting would be mess
         return JSON.stringify(content)
       }
       return this.showTagsChecked ? content : this.stripHtml(content)
@@ -760,7 +754,7 @@ export default {
       this.activeKey = null
       this.$router.replace({ name: "items" })
     },
-    lintContent(translation) {
+    highlightContent(translation) {
       let content = this.getTranslationContent(translation)
       if (!content) {
         return "» not translated «"
@@ -769,19 +763,19 @@ export default {
         const highlightedParts = []
         if (Array.isArray(translation._writeGood)) {
           translation._writeGood.forEach((suggestion) => {
-            highlightedParts.push(content.slice(suggestion.index, suggestion.index + suggestion.offset))
+            highlightedParts.push(_.escape(content).slice(suggestion.index, suggestion.index + suggestion.offset))
           })
         }
         highlightedParts.forEach((part) => {
-          content = content.replace(new RegExp(part, "g"), match => `<span style="background: rgba(255,160,0,0.4)">${match}</span>`)
+          content = content.replace(new RegExp(part, "g"), match => `<span class="inline-highlight-wg">${match}</span>`)
         })
       }
       if (this.allowedChecks.includes("_inconsistencies_dynamic")) {
         if (Array.isArray(translation._dynamic)) {
           translation._dynamic.forEach((dynamic) => {
             content = content.replace(
-              new RegExp(`(§|#|±|~|-|^|–|\\s)${dynamic}`, "gm"),
-              match => `<span style="background: rgb(221,208,255)">${match}</span>`,
+              new RegExp(dynamic, "gm"),
+              match => `<span class="inline-highlight-dynamic">${match}</span>`,
             )
           })
         }
@@ -789,7 +783,7 @@ export default {
       if (this.allowedChecks.includes("_inconsistencies_typos")) {
         if (Array.isArray(translation._typos)) {
           translation._typos.forEach((typo) => {
-            content = content.replace(new RegExp(`(^|\\s)${typo}`, "g"), match => `<span style="background: rgb(255,200,200)">${match}</span>`)
+            content = content.replace(new RegExp(`(?<=^|\\s)${typo}`, "g"), match => `<span class="inline-highlight-typos">${match}</span>`)
           })
         }
       }
