@@ -378,7 +378,7 @@
               <div
                 v-if="activeTranslations[locale]._typos && activeTranslations[locale]._typos !== 'unsupported language' && allowedChecks.includes('_inconsistencies_typos')"
                 class="inline-error"
-                v-b-popover.hover="activeTranslations[locale]._typos.join('\n')"
+                v-b-popover.hover="removeDuplicates(activeTranslations[locale]._typos).join('\n')"
                 title="Typos"
               >
                 <TyposIcon fill-color="#ef0000"></TyposIcon>
@@ -386,7 +386,7 @@
               <div
                 v-if="activeTranslations[locale]._dynamic && allowedChecks.includes('_inconsistencies_dynamic')"
                 class="inline-error-dynamic"
-                v-b-popover.hover="activeTranslations[locale]._dynamic.join('\n')"
+                v-b-popover.hover="removeDuplicates(activeTranslations[locale]._dynamic).join('\n')"
                 title="Dynamic values"
               >
                 <DynamicIcon fill-color="#800080"></DynamicIcon>
@@ -763,7 +763,7 @@ export default {
         const highlightedParts = []
         if (Array.isArray(translation._writeGood)) {
           translation._writeGood.forEach((suggestion) => {
-            highlightedParts.push(_.escape(content).slice(suggestion.index, suggestion.index + suggestion.offset))
+            highlightedParts.push(suggestion.reason.match(/(?<=").*(?=")/m) && suggestion.reason.match(/(?<=").*(?=")/m)[0])
           })
         }
         highlightedParts.forEach((part) => {
@@ -772,7 +772,9 @@ export default {
       }
       if (this.allowedChecks.includes("_inconsistencies_dynamic")) {
         if (Array.isArray(translation._dynamic)) {
-          translation._dynamic.forEach((dynamic) => {
+          const dynamics = JSON.parse(JSON.stringify(translation._dynamic))
+          dynamics.sort((a, b) => b.length - a.length) // sort by string length to highlight all numbers
+          dynamics.forEach((dynamic) => {
             content = content.replace(
               new RegExp(dynamic, "gm"),
               match => `<span class="inline-highlight-dynamic">${match}</span>`,
@@ -783,14 +785,14 @@ export default {
       if (this.allowedChecks.includes("_inconsistencies_typos")) {
         if (Array.isArray(translation._typos)) {
           translation._typos.forEach((typo) => {
-            content = content.replace(new RegExp(`(?<=^|\\s)${typo}`, "g"), match => `<span class="inline-highlight-typos">${match}</span>`)
+            content = content.replace(new RegExp(`(?<=[^\\w])${_.escapeRegExp(typo)}(?=[^\\w])`, "g"), match => `<span class="inline-highlight-typos">${match}</span>`)
           })
         }
       }
       return content
     },
     getWriteGoodReasons(writeGood) {
-      return `${writeGood.map(lint => lint.reason).join(",\n")}`
+      return this.removeDuplicates(writeGood.map(lint => lint.reason)).join(",\n")
     },
     setDefaultWriteGoodConfig() {
       this.writeGoodSettings = JSON.parse(JSON.stringify(defaults.DEFAULT_WRITE_GOOD_SETTINGS)) // deep copy to avoid modification of constant
@@ -889,6 +891,9 @@ export default {
     toggleErrorsFilter(error) {
       this.errorsFilter = this.errorsFilter === error ? "all" : error
       this.search()
+    },
+    removeDuplicates(array) {
+      return [...new Set(array)]
     },
   },
   destroyed() {
