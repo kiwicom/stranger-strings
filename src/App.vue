@@ -19,6 +19,7 @@
 <script type="text/javascript">
 import "bootstrap/dist/css/bootstrap.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
+import "vue-material-design-icons/styles.css"
 import firebase from "firebase"
 import NProgress from "nprogress"
 

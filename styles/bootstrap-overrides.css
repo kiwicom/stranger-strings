@@ -5,3 +5,13 @@
 #collectionDetailModal .modal-lg {
   max-width: 100%;
 }
+
+.inline-highlight-wg {
+  background: rgba(255,160,0,0.4);
+}
+.inline-highlight-dynamic {
+  background: rgb(221,208,255);
+}
+.inline-highlight-typos {
+  background: rgb(255,200,200);
+}
