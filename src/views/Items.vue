@@ -594,6 +594,16 @@ export default {
         return acc
       }, [])
     },
+    matchedPlaceholders() {
+      if (this.placeholderRegex === "" || this.placeholderRegex === null) {
+        return []
+      }
+      const matches = this.regexPreviewText.match(RegExp(this.placeholderRegex, "g"))
+      if (Array.isArray(matches) && matches.length > 10) {
+        return ["...too much matches..."]
+      }
+      return matches || []
+    },
   },
   methods: {
     sortKeys(translations) {
@@ -1017,6 +1027,9 @@ td.locale {
 }
 .not-translated-secondary {
   color: #FFC107;
+}
+.not-translated {
+  color: rgba(255, 0, 0, 0.65);
 }
 .error {
   display: list-item;
