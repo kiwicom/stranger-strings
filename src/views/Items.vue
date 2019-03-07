@@ -78,7 +78,7 @@
           >
             Progress
           </th>
-          <th class="th-errors" v-for="(count, error) in errors" v-if="allowedChecks && allowedChecks.includes(error)">
+          <th class="th-errors" v-for="(count, error) in errors" :key="error" v-if="allowedChecks && allowedChecks.includes(error)">
             <div><span @click="toggleErrorsFilter(error)">{{ userifyInconsistency(error) }}</span></div>
           </th>
           <th
@@ -101,13 +101,16 @@
 
           <td class="translationProgress">
             <b-progress class="mt-2" :max="getMaximumTranslations" show-value>
-              <b-progress-bar :value="val.translated.length" variant="success" />
-              <b-progress-bar :value="getMaximumTranslations - val.translated.length - imporantLoc.filter(l => !val.translated.includes(l)).length" variant="warning" />
-              <b-progress-bar :value="imporantLoc.filter(l => !val.translated.includes(l)).length" variant="danger" />
+              <b-progress-bar :value="val.translated.length" variant="success"></b-progress-bar>
+              <b-progress-bar
+                :value="getMaximumTranslations - val.translated.length - imporantLoc.filter(l => !val.translated.includes(l)).length"
+                variant="warning">
+              </b-progress-bar>
+              <b-progress-bar :value="imporantLoc.filter(l => !val.translated.includes(l)).length" variant="danger"></b-progress-bar>
             </b-progress>
           </td>
 
-          <td v-for="(c, e) in errors" v-if="allowedChecks && allowedChecks.includes(e)" class="indicators">
+          <td v-for="(c, e) in errors" :key="e" v-if="allowedChecks && allowedChecks.includes(e)" class="indicators">
             <PlaceholderIcon :size="30" v-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_placeholders'"></PlaceholderIcon>
             <NoEnglishIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_noEnglish'"></NoEnglishIcon>
             <LengthIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_length'"></LengthIcon>
@@ -172,7 +175,7 @@
       <div class="config-group">
         <h4>Locales</h4>
         <div class="setDefault"><b-button variant="link" @click="setDefaultLocalesConfig">Reset to default</b-button></div>
-        <b-form-group v-for="loc in locales" label-cols="4" label-cols-lg="2">
+        <b-form-group v-for="loc in locales" :key="loc" label-cols="4" label-cols-lg="2">
           <b-form-radio-group v-model="importantLocales[loc]">
             <div class="loc-label">{{ loc }}</div>
             <b-form-radio :value="true">Primary</b-form-radio>
@@ -245,10 +248,10 @@
                            :max-rows="6">
           </b-form-textarea>
         </div>
-        <div class="matchedPlaceholders">
+        <div class="matched-placeholders">
           <label>Matched placeholders:</label>
           <ul>
-            <li v-for="mp in matchedPlaceholders">{{ mp }}</li>
+            <li v-for="mp in matchedPlaceholders" :key="mp">{{ mp }}</li>
           </ul>
         </div>
       </div>
@@ -289,10 +292,14 @@
               <div class="inline-error-dynamic"><DynamicIcon :size="30"></DynamicIcon></div> - contains dynamic values
             </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_writeGood'">
-              <div class="inline-warning"><WriteGoodIcon :size="30"></WriteGoodIcon></div> - write-good suggestions (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+              <div class="inline-warning">
+                <WriteGoodIcon :size="30"></WriteGoodIcon>
+              </div> - write-good suggestions (in locales: {{ items[activeKey][inconsistency].join(", ") }})
             </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_typos'">
-              <div class="inline-error"><TyposIcon :size="30"></TyposIcon></div> - typos (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+              <div class="inline-error">
+                <TyposIcon :size="30"></TyposIcon>
+              </div> - typos (in locales: {{ items[activeKey][inconsistency].join(", ") }})
             </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_tags'">
               <div class="inline-warning"><TagIcon :size="30"></TagIcon></div> - blacklisted HTML tags
@@ -306,15 +313,20 @@
           <LocalizationProgressChart
             :translated="items[activeKey].translated.length"
             :missingPrimary="imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
-            :missingSecondary="getMaximumTranslations - items[activeKey].translated.length - imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
+            :missingSecondary="
+            getMaximumTranslations
+            - items[activeKey].translated.length
+            - imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
           ></LocalizationProgressChart>
         </div>
         <div class="progress-legend">
           <div v-if="imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length > 0">
-            <strong class="missing-important">Missing primary locales: </strong><strong>{{ imporantLoc.filter(l => !items[activeKey].translated.includes(l)).join(", ") }}</strong>
+            <strong class="missing-important">Missing primary locales: </strong>
+            <strong>{{ imporantLoc.filter(l => !items[activeKey].translated.includes(l)).join(", ") }}</strong>
           </div>
           <div v-if="locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).length > 0">
-            <strong class="missing-normal">Missing secondary locales: </strong>{{ locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).join(", ") }}
+            <strong class="missing-normal">Missing secondary locales: </strong>
+            {{ locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).join(", ") }}
           </div>
           <div v-if="getMaximumTranslations > items[activeKey].translated.length">
             <strong class="translated">Translated: </strong><div class="unimportant">{{ items[activeKey].translated.join(", ") }}</div>
@@ -376,7 +388,9 @@
                 <PlaceholderIcon fill-color="#ef0000"></PlaceholderIcon>
               </div>
               <div
-                v-if="activeTranslations[locale]._typos && activeTranslations[locale]._typos !== 'unsupported language' && allowedChecks.includes('_inconsistencies_typos')"
+                v-if="activeTranslations[locale]._typos
+                && activeTranslations[locale]._typos !== 'unsupported language'
+                && allowedChecks.includes('_inconsistencies_typos')"
                 class="inline-error"
                 v-b-popover.hover="removeDuplicates(activeTranslations[locale]._typos).join('\n')"
                 title="Typos"
@@ -392,17 +406,21 @@
                 <DynamicIcon fill-color="#800080"></DynamicIcon>
               </div>
               <div
-                v-if="allowedChecks.includes('_inconsistencies_firstCharType') && activeTranslations[locale]._firstCharType !== getExpectedFirstCharType(activeTranslations)"
+                v-if="allowedChecks.includes('_inconsistencies_firstCharType')
+                && activeTranslations[locale]._firstCharType !== getExpectedFirstCharType(activeTranslations)"
                 class="inline-warning"
-                v-b-popover.hover="'First character is ' + activeTranslations[locale]._firstCharType + ' but expected ' + getExpectedFirstCharType(activeTranslations)"
+                v-b-popover.hover="
+                'First character is ' + activeTranslations[locale]._firstCharType + ' but expected ' + getExpectedFirstCharType(activeTranslations)"
                 title="First character inconsistency"
               >
                 <FirstIcon></FirstIcon>
               </div>
               <div
-                v-if="allowedChecks.includes('_inconsistencies_lastCharType') && activeTranslations[locale]._lastCharType !== getExpectedLastCharType(activeTranslations)"
+                v-if="allowedChecks.includes('_inconsistencies_lastCharType')
+                && activeTranslations[locale]._lastCharType !== getExpectedLastCharType(activeTranslations)"
                 class="inline-warning"
-                v-b-popover.hover="'Last character is ' + activeTranslations[locale]._lastCharType + ' but expected ' + getExpectedLastCharType(activeTranslations)"
+                v-b-popover.hover="
+                'Last character is ' + activeTranslations[locale]._lastCharType + ' but expected ' + getExpectedLastCharType(activeTranslations)"
                 title="Last character inconsistency"
               >
                 <LastIcon></LastIcon>
@@ -413,7 +431,9 @@
             <td :class="imporantLoc.includes(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'" scope="row">
               {{ locale }}
             </td>
-            <td colspan="2" :class="imporantLoc.includes(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">Not translated</td>
+            <td colspan="2" :class="imporantLoc.includes(locale) ?'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">
+              Not translated
+            </td>
           </tr>
         </tbody>
       </table>
@@ -594,16 +614,6 @@ export default {
         return acc
       }, [])
     },
-    matchedPlaceholders() {
-      if (this.placeholderRegex === "" || this.placeholderRegex === null) {
-        return []
-      }
-      const matches = this.regexPreviewText.match(RegExp(this.placeholderRegex, "g"))
-      if (Array.isArray(matches) && matches.length > 10) {
-        return ["...too much matches..."]
-      }
-      return matches || []
-    },
   },
   methods: {
     sortKeys(translations) {
@@ -681,6 +691,7 @@ export default {
         FbDb.ref("writeGood").update(this.writeGoodSettings)
         gcFunctions.inconsistenciesUpdate()
       } else {
+        // eslint-disable-next-line no-alert
         alert("You don't have permission to modify this setting") // TODO: friendlier
       }
     },
@@ -694,6 +705,7 @@ export default {
         })
         gcFunctions.inconsistenciesUpdate()
       } else {
+        // eslint-disable-next-line no-alert
         alert("You don't have permission to modify this setting") // TODO: friendlier
       }
     },
@@ -795,7 +807,10 @@ export default {
       if (this.allowedChecks.includes("_inconsistencies_typos")) {
         if (Array.isArray(translation._typos)) {
           translation._typos.forEach((typo) => {
-            content = content.replace(new RegExp(`(?<=[^\\w])${_.escapeRegExp(typo)}(?=[^\\w])`, "g"), match => `<span class="inline-highlight-typos">${match}</span>`)
+            content = content.replace(
+              new RegExp(`(?<=[^\\w])${_.escapeRegExp(typo)}(?=[^\\w])`, "g"),
+              match => `<span class="inline-highlight-typos">${match}</span>`,
+            )
           })
         }
       }
@@ -870,6 +885,7 @@ export default {
         (translation._placeholders || []).forEach((placeholder) => {
           const placeholderAppearance = translation._placeholders.filter(i => i === placeholder).length
           if (acc.filter(i => i === placeholder).length < placeholderAppearance) {
+            // eslint-disable-next-line no-param-reassign
             acc = _.without(acc, placeholder).concat(_.fill(Array(placeholderAppearance), placeholder))
           }
         })
@@ -878,7 +894,10 @@ export default {
 
       return allPlaceholders.reduce((acc, placeholder) => {
         const totalPlaceholderAppearance = allPlaceholders.filter(i => i === placeholder).length
-        const translationPlaceholderAppearance = (translations[lang] && translations[lang]._placeholders && translations[lang]._placeholders.filter(i => i === placeholder).length) || 0
+        const translationPlaceholderAppearance = (
+          translations[lang] && translations[lang]._placeholders
+          && translations[lang]._placeholders.filter(i => i === placeholder).length
+        ) || 0
         return _.without(acc, placeholder).concat(_.fill(Array(totalPlaceholderAppearance - translationPlaceholderAppearance), placeholder))
       }, allPlaceholders)
     },
@@ -1028,9 +1047,6 @@ td.locale {
 .not-translated-secondary {
   color: #FFC107;
 }
-.not-translated {
-  color: rgba(255, 0, 0, 0.65);
-}
 .error {
   display: list-item;
   margin: 1px;
@@ -1107,7 +1123,7 @@ h4 {
     display: inline-block;
     width: 50%;
   }
-  .matchedPlaceholders {
+  .matched-placeholders {
     width: 50%;
     display: inline-grid;
   }
