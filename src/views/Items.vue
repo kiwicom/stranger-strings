@@ -186,11 +186,11 @@
       <div class="config-group">
         <h4>View</h4>
         <div class="setDefault"><b-button variant="link" @click="setDefaultViewConfig">Reset to default</b-button></div>
-        <b-form-checkbox-group v-model="hardWrap" stacked style="width: fit-content">
-          <b-form-checkbox :value="!hardWrap">
+        <div>
+          <b-form-checkbox v-model="hardWrap">
             <strong>hard wrap</strong> (show english preview in main table with line breaks)
           </b-form-checkbox>
-        </b-form-checkbox-group>
+        </div>
       </div>
     </b-modal>
 
