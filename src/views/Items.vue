@@ -791,7 +791,7 @@ export default {
         highlightedParts.forEach((part) => {
           content = content.replace(
             new RegExp(`${part}(?=[^\\w]|$)`, "g"),
-            match => `${match.slice(0, 1)}<span class="inline-highlight-wg">${match.slice(1)}</span>`,
+            match => `<span class="inline-highlight-wg">${match}</span>`,
           )
         })
       }
@@ -812,7 +812,7 @@ export default {
           translation._typos.forEach((typo) => {
             content = content.replace(
               new RegExp(`${_.escapeRegExp(typo)}(?=[^\\w]|$)`, "g"),
-              match => `${match.slice(0, 1)}<span class="inline-highlight-typos">${match.slice(1)}</span>`,
+              match => `<span class="inline-highlight-typos">${match}</span>`,
             )
           })
         }
