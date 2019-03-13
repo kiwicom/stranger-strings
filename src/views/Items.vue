@@ -789,7 +789,10 @@ export default {
           })
         }
         highlightedParts.forEach((part) => {
-          content = content.replace(new RegExp(part, "g"), match => `<span class="inline-highlight-wg">${match}</span>`)
+          content = content.replace(
+            new RegExp(`[^\\w]${part}(?=[^\\w]|$)`, "g"),
+            match => `${match.slice(0, 1)}<span class="inline-highlight-wg">${match.slice(1)}</span>`,
+          )
         })
       }
       if (this.allowedChecks.includes("_inconsistencies_dynamic")) {
@@ -874,7 +877,7 @@ export default {
     },
     getMissingPlaceholders(lang, translations) {
       /*
-      e.g. for placehorlder
+      e.g. for placeholder
       en -> ph1, ph1, ph1, ph,2
       de -> ph1, ph1, ph2
       cz -> ph1, ph1, ph3
