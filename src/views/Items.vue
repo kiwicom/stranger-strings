@@ -785,7 +785,7 @@ export default {
         const highlightedParts = []
         if (Array.isArray(translation._writeGood)) {
           translation._writeGood.forEach((suggestion) => {
-            highlightedParts.push(suggestion.reason.match(/(?<=").*(?=")/m) && suggestion.reason.match(/(?<=").*(?=")/m)[0])
+            highlightedParts.push(suggestion.reason.match(/"[\w]+(?=")/m) && suggestion.reason.match(/"[\w]+(?=")/m)[0].slice(1))
           })
         }
         highlightedParts.forEach((part) => {
@@ -808,8 +808,8 @@ export default {
         if (Array.isArray(translation._typos)) {
           translation._typos.forEach((typo) => {
             content = content.replace(
-              new RegExp(`(?<=[^\\w])${_.escapeRegExp(typo)}(?=[^\\w])`, "g"),
-              match => `<span class="inline-highlight-typos">${match}</span>`,
+              new RegExp(`[^\\w]${_.escapeRegExp(typo)}(?=[^\\w]|$)`, "g"),
+              match => `${match.slice(0,1)}<span class="inline-highlight-typos">${match.slice(1)}</span>`,
             )
           })
         }
@@ -942,7 +942,6 @@ export default {
   .table-fixed thead {
     top: 0;
     z-index: 1;
-    height: 95px;
   }
 
   .table-fixed thead tr {
