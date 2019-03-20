@@ -186,11 +186,11 @@
       <div class="config-group">
         <h4>View</h4>
         <div class="setDefault"><b-button variant="link" @click="setDefaultViewConfig">Reset to default</b-button></div>
-        <b-form-checkbox-group v-model="hardWrap" stacked style="width: fit-content">
-          <b-form-checkbox :value="!hardWrap">
+        <div>
+          <b-form-checkbox v-model="hardWrap">
             <strong>hard wrap</strong> (show english preview in main table with line breaks)
           </b-form-checkbox>
-        </b-form-checkbox-group>
+        </div>
       </div>
     </b-modal>
 
@@ -785,11 +785,14 @@ export default {
         const highlightedParts = []
         if (Array.isArray(translation._writeGood)) {
           translation._writeGood.forEach((suggestion) => {
-            highlightedParts.push(suggestion.reason.match(/(?<=").*(?=")/m) && suggestion.reason.match(/(?<=").*(?=")/m)[0])
+            highlightedParts.push(suggestion.reason.match(/".+(?=")/m) && suggestion.reason.match(/".+(?=")/m)[0].slice(1))
           })
         }
         highlightedParts.forEach((part) => {
-          content = content.replace(new RegExp(part, "g"), match => `<span class="inline-highlight-wg">${match}</span>`)
+          content = content.replace(
+            new RegExp(`${part}(?=[^\\w]|$)`, "g"),
+            match => `<span class="inline-highlight-wg">${match}</span>`,
+          )
         })
       }
       if (this.allowedChecks.includes("_inconsistencies_dynamic")) {
@@ -808,7 +811,7 @@ export default {
         if (Array.isArray(translation._typos)) {
           translation._typos.forEach((typo) => {
             content = content.replace(
-              new RegExp(`(?<=[^\\w])${_.escapeRegExp(typo)}(?=[^\\w])`, "g"),
+              new RegExp(`${_.escapeRegExp(typo)}(?=[^\\w]|$)`, "g"),
               match => `<span class="inline-highlight-typos">${match}</span>`,
             )
           })
@@ -874,7 +877,7 @@ export default {
     },
     getMissingPlaceholders(lang, translations) {
       /*
-      e.g. for placehorlder
+      e.g. for placeholder
       en -> ph1, ph1, ph1, ph,2
       de -> ph1, ph1, ph2
       cz -> ph1, ph1, ph3
@@ -942,7 +945,6 @@ export default {
   .table-fixed thead {
     top: 0;
     z-index: 1;
-    height: 95px;
   }
 
   .table-fixed thead tr {
