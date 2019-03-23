@@ -346,16 +346,19 @@
         </b-form>
       </div>
 
-      <table v-if="items[activeKey]" class="table table-sm b-table table-striped detailTable">
+      <table v-if="items[activeKey]" class="table table-sm b-table table-striped">
         <thead>
-          <th>Locale</th>
+          <th colspan="2">Locale</th>
           <th>Translation</th>
           <th>Errors</th>
         </thead>
 
         <tbody>
           <tr :key="locale" v-for="locale in locales" v-if="activeTranslations[locale]">
-            <td class="locale-id" scope="row">
+            <td class="flag-id">
+              <div class="flag-icon"><CountryFlag :country="locale.slice(3, 5).toLowerCase()" size="small"></CountryFlag></div>
+            </td>
+            <td class="locale-id">
               {{ locale }}
             </td>
             <td class="translation">
@@ -428,6 +431,9 @@
             </td>
           </tr>
           <tr v-else>
+            <td class="flag-id">
+              <div class="flag-icon transparent"><CountryFlag :country="locale.slice(3, 5).toLowerCase()" size="small"></CountryFlag></div>
+            </td>
             <td :class="imporantLoc.includes(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'" scope="row">
               {{ locale }}
             </td>
@@ -454,6 +460,7 @@ import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
 import FirstIcon from "vue-material-design-icons/PageFirst"
 import LastIcon from "vue-material-design-icons/PageLast"
 import TagIcon from "vue-material-design-icons/CodeTags"
+import CountryFlag from "vue-country-flag"
 
 
 import Multiselect from "vue-multiselect"
@@ -488,6 +495,7 @@ export default {
     LastIcon,
     TagIcon,
     LocalizationProgressChart,
+    CountryFlag,
   },
   data() {
     return {
@@ -1025,23 +1033,24 @@ td.locale {
 .row-visited td {
   background-color: #DFE7F2;
 }
-.detailTable {
-  td.locale {
-    max-width: 80px;
-    width: 80px;
-    white-space: nowrap;
-  }
-  td.translation {
-    max-width: 500px;
-    width: 500px;
-  }
-  td.errors-col {
-    width: 9vw;
-  }
-}
   .locale-id {
     font-weight: bolder;
-    width: 150px;
+    width: max-content;
+  }
+  .flag-id {
+    width: 30px;
+  }
+  .translation {
+    width: 80%;
+  }
+  .flag-icon {
+    width: 30px;
+    height: 20px;
+    text-align: center;
+    margin-top: -33px;
+  }
+  .transparent {
+    opacity: 0.3;
   }
 .not-translated-primary {
   color: rgba(255, 0, 0, 0.65);
