@@ -391,14 +391,30 @@
                 <PlaceholderIcon fill-color="#ef0000"></PlaceholderIcon>
               </div>
               <div
+                id="typosIndicator"
                 v-if="activeTranslations[locale]._typos
                 && activeTranslations[locale]._typos !== 'unsupported language'
                 && allowedChecks.includes('_inconsistencies_typos')"
-                class="inline-error"
-                v-b-popover.hover="removeDuplicates(activeTranslations[locale]._typos).join('\n')"
-                title="Typos"
+                class="inline-error clickable"
               >
                 <TyposIcon fill-color="#ef0000"></TyposIcon>
+                <b-popover
+                  target="typosIndicator"
+                  title="Typos"
+                  triggers="click"
+                >
+                  <div v-for="typo in removeDuplicates(activeTranslations[locale]._typos)" :key="typo">
+                    <strong :class="dictsExpansionData[locale].includes(typo) ? 'strikethrough' : ''">{{ typo }}  </strong>
+                    <b-button
+                      @click="addWordToDict(typo, locale)"
+                      :disabled="dictsExpansionData[locale].includes(typo)"
+                      variant="outline-success"
+                      size="sm">
+                      add to {{ locale }} dictionary
+                    </b-button>
+                  </div>
+                  <div class="note">note: please take in mind that changes in dictionaries will be visible after next spellchecking (&lt;1 min)</div>
+                </b-popover>
               </div>
               <div
                 v-if="activeTranslations[locale]._dynamic && allowedChecks.includes('_inconsistencies_dynamic')"
@@ -592,6 +608,9 @@ export default {
       this.setActive(this.activeKey)
     }
     this.allowedChecks = this.loadUserChecksConfig()
+    FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
+      this.dictsExpansionData = dictsData.val()
+    })
     window.addEventListener("scroll", this.toggleSSNameVisibility)
     if (this.itemsLoaded) {
       NProgress.done()
@@ -651,6 +670,9 @@ export default {
       this.activeKey = key
       this.$router.push({ name: "items", params: { all: key } })
       this.activeTranslations = {}
+      FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
+        this.dictsExpansionData = dictsData.val()
+      })
       FbDb.ref(`translations/${key}`).once("value", (snapshot) => {
         if (snapshot.val()) {
           this.activeTranslations = snapshot.val()
@@ -935,6 +957,17 @@ export default {
     removeDuplicates(array) {
       return [...new Set(array)]
     },
+    addWordToDict(word, locale) {
+      FbDb.ref(`dictsExpansion/${locale}`).once("value", (snapshot) => {
+        if (!snapshot.val().includes(word)) {
+          FbDb.ref(`dictsExpansion/${locale}/${snapshot.val().length}`).set(word)
+          gcFunctions.inconsistenciesUpdate()
+          FbDb.ref("dictsExpansion/").once("value", (updatedData) => {
+            this.dictsExpansionData = updatedData.val()
+          })
+        }
+      })
+    },
   },
   destroyed() {
     window.removeEventListener("scroll", this.toggleSSNameVisibility)
@@ -1209,5 +1242,15 @@ h4 {
     left: 475px;
     width: 300px;
     top: 15px;
+  }
+  .clickable {
+    cursor: pointer;
+  }
+  .note {
+    font-size: 8px;
+    color: gray;
+  }
+  .strikethrough {
+    text-decoration: line-through;
   }
 </style>
