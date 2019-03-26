@@ -391,7 +391,7 @@
                 <PlaceholderIcon fill-color="#ef0000"></PlaceholderIcon>
               </div>
               <div
-                id="typosIndicator"
+                :id="`typosIndicator_${locale}`"
                 v-if="activeTranslations[locale]._typos
                 && activeTranslations[locale]._typos !== 'unsupported language'
                 && allowedChecks.includes('_inconsistencies_typos')"
@@ -399,7 +399,7 @@
               >
                 <TyposIcon fill-color="#ef0000"></TyposIcon>
                 <b-popover
-                  target="typosIndicator"
+                  :target="`typosIndicator_${locale}`"
                   title="Typos"
                   triggers="click"
                 >
