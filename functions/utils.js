@@ -214,7 +214,11 @@ function updateDictsExpansion(dictsExpansion, dicts) {
   if (!dictsExpansion || !dictsExpansion.global) {
     dictsExpUpdate.global = ["**PLACEHOLDER**"]
   }
-  return { ...dictsExpUpdate, ...dictsExpansion }
+  const updatedDictExpansion = { ...dictsExpUpdate, ...dictsExpansion }
+  return _.reduce(updatedDictExpansion, (acc, dict, lang) => { // remove unnecessary placeholders
+    acc[lang] = dict.length > 1 ? dict.filter(word => word !== "**PLACEHOLDER**") : dict
+    return acc
+  }, {})
 }
 
 module.exports = {
