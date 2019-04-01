@@ -4,8 +4,8 @@
       Stranger Strings
     </b-navbar-brand>
     <b-navbar-nav is-nav>
-        <b-link to="/items" style="color: #CCE2FC; margin-right: 15px; margin-left: 15px;" active-class="activeView">Items</b-link>
-        <b-link to="/collections" style="color: #CCE2FC;" active-class="activeView">Collections</b-link>
+        <b-link to="/items" style="color: rgba(255, 255, 255, 0.5); margin-right: 15px; margin-left: 15px;" active-class="activeView">Items</b-link>
+        <b-link to="/collections" style="color: rgba(255, 255, 255, 0.5);" active-class="activeView">Collections</b-link>
     </b-navbar-nav>
 
     <div class="updating" v-if="updateInProgress.info">Update in progress ({{ updateInProgress.info.state }}...)</div>
@@ -49,7 +49,7 @@ export default {
   @import url('https://fonts.googleapis.com/css?family=Megrim');
 
   .navbar-dark {
-    background-color: #007bff !important;
+    background-color: #26539B !important;
   }
 
   .navbar-brand {

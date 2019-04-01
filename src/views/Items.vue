@@ -270,14 +270,10 @@
       @hidden="hideKeyDetail"
     >
       <div class="keyOverview" v-if="items[activeKey]">
-        <div class="errors-overview" v-if="getItemInconsistencies(items[activeKey]).length > 0">
-          <strong>Errors:</strong><br/>
+        <div class="errors-overview">
           <div v-for="inconsistency in getItemInconsistencies(items[activeKey])" :key="inconsistency" class="error">
             <div v-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_placeholders'">
               <div class="inline-error"><PlaceholderIcon :size="30"></PlaceholderIcon></div> - missing placeholders
-            </div>
-            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_noEnglish'">
-              <div class="inline-error"><NoEnglishIcon :size="30"></NoEnglishIcon></div> - missing english localisation
             </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_length'">
               <div  class="inline-warning"><LengthIcon :size="30"></LengthIcon></div> - big differences in length
@@ -328,9 +324,6 @@
             <strong class="missing-normal">Missing secondary locales: </strong>
             {{ locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).join(", ") }}
           </div>
-          <div v-if="getMaximumTranslations > items[activeKey].translated.length">
-            <strong class="translated">Translated: </strong><div class="unimportant">{{ items[activeKey].translated.join(", ") }}</div>
-          </div>
         </div>
       </div>
 
@@ -346,11 +339,11 @@
         </b-form>
       </div>
 
-      <table v-if="items[activeKey]" class="table table-sm b-table table-striped">
+      <table v-if="items[activeKey]" class="table table-sm b-table table-striped key-detail-table">
         <thead>
-          <th colspan="2">Locale</th>
-          <th>Translation</th>
-          <th>Errors</th>
+          <th colspan="2" class="key-detail-header">Locale</th>
+          <th class="key-detail-header">Translation</th>
+          <th class="key-detail-header">Errors</th>
         </thead>
 
         <tbody>
@@ -1001,7 +994,6 @@ export default {
   }
 td {
   vertical-align: middle;
-  font-size: 12px;
   padding: 5px;
 }
 th {
@@ -1032,6 +1024,9 @@ td.key {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+td.key a {
+  color: #26539B;
 }
 td.translationProgress {
   width: 50px;
@@ -1069,12 +1064,18 @@ td.locale {
   .locale-id {
     font-weight: bolder;
     width: max-content;
+    border: none !important;
   }
   .flag-id {
     width: 30px;
+    border: none !important;
   }
   .translation {
     width: 80%;
+    border: none !important;
+  }
+  .errors-col {
+    border: none !important;
   }
   .flag-icon {
     width: 30px;
@@ -1097,6 +1098,7 @@ td.locale {
   font-size: 16px;
   border: 1px;
   list-style: none;
+  padding-bottom: 10px;
 }
 .textInput {
   max-width: 100%;
@@ -1213,13 +1215,10 @@ h4 {
     font-weight: bolder;
   }
   .missing-important {
-    color: #DC3545;
+    color: #D5011B;
   }
   .missing-normal {
-    color: #FFC107;
-  }
-  .translated {
-    color: #28A745;
+    color: #ffb508;
   }
   .unimportant {
     color: gray;
@@ -1227,9 +1226,10 @@ h4 {
   }
   .progress-chart {
     width: 33%;
+    text-align: center;
   }
   .progress-legend {
-    font-size: 14px;
+    font-size: 16px;
     display: inline-block;
     width: 33%;
     float: right;
@@ -1252,5 +1252,28 @@ h4 {
   }
   .strikethrough {
     text-decoration: line-through;
+  }
+  .key-detail-header {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-weight: 600;
+    font-size: 16px;
+    border-bottom: 0.5px solid grey;
+    border-top: none;
+  }
+  .key-detail-table {
+    font-size: 13px;
+  }
+  .table-keys {
+    font-size: 12px;
+  }
+  .bg-success {
+    background-color: #42B3D5 !important
+  }
+  .bg-warning {
+    background-color: #FFB508 !important;
+  }
+  .bg-danger {
+    background-color: #D5011B !important;
   }
 </style>
