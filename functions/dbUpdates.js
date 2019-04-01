@@ -173,17 +173,17 @@ function computeInconsistenciesOfKey(mappedTranslations, fbKey) {
   // - japan lang doesn't use question mark
   const lastCharTypeExceptions = mappedTranslations[fbKey]
   && mappedTranslations[fbKey]["en-GB"]
-  && mappedTranslations[fbKey]["en-GB"]._lastCharType === "QUESTMARK" ? ["th-TH", "ja-JP"] : "th-TH"
+  && mappedTranslations[fbKey]["en-GB"]._lastCharType === "question mark" ? ["th-TH", "ja-JP"] : "th-TH"
 
   val._inconsistencies_placeholders = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.uniqWith(_.map(mappedTranslations[fbKey], x => x._placeholders.sort()), _.isEqual).length !== 1
   val._inconsistencies_firstCharType = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.uniq(_.map(mappedTranslations[fbKey], x => x._firstCharType))
-      .filter(x => x !== "DIGIT").length > 1
+      .filter(x => x !== "digit").length > 1
   // DIGIT excluded due to syntax differences between languages
   val._inconsistencies_lastCharType = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.uniq(_.map(_.omit(mappedTranslations[fbKey], lastCharTypeExceptions), x => x._lastCharType))
-      .filter(x => !["UNCATEGORIZED", "DIGIT"].includes(x)).length > 1
+      .filter(x => !["uncategorized", "digit"].includes(x)).length > 1
   // UNCATEGORIZED and DIGIT excluded due to syntax differences between languages
   val._inconsistencies_tags = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.includes(_.map(mappedTranslations[fbKey], x => x._tags), "NOT_ALLOWED")

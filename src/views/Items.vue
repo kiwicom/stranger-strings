@@ -418,24 +418,40 @@
                 <DynamicIcon fill-color="#800080"></DynamicIcon>
               </div>
               <div
+                :id="`firstIndicator_${locale}`"
                 v-if="allowedChecks.includes('_inconsistencies_firstCharType')
                 && activeTranslations[locale]._firstCharType !== getExpectedFirstCharType(activeTranslations)"
                 class="inline-warning"
-                v-b-popover.hover="
-                'First character is ' + activeTranslations[locale]._firstCharType + ' but expected ' + getExpectedFirstCharType(activeTranslations)"
-                title="First character inconsistency"
               >
                 <FirstIcon></FirstIcon>
+                <b-popover
+                  :target="`firstIndicator_${locale}`"
+                  title="First character inconsistency"
+                  triggers="hover"
+                >
+                  First character is
+                  <strong> {{ activeTranslations[locale]._firstCharType }} </strong>
+                  but expected
+                  <strong> {{  getExpectedFirstCharType(activeTranslations) }} </strong>
+                </b-popover>
               </div>
               <div
+                :id="`lastIndicator_${locale}`"
                 v-if="allowedChecks.includes('_inconsistencies_lastCharType')
                 && activeTranslations[locale]._lastCharType !== getExpectedLastCharType(activeTranslations)"
                 class="inline-warning"
-                v-b-popover.hover="
-                'Last character is ' + activeTranslations[locale]._lastCharType + ' but expected ' + getExpectedLastCharType(activeTranslations)"
-                title="Last character inconsistency"
               >
                 <LastIcon></LastIcon>
+                <b-popover
+                  :target="`lastIndicator_${locale}`"
+                  title="Last character inconsistency"
+                  triggers="hover"
+                >
+                  Last character is
+                  <strong> {{ activeTranslations[locale]._lastCharType }} </strong>
+                  but expected
+                  <strong> {{  getExpectedLastCharType(activeTranslations) }} </strong>
+                </b-popover>
               </div>
             </td>
           </tr>
