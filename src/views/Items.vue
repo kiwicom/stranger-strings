@@ -79,7 +79,7 @@
             Progress
           </th>
           <th class="th-errors" v-for="(count, error) in errors" :key="error" v-if="allowedChecks && allowedChecks.includes(error)">
-            <div><span @click="toggleErrorsFilter(error)">{{ userifyInconsistency(error) }}</span></div>
+            <div><span :class="errorsFilter === error ? 'selected-error' : ''" @click="toggleErrorsFilter(error)">{{ userifyInconsistency(error) }}</span></div>
           </th>
           <th
             @click="changeSort('en-GB')"
@@ -938,10 +938,12 @@ export default {
       }
     },
     getExpectedFirstCharType(activeTranslations) {
-      return _.uniq(Object.values(activeTranslations).map(t => t._firstCharType))[0]
+      const firstChars = Object.values(activeTranslations).map(t => t._firstCharType)
+      return firstChars.sort((a, b) => firstChars.filter(v => v === a).length - firstChars.filter(v => v === b).length).pop()
     },
     getExpectedLastCharType(activeTranslations) {
-      return _.uniq(Object.values(activeTranslations).map(t => t._lastCharType))[0]
+      const lastChars = Object.values(activeTranslations).map(t => t._lastCharType)
+      return lastChars.sort((a, b) => lastChars.filter(v => v === a).length - lastChars.filter(v => v === b).length).pop()
     },
     toggleErrorsFilter(error) {
       this.errorsFilter = this.errorsFilter === error ? "all" : error
@@ -982,15 +984,17 @@ export default {
   }
 
   .table-fixed thead tr {
-    background-color: #ffff;
+    background-color: #f9fafc;
   }
 
   .table-fixed thead th {
-    top: 67px;
+    top: 63.5px;
     z-index: 1;
     position: sticky;
     position: -webkit-sticky;
-    background-color: rgb(0,0,0,0)
+    background-color: rgb(0,0,0,0);
+    font-weight: 500;
+    font-size: 14px;
   }
 td {
   vertical-align: middle;
@@ -1179,7 +1183,7 @@ h4 {
     z-index: 1;
     position: sticky;
     top: 0;
-    background-image: linear-gradient(rgba(255,255,255,0.95) 30%, rgba(255,255,255,1) 100%);
+    background-image: linear-gradient(rgba(255,255,255,0.95) 30%, #f9fafc 100%);
   }
   .ss-name {
     visibility: hidden;
@@ -1260,6 +1264,7 @@ h4 {
     font-size: 16px;
     border-bottom: 0.5px solid grey;
     border-top: none;
+    background-color: #f9fafc;
   }
   .key-detail-table {
     font-size: 13px;
@@ -1275,5 +1280,8 @@ h4 {
   }
   .bg-danger {
     background-color: #D5011B !important;
+  }
+  .selected-error {
+    font-weight: 900;
   }
 </style>
