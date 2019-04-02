@@ -23,7 +23,9 @@ const {
   writeGoodCheck,
   updateDictsExpansion,
 } = require("./utils")
-const { DEFAULT_SPELLCHECKING_DICT_SUPPORT, DEFAULT_WRITE_GOOD_SETTINGS, DEFAULT_PLACEHOLDER_REGEX } = require("../common/config") // TODO: configurable
+// TODO: configurable
+const { DEFAULT_SPELLCHECKING_DICT_SUPPORT, DEFAULT_WRITE_GOOD_SETTINGS, DEFAULT_PLACEHOLDER_REGEX } = require("../common/config")
+
 
 function getGithubApi(repo, path) { // just a preventions for incorrect repo path
   // TODO: write tests
