@@ -619,6 +619,7 @@ export default {
     this.errors = this.countErrors()
     if (this.activeKey) {
       this.setActive(this.activeKey)
+      NProgress.start()
     }
     this.allowedChecks = this.loadUserChecksConfig()
     FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
@@ -679,7 +680,7 @@ export default {
       return errs
     },
     setActive(key) {
-      this.modalKeyDetail = true
+      NProgress.start()
       this.activeKey = key
       this.$router.push({ name: "items", params: { all: key } })
       this.activeTranslations = {}
@@ -689,6 +690,8 @@ export default {
       FbDb.ref(`translations/${key}`).once("value", (snapshot) => {
         if (snapshot.val()) {
           this.activeTranslations = snapshot.val()
+          this.modalKeyDetail = true
+          NProgress.done()
         }
       })
     },
