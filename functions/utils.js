@@ -49,38 +49,75 @@ function determineCharType(char) {
   switch (char) {
   case ":":
   case "：":
-    return "COLON"
+    return "colon"
   case ".":
   case "。":
   case "…":
-    return "DOT"
+    return "dot"
   case ",":
-    return "COMMA"
+  case "،":
+  case "、":
+    return "comma"
   case "_":
-    return "UNDERSCORE"
+    return "underscore"
   case " ":
-    return "SPACE"
+    return "space"
   case "¿": // spanish beginning of a sentence ending with question/exclamation mark
   case "¡":
-    return "LETTER"
+    return "letter"
   case "!":
   case "！":
-    return "EXCLMARK"
+    return "exclamation mark"
   case "?":
   case ";":
   case "؟":
   case "？":
-    return "QUESTMARK"
+    return "question mark"
   case "\n":
-    return "LINEBREAK"
+    return "linebreak"
+  case "[":
+  case "]":
+  case "(":
+  case ")":
+  case "{":
+  case "}":
+  case "⟨":
+  case "⟩":
+    return "bracket"
+  case "‒":
+  case "–":
+  case "—":
+  case "―":
+    return "dash"
+  case "‹":
+  case "›":
+  case "«":
+  case "»":
+    return "guillemet"
+  case "‐":
+  case "-":
+    return "hyphen"
+  case "‘":
+  case "’":
+  case "“":
+  case "”":
+  case "'":
+  case "\"":
+    return "quotation mark"
+  case "/":
+  case "⧸":
+  case "⁄":
+    return "slash"
+  case "+":
+    return "plus"
   default:
     switch (true) {
     case /\d/.test(char):
-      return "DIGIT"
+      return "digit"
     case XRegExp("\\pL").test(char):
-      return "LETTER"
+      return "letter"
     default:
-      return "UNCATEGORIZED"
+      return "uncategorized"
     }
   }
 }
@@ -214,7 +251,11 @@ function updateDictsExpansion(dictsExpansion, dicts) {
   if (!dictsExpansion || !dictsExpansion.global) {
     dictsExpUpdate.global = ["**PLACEHOLDER**"]
   }
-  return { ...dictsExpUpdate, ...dictsExpansion }
+  const updatedDictExpansion = { ...dictsExpUpdate, ...dictsExpansion }
+  return _.reduce(updatedDictExpansion, (acc, dict, lang) => { // remove unnecessary placeholders
+    acc[lang] = dict.length > 1 ? dict.filter(word => word !== "**PLACEHOLDER**") : dict
+    return acc
+  }, {})
 }
 
 module.exports = {

@@ -30,7 +30,7 @@ export default {
             },
           },
           color: {
-            value: "#007bff",
+            value: "#26539B",
           },
           shape: {
             type: "circle",
@@ -70,7 +70,7 @@ export default {
           line_linked: {
             enable: true,
             distance: 126.26362266116361,
-            color: "#007bff",
+            color: "#26539B",
             opacity: 0.4,
             width: 1,
           },

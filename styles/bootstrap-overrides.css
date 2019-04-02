@@ -15,3 +15,33 @@
 .inline-highlight-typos {
   background: rgb(255,200,200);
 }
+
+.apexcharts-canvas {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.modal-header {
+  background-color: #26539B;
+  color: white;
+}
+
+.modal-header .close {
+  color: white;
+}
+
+.modal-header .close:hover {
+  color: white !important;
+}
+
+.modal-body {
+  background-color: #f9fafc;
+}
+
+.modal-footer {
+  background-color: #f9fafc;
+}
+
+body {
+  background-color: #f9fafc;
+}
