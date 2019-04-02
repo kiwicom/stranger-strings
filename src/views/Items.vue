@@ -79,7 +79,11 @@
             Progress
           </th>
           <th class="th-errors" v-for="(count, error) in errors" :key="error" v-if="allowedChecks && allowedChecks.includes(error)">
-            <div><span :class="errorsFilter === error ? 'selected-error' : ''" @click="toggleErrorsFilter(error)">{{ userifyInconsistency(error) }}</span></div>
+            <div>
+              <span :class="errorsFilter === error ? 'selected-error' : ''" @click="toggleErrorsFilter(error)">
+                {{ userifyInconsistency(error) }}
+              </span>
+            </div>
           </th>
           <th
             @click="changeSort('en-GB')"
