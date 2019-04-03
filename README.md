@@ -1,6 +1,6 @@
 # Stranger Strings
 
-![stranger strings 2019-03-06 19-30-21](https://user-images.githubusercontent.com/26377907/53920407-526d0480-406d-11e9-856d-1a8c3711e5ef.png)
+![image](https://user-images.githubusercontent.com/26377907/55490923-de565a00-5634-11e9-9349-0f5f0dc90336.png)
 ### Demo: <https://stranger-strings-showcase.firebaseapp.com> 
 ## Description
 **Stranger Strings** is open-source Firebase web application for exploring inconsistencies and

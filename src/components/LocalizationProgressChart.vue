@@ -58,7 +58,7 @@ export default {
             },
           },
         },
-        colors: ["#DC3545", "#FFC107", "#28A745"],
+        colors: ["#d5011b", "#ffb508", "#42b3d5"],
         dataLabels: {
           enabled: false,
           formatter(val) {
