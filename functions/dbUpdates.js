@@ -316,7 +316,7 @@ async function githubToFirebase() {
     await superagent
       .put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/locales.json`)
       .send({
-        locales: [...new Set(_.reduce(translations, (acc, translation) => acc.concat(Object.keys(translation)), []))],
+        list: [...new Set(_.reduce(translations, (acc, translation) => acc.concat(Object.keys(translation)), []))],
       })
 
     await superagent
