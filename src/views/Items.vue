@@ -79,7 +79,11 @@
             Progress
           </th>
           <th class="th-errors" v-for="(count, error) in errors" :key="error" v-if="allowedChecks && allowedChecks.includes(error)">
-            <div><span @click="toggleErrorsFilter(error)">{{ userifyInconsistency(error) }}</span></div>
+            <div>
+              <span :class="errorsFilter === error ? 'selected-error' : ''" @click="toggleErrorsFilter(error)">
+                {{ userifyInconsistency(error) }}
+              </span>
+            </div>
           </th>
           <th
             @click="changeSort('en-GB')"
@@ -270,14 +274,10 @@
       @hidden="hideKeyDetail"
     >
       <div class="keyOverview" v-if="items[activeKey]">
-        <div class="errors-overview" v-if="getItemInconsistencies(items[activeKey]).length > 0">
-          <strong>Errors:</strong><br/>
+        <div class="errors-overview">
           <div v-for="inconsistency in getItemInconsistencies(items[activeKey])" :key="inconsistency" class="error">
             <div v-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_placeholders'">
               <div class="inline-error"><PlaceholderIcon :size="30"></PlaceholderIcon></div> - missing placeholders
-            </div>
-            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_noEnglish'">
-              <div class="inline-error"><NoEnglishIcon :size="30"></NoEnglishIcon></div> - missing english localisation
             </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_length'">
               <div  class="inline-warning"><LengthIcon :size="30"></LengthIcon></div> - big differences in length
@@ -328,9 +328,6 @@
             <strong class="missing-normal">Missing secondary locales: </strong>
             {{ locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).join(", ") }}
           </div>
-          <div v-if="getMaximumTranslations > items[activeKey].translated.length">
-            <strong class="translated">Translated: </strong><div class="unimportant">{{ items[activeKey].translated.join(", ") }}</div>
-          </div>
         </div>
       </div>
 
@@ -346,16 +343,19 @@
         </b-form>
       </div>
 
-      <table v-if="items[activeKey]" class="table table-sm b-table table-striped detailTable">
+      <table v-if="items[activeKey]" class="table table-sm b-table table-striped key-detail-table">
         <thead>
-          <th>Locale</th>
-          <th>Translation</th>
-          <th>Errors</th>
+          <th colspan="2" class="key-detail-header">Locale</th>
+          <th class="key-detail-header">Translation</th>
+          <th class="key-detail-header">Errors</th>
         </thead>
 
         <tbody>
           <tr :key="locale" v-for="locale in locales" v-if="activeTranslations[locale]">
-            <td class="locale-id" scope="row">
+            <td class="flag-id">
+              <div class="flag-icon"><CountryFlag :country="locale.slice(3, 5).toLowerCase()" size="small"></CountryFlag></div>
+            </td>
+            <td class="locale-id">
               {{ locale }}
             </td>
             <td class="translation">
@@ -388,14 +388,30 @@
                 <PlaceholderIcon fill-color="#ef0000"></PlaceholderIcon>
               </div>
               <div
+                :id="`typosIndicator_${locale}`"
                 v-if="activeTranslations[locale]._typos
                 && activeTranslations[locale]._typos !== 'unsupported language'
                 && allowedChecks.includes('_inconsistencies_typos')"
-                class="inline-error"
-                v-b-popover.hover="removeDuplicates(activeTranslations[locale]._typos).join('\n')"
-                title="Typos"
+                class="inline-error clickable"
               >
                 <TyposIcon fill-color="#ef0000"></TyposIcon>
+                <b-popover
+                  :target="`typosIndicator_${locale}`"
+                  title="Typos"
+                  triggers="click"
+                >
+                  <div v-for="typo in removeDuplicates(activeTranslations[locale]._typos)" :key="typo">
+                    <strong :class="dictsExpansionData[locale].includes(typo) ? 'strikethrough' : ''">{{ typo }}  </strong>
+                    <b-button
+                      @click="addWordToDict(typo, locale)"
+                      :disabled="dictsExpansionData[locale].includes(typo)"
+                      variant="outline-success"
+                      size="sm">
+                      add to {{ locale }} dictionary
+                    </b-button>
+                  </div>
+                  <div class="note">note: please take in mind that changes in dictionaries will be visible after next spellchecking (&lt;1 min)</div>
+                </b-popover>
               </div>
               <div
                 v-if="activeTranslations[locale]._dynamic && allowedChecks.includes('_inconsistencies_dynamic')"
@@ -406,28 +422,47 @@
                 <DynamicIcon fill-color="#800080"></DynamicIcon>
               </div>
               <div
+                :id="`firstIndicator_${locale}`"
                 v-if="allowedChecks.includes('_inconsistencies_firstCharType')
                 && activeTranslations[locale]._firstCharType !== getExpectedFirstCharType(activeTranslations)"
                 class="inline-warning"
-                v-b-popover.hover="
-                'First character is ' + activeTranslations[locale]._firstCharType + ' but expected ' + getExpectedFirstCharType(activeTranslations)"
-                title="First character inconsistency"
               >
                 <FirstIcon></FirstIcon>
+                <b-popover
+                  :target="`firstIndicator_${locale}`"
+                  title="First character inconsistency"
+                  triggers="hover"
+                >
+                  First character is
+                  <strong> {{ activeTranslations[locale]._firstCharType }} </strong>
+                  but expected
+                  <strong> {{  getExpectedFirstCharType(activeTranslations) }} </strong>
+                </b-popover>
               </div>
               <div
+                :id="`lastIndicator_${locale}`"
                 v-if="allowedChecks.includes('_inconsistencies_lastCharType')
                 && activeTranslations[locale]._lastCharType !== getExpectedLastCharType(activeTranslations)"
                 class="inline-warning"
-                v-b-popover.hover="
-                'Last character is ' + activeTranslations[locale]._lastCharType + ' but expected ' + getExpectedLastCharType(activeTranslations)"
-                title="Last character inconsistency"
               >
                 <LastIcon></LastIcon>
+                <b-popover
+                  :target="`lastIndicator_${locale}`"
+                  title="Last character inconsistency"
+                  triggers="hover"
+                >
+                  Last character is
+                  <strong> {{ activeTranslations[locale]._lastCharType }} </strong>
+                  but expected
+                  <strong> {{  getExpectedLastCharType(activeTranslations) }} </strong>
+                </b-popover>
               </div>
             </td>
           </tr>
           <tr v-else>
+            <td class="flag-id">
+              <div class="flag-icon transparent"><CountryFlag :country="locale.slice(3, 5).toLowerCase()" size="small"></CountryFlag></div>
+            </td>
             <td :class="imporantLoc.includes(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'" scope="row">
               {{ locale }}
             </td>
@@ -454,6 +489,7 @@ import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
 import FirstIcon from "vue-material-design-icons/PageFirst"
 import LastIcon from "vue-material-design-icons/PageLast"
 import TagIcon from "vue-material-design-icons/CodeTags"
+import CountryFlag from "vue-country-flag"
 
 
 import Multiselect from "vue-multiselect"
@@ -488,6 +524,7 @@ export default {
     LastIcon,
     TagIcon,
     LocalizationProgressChart,
+    CountryFlag,
   },
   data() {
     return {
@@ -560,11 +597,11 @@ export default {
           this.allowedChecks = this.loadUserChecksConfig()
         },
       },
-      lastUpdate: {
-        source: FbDb.ref("lastUpdate"),
+      localeList: {
+        source: FbDb.ref("locales"),
         asObject: true,
         readyCallback: () => {
-          this.locales = this.lastUpdate.locales
+          this.locales = this.localeList.list
           this.importantLocales = this.loadUserLocalesConfig()
         },
       },
@@ -582,8 +619,12 @@ export default {
     this.errors = this.countErrors()
     if (this.activeKey) {
       this.setActive(this.activeKey)
+      NProgress.start()
     }
     this.allowedChecks = this.loadUserChecksConfig()
+    FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
+      this.dictsExpansionData = dictsData.val()
+    })
     window.addEventListener("scroll", this.toggleSSNameVisibility)
     if (this.itemsLoaded) {
       NProgress.done()
@@ -639,13 +680,18 @@ export default {
       return errs
     },
     setActive(key) {
-      this.modalKeyDetail = true
+      NProgress.start()
       this.activeKey = key
       this.$router.push({ name: "items", params: { all: key } })
       this.activeTranslations = {}
+      FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
+        this.dictsExpansionData = dictsData.val()
+      })
       FbDb.ref(`translations/${key}`).once("value", (snapshot) => {
         if (snapshot.val()) {
           this.activeTranslations = snapshot.val()
+          this.modalKeyDetail = true
+          NProgress.done()
         }
       })
     },
@@ -915,10 +961,12 @@ export default {
       }
     },
     getExpectedFirstCharType(activeTranslations) {
-      return _.uniq(Object.values(activeTranslations).map(t => t._firstCharType))[0]
+      const firstChars = Object.values(activeTranslations).map(t => t._firstCharType)
+      return firstChars.sort((a, b) => firstChars.filter(v => v === a).length - firstChars.filter(v => v === b).length).pop()
     },
     getExpectedLastCharType(activeTranslations) {
-      return _.uniq(Object.values(activeTranslations).map(t => t._lastCharType))[0]
+      const lastChars = Object.values(activeTranslations).map(t => t._lastCharType)
+      return lastChars.sort((a, b) => lastChars.filter(v => v === a).length - lastChars.filter(v => v === b).length).pop()
     },
     toggleErrorsFilter(error) {
       this.errorsFilter = this.errorsFilter === error ? "all" : error
@@ -926,6 +974,17 @@ export default {
     },
     removeDuplicates(array) {
       return [...new Set(array)]
+    },
+    addWordToDict(word, locale) {
+      FbDb.ref(`dictsExpansion/${locale}`).once("value", (snapshot) => {
+        if (!snapshot.val().includes(word)) {
+          FbDb.ref(`dictsExpansion/${locale}/${snapshot.val().length}`).set(word)
+          gcFunctions.inconsistenciesUpdate()
+          FbDb.ref("dictsExpansion/").once("value", (updatedData) => {
+            this.dictsExpansionData = updatedData.val()
+          })
+        }
+      })
     },
   },
   destroyed() {
@@ -948,19 +1007,20 @@ export default {
   }
 
   .table-fixed thead tr {
-    background-color: #ffff;
+    background-color: #f9fafc;
   }
 
   .table-fixed thead th {
-    top: 67px;
+    top: 63.5px;
     z-index: 1;
     position: sticky;
     position: -webkit-sticky;
-    background-color: rgb(0,0,0,0)
+    background-color: rgb(0,0,0,0);
+    font-weight: 500;
+    font-size: 14px;
   }
 td {
   vertical-align: middle;
-  font-size: 12px;
   padding: 5px;
 }
 th {
@@ -991,6 +1051,9 @@ td.key {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+td.key a {
+  color: #26539B;
 }
 td.translationProgress {
   width: 50px;
@@ -1025,23 +1088,30 @@ td.locale {
 .row-visited td {
   background-color: #DFE7F2;
 }
-.detailTable {
-  td.locale {
-    max-width: 80px;
-    width: 80px;
-    white-space: nowrap;
-  }
-  td.translation {
-    max-width: 500px;
-    width: 500px;
-  }
-  td.errors-col {
-    width: 9vw;
-  }
-}
   .locale-id {
     font-weight: bolder;
-    width: 150px;
+    width: max-content;
+    border: none !important;
+  }
+  .flag-id {
+    width: 30px;
+    border: none !important;
+  }
+  .translation {
+    width: 80%;
+    border: none !important;
+  }
+  .errors-col {
+    border: none !important;
+  }
+  .flag-icon {
+    width: 30px;
+    height: 20px;
+    text-align: center;
+    margin-top: -33px;
+  }
+  .transparent {
+    opacity: 0.3;
   }
 .not-translated-primary {
   color: rgba(255, 0, 0, 0.65);
@@ -1055,6 +1125,7 @@ td.locale {
   font-size: 16px;
   border: 1px;
   list-style: none;
+  padding-bottom: 10px;
 }
 .textInput {
   max-width: 100%;
@@ -1135,7 +1206,7 @@ h4 {
     z-index: 1;
     position: sticky;
     top: 0;
-    background-image: linear-gradient(rgba(255,255,255,0.95) 30%, rgba(255,255,255,1) 100%);
+    background-image: linear-gradient(rgba(255,255,255,0.95) 30%, #f9fafc 100%);
   }
   .ss-name {
     visibility: hidden;
@@ -1171,13 +1242,10 @@ h4 {
     font-weight: bolder;
   }
   .missing-important {
-    color: #DC3545;
+    color: #D5011B;
   }
   .missing-normal {
-    color: #FFC107;
-  }
-  .translated {
-    color: #28A745;
+    color: #ffb508;
   }
   .unimportant {
     color: gray;
@@ -1185,9 +1253,10 @@ h4 {
   }
   .progress-chart {
     width: 33%;
+    text-align: center;
   }
   .progress-legend {
-    font-size: 14px;
+    font-size: 16px;
     display: inline-block;
     width: 33%;
     float: right;
@@ -1200,5 +1269,42 @@ h4 {
     left: 475px;
     width: 300px;
     top: 15px;
+  }
+  .clickable {
+    cursor: pointer;
+  }
+  .note {
+    font-size: 8px;
+    color: gray;
+  }
+  .strikethrough {
+    text-decoration: line-through;
+  }
+  .key-detail-header {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-weight: 600;
+    font-size: 16px;
+    border-bottom: 0.5px solid grey;
+    border-top: none;
+    background-color: #f9fafc;
+  }
+  .key-detail-table {
+    font-size: 13px;
+  }
+  .table-keys {
+    font-size: 12px;
+  }
+  .bg-success {
+    background-color: #42B3D5 !important
+  }
+  .bg-warning {
+    background-color: #FFB508 !important;
+  }
+  .bg-danger {
+    background-color: #D5011B !important;
+  }
+  .selected-error {
+    font-weight: 900;
   }
 </style>

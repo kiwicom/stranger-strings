@@ -10,6 +10,7 @@ if (LOCALEXEC) {
 const superagent = require("superagent")
 const _ = require("lodash")
 const moment = require("moment")
+const sanitizeHtml = require("sanitize-html")
 
 const dbMutex = require("./dbMutex")
 const {
@@ -22,7 +23,9 @@ const {
   writeGoodCheck,
   updateDictsExpansion,
 } = require("./utils")
-const { DEFAULT_SPELLCHECKING_DICT_SUPPORT, DEFAULT_WRITE_GOOD_SETTINGS, DEFAULT_PLACEHOLDER_REGEX } = require("../common/config") // TODO: configurable
+// TODO: configurable
+const { DEFAULT_SPELLCHECKING_DICT_SUPPORT, DEFAULT_WRITE_GOOD_SETTINGS, DEFAULT_PLACEHOLDER_REGEX } = require("../common/config")
+
 
 function getGithubApi(repo, path) { // just a preventions for incorrect repo path
   // TODO: write tests
@@ -155,8 +158,8 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
     _.set(mappedTranslations, [fbKey, _key], {
       content: _val,
       _placeholders: trimmed.match(RegExp(placeholderRegex, "g")) || [],
-      _firstCharType: determineCharType(interpolated[0]),
-      _lastCharType: determineCharType(interpolated[interpolated.length - 1]),
+      _firstCharType: determineCharType(sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] })[0]),
+      _lastCharType: determineCharType(sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] })[interpolated.length - 1]),
       _tags: validateHtml(_val),
       _dynamic: detectDynamicValues(_val),
       _writeGood: writeGoodCheck(_val, _key, writeGoodSettings),
@@ -172,16 +175,18 @@ function computeInconsistenciesOfKey(mappedTranslations, fbKey) {
   // - japan lang doesn't use question mark
   const lastCharTypeExceptions = mappedTranslations[fbKey]
   && mappedTranslations[fbKey]["en-GB"]
-  && mappedTranslations[fbKey]["en-GB"]._lastCharType === "QUESTMARK" ? ["th-TH", "ja-JP"] : "th-TH"
+  && mappedTranslations[fbKey]["en-GB"]._lastCharType === "question mark" ? ["th-TH", "ja-JP"] : "th-TH"
 
   val._inconsistencies_placeholders = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.uniqWith(_.map(mappedTranslations[fbKey], x => x._placeholders.sort()), _.isEqual).length !== 1
   val._inconsistencies_firstCharType = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
-    && _.uniq(_.map(mappedTranslations[fbKey], x => x._firstCharType)).length !== 1
+    && _.uniq(_.map(mappedTranslations[fbKey], x => x._firstCharType))
+      .filter(x => x !== "digit").length > 1
+  // DIGIT excluded due to syntax differences between languages
   val._inconsistencies_lastCharType = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.uniq(_.map(_.omit(mappedTranslations[fbKey], lastCharTypeExceptions), x => x._lastCharType))
-      .filter(x => !["UNCATEGORIZED", "DIGIT"].includes(x)).length > 1
-  // UNCATEGORIZED and DIGIGT excluded due to syntax differences between languages
+      .filter(x => !["uncategorized", "digit"].includes(x)).length > 1
+  // UNCATEGORIZED and DIGIT excluded due to syntax differences between languages
   val._inconsistencies_tags = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.includes(_.map(mappedTranslations[fbKey], x => x._tags), "NOT_ALLOWED")
   val._inconsistencies_length = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
@@ -309,10 +314,15 @@ async function githubToFirebase() {
     await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`).send(collections)
 
     await superagent
+      .put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/locales.json`)
+      .send({
+        list: [...new Set(_.reduce(translations, (acc, translation) => acc.concat(Object.keys(translation)), []))],
+      })
+
+    await superagent
       .put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/lastUpdate.json`)
       .send({
         updated: moment().format("DD-MM-YYYY HH:mm:ss"),
-        locales: [...new Set(_.reduce(translations, (acc, translation) => acc.concat(Object.keys(translation)), []))],
         commitSha,
       })
     console.log("SUCCESS: updated all translations")
