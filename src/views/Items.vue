@@ -597,11 +597,11 @@ export default {
           this.allowedChecks = this.loadUserChecksConfig()
         },
       },
-      lastUpdate: {
-        source: FbDb.ref("lastUpdate"),
+      localeList: {
+        source: FbDb.ref("locales"),
         asObject: true,
         readyCallback: () => {
-          this.locales = this.lastUpdate.locales
+          this.locales = this.localeList.list
           this.importantLocales = this.loadUserLocalesConfig()
         },
       },

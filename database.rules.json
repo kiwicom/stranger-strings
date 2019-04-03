@@ -35,6 +35,10 @@
     "placeholders": {
        ".read": "true",
        ".write": "true"
+    },
+    "locales": {
+      ".read": "true",
+      ".write": "true"
     }
   }
 }

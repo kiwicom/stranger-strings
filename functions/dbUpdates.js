@@ -314,10 +314,15 @@ async function githubToFirebase() {
     await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`).send(collections)
 
     await superagent
+      .put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/locales.json`)
+      .send({
+        list: [...new Set(_.reduce(translations, (acc, translation) => acc.concat(Object.keys(translation)), []))],
+      })
+
+    await superagent
       .put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/lastUpdate.json`)
       .send({
         updated: moment().format("DD-MM-YYYY HH:mm:ss"),
-        locales: [...new Set(_.reduce(translations, (acc, translation) => acc.concat(Object.keys(translation)), []))],
         commitSha,
       })
     console.log("SUCCESS: updated all translations")
