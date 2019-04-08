@@ -372,6 +372,14 @@
                 <WriteGoodIcon></WriteGoodIcon>
               </div>
               <div
+                v-if="activeTranslations[locale]._insensitiveness && allowedChecks.includes('_inconsistencies_insensitiveness')"
+                class="inline-warning"
+                v-b-popover.hover="activeTranslations[locale]._insensitiveness.join(',\n')"
+                title="insensitiveness"
+              >
+                <WarningIcon></WarningIcon>
+              </div>
+              <div
                 v-if="hasInconsistentLength(locale, activeTranslations) && allowedChecks.includes('_inconsistencies_length')"
                 class="inline-warning"
                 v-b-popover.hover="'suspiciously long translation'"

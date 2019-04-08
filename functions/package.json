@@ -20,6 +20,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.0.0",
     "@babel/runtime": "^7.0.0",
+    "alex": "^7.1.0",
     "async": "^2.6.1",
     "dictionary-bg": "^1.2.2",
     "dictionary-cs": "^2.0.0",

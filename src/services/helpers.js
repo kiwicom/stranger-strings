@@ -107,6 +107,8 @@ export function userifyInconsistency(inconsistency) {
     return "dynamic"
   case "_inconsistencies_noEnglish":
     return "no english"
+  case "_inconsistencies_insensitiveness":
+    return "insensitiveness"
   default:
     return inconsistency
   }

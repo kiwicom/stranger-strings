@@ -8,6 +8,7 @@ if (LOCALEXEC) {
 // //////////////////////// //
 
 const superagent = require("superagent")
+const alex = require("alex")
 const _ = require("lodash")
 const moment = require("moment")
 const sanitizeHtml = require("sanitize-html")
@@ -163,6 +164,11 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
       _tags: validateHtml(_val),
       _dynamic: detectDynamicValues(_val),
       _writeGood: writeGoodCheck(_val, _key, writeGoodSettings),
+      _insensitiveness: _key.toString() === "en-GB" ?
+        alex.text(sanitizeHtml(_val, { allowedTags: [], allowedAttributes: [] }), {
+          profanitySureness: 2,
+          allow: ["special", "invalid"],
+        }).messages.map(out => out.message) : {},
     })
   })
   return mappedTranslations
@@ -200,6 +206,9 @@ function computeInconsistenciesOfKey(mappedTranslations, fbKey) {
   val._inconsistencies_dynamic = mappedTranslations[fbKey]
     && Object.values(mappedTranslations[fbKey])
       .some(x => x._dynamic.length > 0)
+  val._inconsistencies_insensitiveness = mappedTranslations[fbKey]
+    && Object.keys(mappedTranslations[fbKey])
+      .filter(lang => Array.isArray(mappedTranslations[fbKey][lang]._insensitiveness) && mappedTranslations[fbKey][lang]._insensitiveness.length > 0)
   return val
 }
 
