@@ -14,6 +14,7 @@ export const descriptions = {
   length: "detects suspicious variations in length",
   typos: "performs spellchecking",
   "write-good": "detects stylistic issues in text",
+  insensitiveness: "detects gender favouring, polarising, race related, religion inconsiderate, or other unequal phrasing in text",
   dynamic: "detects dynamic values e.g. numbers",
   "no english": "looks for missing english translation",
 }

@@ -124,6 +124,7 @@
             <WriteGoodIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_writeGood'"></WriteGoodIcon>
             <TyposIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_typos'"></TyposIcon>
             <TagIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_tags'"></TagIcon>
+            <InsensitivenessIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_insensitiveness'"></InsensitivenessIcon>
             <WarningIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
           </td>
 
@@ -296,6 +297,11 @@
                 <WriteGoodIcon :size="30"></WriteGoodIcon>
               </div> - write-good suggestions (in locales: {{ items[activeKey][inconsistency].join(", ") }})
             </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_insensitiveness'">
+              <div class="inline-warning">
+                <InsensitivenessIcon :size="30"></InsensitivenessIcon>
+              </div> - insensitiveness (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+            </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_typos'">
               <div class="inline-error">
                 <TyposIcon :size="30"></TyposIcon>
@@ -377,7 +383,7 @@
                 v-b-popover.hover="activeTranslations[locale]._insensitiveness.join(',\n')"
                 title="insensitiveness"
               >
-                <WarningIcon></WarningIcon>
+                <InsensitivenessIcon></InsensitivenessIcon>
               </div>
               <div
                 v-if="hasInconsistentLength(locale, activeTranslations) && allowedChecks.includes('_inconsistencies_length')"
@@ -488,6 +494,7 @@
 import NProgress from "nprogress"
 import "vue-octicon/icons"
 import WarningIcon from "vue-material-design-icons/AlertOutline"
+import InsensitivenessIcon from "vue-material-design-icons/EmoticonCryOutline"
 import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
 import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
 import TyposIcon from "vue-material-design-icons/Spellcheck"
@@ -522,6 +529,7 @@ export default {
   components: {
     Multiselect,
     WarningIcon,
+    InsensitivenessIcon,
     PlaceholderIcon,
     WriteGoodIcon,
     TyposIcon,
