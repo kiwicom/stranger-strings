@@ -39,9 +39,14 @@
             <octicon name="mention"></octicon>&nbsp; placeholder config
           </b-dropdown-item-button>
           <b-dropdown-item-button
-            @click="showWriteGoodSettings"
+            @click="showWriteGoodConfig"
           >
-            <octicon name="checklist"></octicon>&nbsp;write good settings
+            <octicon name="checklist"></octicon>&nbsp;write good config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
+            @click="showInsensitivenessConfig"
+          >
+            <InsensitivenessIcon></InsensitivenessIcon> insensitiveness config
           </b-dropdown-item-button>
           <b-dropdown-item-button
             @click="exportKeys"
@@ -735,7 +740,7 @@ export default {
     showUserConfig() {
       this.modalChecksConfig = true
     },
-    showWriteGoodSettings() {
+    showWriteGoodConfig() {
       FbDb.ref("writeGood").once("value", (snapshot) => {
         if (snapshot.val()) {
           this.writeGoodSettings = snapshot.val() // if this line is removed dicts expansion cannot be modified
@@ -756,6 +761,9 @@ export default {
         // eslint-disable-next-line no-alert
         alert("You don't have permission to modify this setting") // TODO: friendlier
       }
+    },
+    showInsensitivenessConfig() {
+
     },
     showPlaceholderConfig() {
       this.modalPlaceholderConfig = true
