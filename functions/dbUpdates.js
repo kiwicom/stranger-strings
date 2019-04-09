@@ -13,6 +13,9 @@ const moment = require("moment")
 const sanitizeHtml = require("sanitize-html")
 
 const dbMutex = require("./dbMutex")
+
+const { loader } = require("./config")
+
 const {
   validateHtml,
   determineCharType,
@@ -26,120 +29,6 @@ const {
 // TODO: configurable
 const { DEFAULT_SPELLCHECKING_DICT_SUPPORT, DEFAULT_WRITE_GOOD_SETTINGS, DEFAULT_PLACEHOLDER_REGEX } = require("../common/config")
 
-
-function getGithubApi(repo, path) { // just a preventions for incorrect repo path
-  // TODO: write tests
-  return repo
-    .replace(/^https:\/\/github\.com\//, "https://api.github.com/repos/")
-    .replace(/.git$/, "")
-    .replace(/\/$/, "")
-    .concat(path || "")
-}
-
-function fetchCommitSha() {
-  return new Promise((resolve, reject) => {
-    superagent
-      .get(getGithubApi(process.env.GITHUB_REPO, "/commits"))
-      .auth(process.env.GITHUB_USER, process.env.GITHUB_PASSWORD)
-      .end((err, res) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(res.body[0].sha)
-        }
-      })
-  })
-}
-
-function fetchCommit(sha) {
-  console.log("fetchCommit")
-  console.log(sha)
-
-  return new Promise((resolve, reject) => {
-    superagent
-      .get(getGithubApi(process.env.GITHUB_REPO, `/git/commits/${sha}`))
-      .auth(process.env.GITHUB_USER, process.env.GITHUB_PASSWORD)
-      .end((err, res) => {
-        if (err) {
-          console.log(err, "error")
-          reject(err)
-        } else {
-          console.log("resolving fetchCommit")
-          resolve(res.body.tree.sha)
-        }
-      })
-  })
-}
-
-function fetchNodes(sha) {
-  return new Promise((resolve, reject) => {
-    superagent
-      .get(getGithubApi(process.env.GITHUB_REPO, `/git/trees/${sha}`))
-      .auth(process.env.GITHUB_USER, process.env.GITHUB_PASSWORD)
-      .end((err, res) => {
-        if (err) {
-          reject(err)
-        } else { // TODO: refactor ignored files
-          const nodes = res.body.tree.filter(node => node.type === "blob"
-              && node.path.includes(".json")
-              && node.path !== "package.json"
-              && node.path !== ".releaserc.json")
-          resolve(nodes)
-        }
-      })
-  })
-}
-
-function fetchBlobs(nodes) {
-  return Promise.all(nodes.map((node) => { // eslint-disable-line
-    return new Promise((resolve, reject) => {
-      superagent
-        .get(node.url)
-        .auth(process.env.GITHUB_USER, process.env.GITHUB_PASSWORD)
-        .end((err, res) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve({ name: node.path, blob: res.body })
-          }
-        })
-    })
-  }))
-}
-
-function mapFiles(files) {
-  return files.map(file => ({
-    locale: file.name.replace(".json", ""),
-    sha: file.blob.sha,
-    data: JSON.parse(new Buffer(file.blob.content, file.blob.encoding).toString("utf8")), // eslint-disable-line no-buffer-constructor
-  }))
-}
-
-function processTranslations(translations) {
-  // take only english translated keys
-  const enTranslations = translations.filter(x => x.locale === "en-GB")[0].data // TODO: configurable default locale
-  const allTKeys = Object.keys(enTranslations)
-  // problem is there can be keys translated only in czech or some other locale and these should also be added
-  translations.forEach((trans) => {
-    Object.keys(trans.data).forEach((key) => {
-      if (allTKeys.indexOf(key) < 0) {
-        allTKeys.push(key)
-      }
-    })
-  })
-
-  return allTKeys.reduce((acc, key) => {
-    translations.forEach((trans) => {
-      if (trans.data[key]) {
-        if (!acc[key]) {
-          acc[key] = {}
-        }
-        acc[key][trans.locale] = trans.data[key]
-      }
-    })
-    return acc
-  }, {})
-}
 
 function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex) {
   const mappedTranslations = {}
@@ -243,18 +132,14 @@ function prepareTranslationsForExport(translations) {
   }, {})
 }
 
-async function githubToFirebase() {
-  if (!(await dbMutex.tryLock("downloading recent translations from GitHub"))) {
-    console.log("Update already in progress, stopping!")
-    return
-  }
+async function originToFirebase() {
+  // TODO: Put back
+  // if (!(await dbMutex.tryLock("downloading recent translations from GitHub"))) {
+  //   console.log("Update already in progress, stopping!")
+  //   return
+  // }
   try {
-    const commitSha = await fetchCommitSha()
-    const repoTreeSha = await fetchCommit(commitSha)
-    const nodes = await fetchNodes(repoTreeSha)
-    const blobs = await fetchBlobs(nodes)
-    const files = mapFiles(blobs)
-    const translations = processTranslations(files)
+    const { version, translations } = await loader.fetch()
 
     const items = _.reduce(translations, (acc, val, key) => {
       const _key = key.includes(".") ? key.split(".").join("-") : key
@@ -323,7 +208,7 @@ async function githubToFirebase() {
       .put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/lastUpdate.json`)
       .send({
         updated: moment().format("DD-MM-YYYY HH:mm:ss"),
-        commitSha,
+        version,
       })
     console.log("SUCCESS: updated all translations")
     // eslint-disable-next-line consistent-return
@@ -408,12 +293,11 @@ async function updateCollections() {
 }
 
 module.exports = {
-  getGithubApi,
-  githubToFirebase,
+  originToFirebase,
   updateInconsistencies,
   updateCollections,
 }
 
 // LOCAL DEBUGGING SETTINGS //
-if (LOCALEXEC) githubToFirebase()
+if (LOCALEXEC) originToFirebase()
 // //////////////////////// //
