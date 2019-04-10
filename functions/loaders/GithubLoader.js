@@ -45,7 +45,6 @@ function processTranslations(translations) {
 
 
 module.exports = function GithubLoader(repo, user, password) {
-
   function fetchCommitSha() {
     return new Promise((resolve, reject) => {
       const api = getGithubApi(repo, "/commits")

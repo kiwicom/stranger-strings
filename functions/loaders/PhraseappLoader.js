@@ -1,11 +1,10 @@
 const superagent = require("superagent")
-const _ = require("lodash")
-const async = require("async")
+const bluebird = require("bluebird")
 
 
 const path = "https://api.phraseapp.com/v2"
 
-module.exports = function (projectId, token) {
+module.exports = (projectId, token) => {
   async function fetchProjectLastUpdate() {
     return new Promise((resolve, reject) => {
       superagent
@@ -38,27 +37,29 @@ module.exports = function (projectId, token) {
   }
 
   async function fetchTranslations(locales) {
-    // TODO: Limit concurrency to 2 as specified in PhraseApp docs
-    const promises = locales.map(locale => new Promise((resolve, reject) => {
-      superagent
-        .get(`${path}/projects/${projectId}/locales/${locale.id}/download`)
-        .query({
-          file_format: "simple_json",
-          access_token: token,
-          include_empty_translations: true,
-        })
-        .end((err, res) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve({
-              code: locale.code,
-              data: res.body,
-            })
-          }
-        })
-    }))
-
+    const results = await bluebird.map(
+      locales,
+      locale => new Promise((resolve, reject) => {
+        superagent
+          .get(`${path}/projects/${projectId}/locales/${locale.id}/download`)
+          .query({
+            file_format: "simple_json",
+            access_token: token,
+            include_empty_translations: true,
+          })
+          .end((err, res) => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve({
+                code: locale.code,
+                data: res.body,
+              })
+            }
+          })
+      }),
+      { concurrency: 2 },
+    )
     // [
     //   {
     //     "code": "en-GB",
@@ -68,10 +69,10 @@ module.exports = function (projectId, token) {
     //   }
     // ]
 
-    return Promise.all(promises).then(arr => arr.reduce((acc, x) => {
+    return results.reduce((acc, x) => {
       acc[x.code] = x.data
       return acc
-    }, {}))
+    }, {})
   }
 
   return {
@@ -99,7 +100,10 @@ module.exports = function (projectId, token) {
 
       const output = enKeys.reduce((acc, key) => {
         acc[key] = locales.reduce((acc2, locale) => {
-          acc2[locale.code] = translations[locale.code][key]
+          if (translations[locale.code][key]) {
+            // eslint-disable-next-line no-param-reassign
+            acc2[locale.code] = translations[locale.code][key]
+          }
           return acc2
         }, {})
         return acc

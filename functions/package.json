@@ -20,7 +20,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.0.0",
     "@babel/runtime": "^7.0.0",
-    "async": "^2.6.1",
+    "bluebird": "^3.5.4",
     "dictionary-bg": "^1.2.2",
     "dictionary-cs": "^2.0.0",
     "dictionary-da": "^3.3.0",

@@ -14,7 +14,7 @@ const sanitizeHtml = require("sanitize-html")
 
 const dbMutex = require("./dbMutex")
 
-const { loader } = require("./config")
+const { loader, loaderType } = require("./config")
 
 const {
   validateHtml,
@@ -133,11 +133,10 @@ function prepareTranslationsForExport(translations) {
 }
 
 async function originToFirebase() {
-  // TODO: Put back
-  // if (!(await dbMutex.tryLock("downloading recent translations from GitHub"))) {
-  //   console.log("Update already in progress, stopping!")
-  //   return
-  // }
+  if (!(await dbMutex.tryLock(`downloading recent translations from ${loaderType}`))) {
+    console.log("Update already in progress, stopping!")
+    return
+  }
   try {
     const { version, translations } = await loader.fetch()
 
