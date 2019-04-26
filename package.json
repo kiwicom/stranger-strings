@@ -16,7 +16,7 @@
     "@vue/cli-plugin-unit-jest": "^3.0.1",
     "apexcharts": "^3.5.0",
     "bootstrap": "^4.1.3",
-    "bootstrap-vue": "^2.0.0-rc.11",
+    "bootstrap-vue": "^2.0.0-rc.19",
     "dotenv": "^6.0.0",
     "eslint-plugin-jest": "^21.22.0",
     "firebase": "^5.4.2",

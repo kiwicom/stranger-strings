@@ -61,7 +61,7 @@
     <div class="sticky-header-hack">
       <div class="ss-name">Stranger Strings</div>
     </div>
-    <table class="table table-sm b-table table-striped table-hover table-keys table-fixed">
+    <table class="table table-sm table-striped table-hover table-keys table-fixed">
       <thead>
         <tr>
           <th
@@ -339,7 +339,8 @@
           >
             Show tags in translations
           </b-form-checkbox>
-          <b-form-checkbox v-model="escapeTranslationsChecked">Escape translations</b-form-checkbox>
+          <b-form-checkbox class="ml-3" v-model="escapeTranslationsChecked">Escape translations</b-form-checkbox>
+          <b-button class="ml-auto p-2"  variant="outline-secondary" @click="showReportModal('not-specified')"><ReportIcon/>  Report</b-button>
         </b-form>
       </div>
 
@@ -348,6 +349,7 @@
           <th colspan="2" class="key-detail-header">Locale</th>
           <th class="key-detail-header">Translation</th>
           <th class="key-detail-header">Errors</th>
+          <th class="key-detail-header"></th>
         </thead>
 
         <tbody>
@@ -458,6 +460,9 @@
                 </b-popover>
               </div>
             </td>
+            <td>
+              <b-button v-b-tooltip.hover title="Report" size="sm" variant="outline-secondary" @click="showReportModal(locale)"><ReportIcon/></b-button>
+            </td>
           </tr>
           <tr v-else>
             <td class="flag-id">
@@ -466,11 +471,62 @@
             <td :class="imporantLoc.includes(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'" scope="row">
               {{ locale }}
             </td>
-            <td colspan="2" :class="imporantLoc.includes(locale) ?'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">
+            <td colspan="3" :class="imporantLoc.includes(locale) ?'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">
               Not translated
             </td>
           </tr>
         </tbody>
+      </table>
+    </b-modal>
+
+    <!-- MODAL: REPORTING -->
+    <b-modal
+      id="reportModal"
+      title="Report"
+      v-model="modalReport"
+      size="lg"
+      ok-title="Send report"
+      @hidden="modalKeyDetail = true"
+      @ok="submitReport"
+      :ok-disabled="reportForm.errorType.length < 1"
+    >
+      <b-row class="my-2">
+        <b-col sm="2"><label><strong>Author:</strong></label> </b-col>
+        <b-col sm="10">{{ reportForm.author }}</b-col>
+      </b-row>
+      <b-row class="my-2">
+        <b-col sm="2"><label><strong>Key:</strong></label> </b-col>
+        <b-col sm="10">{{ reportForm.key }}</b-col>
+      </b-row>
+      <b-row class="my-2">
+        <b-col sm="2"><label for="locale-select"><strong>Locale:</strong></label></b-col>
+        <b-col sm="10">
+          <b-form-select id="locale-select" :options="locales.concat(['not-specified'])" v-model="reportForm.locale"></b-form-select>
+        </b-col>
+      </b-row>
+      <b-row class="my-2">
+        <b-col sm="2"><label><strong>Error Type:</strong></label></b-col>
+        <b-col sm="10">
+          <b-form-input :state="reportForm.errorType.length > 0" placeholder="e.g. typo" v-model="reportForm.errorType"></b-form-input>
+        </b-col>
+      </b-row>
+      <label class="mt-3"><strong>Additional info:</strong></label>
+      <b-form-textarea v-model="reportForm.additionalInfo" rows="3" max-rows="6"></b-form-textarea>
+      <table v-if="reportLogs" class="table table-sm b-table table-striped key-detail-table">
+        <thead>
+          <th>Date</th>
+          <th>Author</th>
+          <th>Locale</th>
+          <th>Type</th>
+          <th>Description</th>
+        </thead>
+        <tr v-for="report in reportLogs">
+          <td>{{ new Date(report.time).toLocaleDateString("en-GB") }}</td>
+          <td>{{ report.author }}</td>
+          <td>{{ report.locale }}</td>
+          <td>{{ report.errorType }}</td>
+          <td>{{ report.description }}</td>
+        </tr>
       </table>
     </b-modal>
   </div>
@@ -489,6 +545,7 @@ import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
 import FirstIcon from "vue-material-design-icons/PageFirst"
 import LastIcon from "vue-material-design-icons/PageLast"
 import TagIcon from "vue-material-design-icons/CodeTags"
+import ReportIcon from "vue-material-design-icons/AlertOctagon"
 import CountryFlag from "vue-country-flag"
 
 
@@ -525,6 +582,7 @@ export default {
     TagIcon,
     LocalizationProgressChart,
     CountryFlag,
+    ReportIcon,
   },
   data() {
     return {
@@ -582,6 +640,17 @@ export default {
       modalWriteGoodSettings: false,
       modalChecksConfig: false,
       modalPlaceholderConfig: false,
+      modalReport: false,
+
+      // Reporting
+      reportForm: {
+        key: "",
+        locale: "",
+        errorType: "not-specified",
+        additionalInfo: "",
+        author: "",
+      },
+      reportLogs: {},
     }
   },
   firebase() {
@@ -985,6 +1054,31 @@ export default {
           })
         }
       })
+    },
+    showReportModal(locale) {
+      NProgress.start()
+      this.reportForm.locale = locale
+      this.reportForm.key = this.items[this.activeKey] && this.items[this.activeKey].key
+      this.reportForm.author = this.user.email
+      this.reportForm.additionalInfo = ""
+      this.reportForm.errorType = ""
+
+      FbDb.ref(`reports/${this.activeKey}`).once("value", (snapshot) => {
+        if (snapshot.val()) {
+          this.reportLogs = snapshot.val()
+        }
+        NProgress.done()
+        this.modalReport = true
+      })
+    },
+    submitReport() {
+      // TODO: report
+
+      // create log
+      const reportLog = _.cloneDeep(this.reportForm)
+      delete reportLog.key
+      reportLog.time = new Date().toString()
+      FbDb.ref(`reports/${this.activeKey}`).push(reportLog)
     },
   },
   destroyed() {

@@ -39,6 +39,10 @@
     "locales": {
       ".read": "true",
       ".write": "true"
+    },
+    "reports": {
+      ".read": "true",
+      ".write": "true"
     }
   }
 }
