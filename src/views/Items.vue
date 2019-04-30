@@ -499,7 +499,7 @@
               <b-button
                 v-b-tooltip.hover
                 :disabled="!reportConfig.active"
-                title="Report"
+                :title="`report ${locale}`"
                 size="sm"
                 variant="outline-secondary"
                 @click="showReportModal(locale)"
@@ -706,6 +706,7 @@ export default {
         additionalInfo: "",
         author: "",
         slackName: "",
+        url: "",
       },
       reportLogs: {},
       reportConfig: {
@@ -1155,7 +1156,7 @@ export default {
       this.reportForm.author = this.user.email
       this.reportForm.additionalInfo = ""
       this.reportForm.errorType = ""
-      this.reportForm.slackName = ""
+      this.reportForm.url = ""
 
       FbDb.ref(`reports/${this.activeKey}`).once("value", (snapshot) => {
         if (snapshot.val()) {
@@ -1166,7 +1167,12 @@ export default {
       })
     },
     submitReport() {
-      // TODO: report
+      this.reportForm.url = document.location.href
+
+      // Slack reporting
+      if (this.reportConfig.option === "Slack") {
+        reporting.reportOnSlack(this.reportConfig.webhook, this.reportForm)
+      }
 
       // create log
       const reportLog = _.cloneDeep(this.reportForm)
