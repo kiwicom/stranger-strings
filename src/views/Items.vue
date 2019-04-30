@@ -44,6 +44,11 @@
             <octicon name="checklist"></octicon>&nbsp;write good settings
           </b-dropdown-item-button>
           <b-dropdown-item-button
+            @click="showReportingConfig"
+          >
+            <octicon name="megaphone"></octicon>&nbsp;reporting config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
             @click="exportKeys"
           >
             <octicon name="desktop-download"></octicon>&nbsp; export
@@ -191,7 +196,7 @@
         <h4>View</h4>
         <div class="setDefault"><b-button variant="link" @click="setDefaultViewConfig">Reset to default</b-button></div>
         <div>
-          <b-form-checkbox v-model="hardWrap">
+          <b-form-checkbox switch v-model="hardWrap">
             <strong>hard wrap</strong> (show english preview in main table with line breaks)
           </b-form-checkbox>
         </div>
@@ -258,6 +263,36 @@
             <li v-for="mp in matchedPlaceholders" :key="mp">{{ mp }}</li>
           </ul>
         </div>
+      </div>
+    </b-modal>
+
+    <!--  MODAL: REPORTING CONFIG -->
+    <b-modal
+      id="reportingConfigModal"
+      v-model="modalReportingConfig"
+      title="Reporting configuration"
+      size="lg"
+      ok-title="Save"
+      no-fade
+      @ok="updateReportingConfig"
+      @hidden="resetReportConf"
+    >
+      <div class="mx-auto" style="width: fit-content">
+        <b-form-checkbox
+          switch
+          v-model="reportConfig.active"
+        >
+          Enable Reporting
+        </b-form-checkbox>
+      </div>
+      <div v-if="reportConfig.active" class="mt-3">
+        <label for="report-option"><strong>Select reporting option:</strong></label>
+        <b-form-select if="report-option" v-model="reportConfig.option" :options="getReportingOptions()"></b-form-select>
+      </div>
+      <div v-if="reportConfig.active && reportConfig.option === 'Slack'" class="mt-3">
+        <label for="webhook"><strong>Enter your <a href="https://api.slack.com/incoming-webhooks">Slack Incoming Webhook URL</a>:</strong></label>
+        <b-form-input id="webhook" v-model="reportConfig.webhook" placeholder="e.g. https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+"></b-form-input>
       </div>
     </b-modal>
 
@@ -340,7 +375,7 @@
             Show tags in translations
           </b-form-checkbox>
           <b-form-checkbox class="ml-3" v-model="escapeTranslationsChecked">Escape translations</b-form-checkbox>
-          <b-button class="ml-auto p-2"  variant="outline-secondary" @click="showReportModal('not-specified')"><ReportIcon/>  Report</b-button>
+          <b-button class="ml-auto p-2" :disabled="!reportConfig.active"  variant="outline-secondary" @click="showReportModal('not-specified')"><ReportIcon/>  Report</b-button>
         </b-form>
       </div>
 
@@ -461,7 +496,16 @@
               </div>
             </td>
             <td>
-              <b-button v-b-tooltip.hover title="Report" size="sm" variant="outline-secondary" @click="showReportModal(locale)"><ReportIcon/></b-button>
+              <b-button
+                v-b-tooltip.hover
+                :disabled="!reportConfig.active"
+                title="Report"
+                size="sm"
+                variant="outline-secondary"
+                @click="showReportModal(locale)"
+              >
+                <ReportIcon/>
+              </b-button>
             </td>
           </tr>
           <tr v-else>
@@ -486,13 +530,20 @@
       v-model="modalReport"
       size="lg"
       ok-title="Send report"
-      @hidden="modalKeyDetail = true"
       @ok="submitReport"
       :ok-disabled="reportForm.errorType.length < 1"
     >
       <b-row class="my-2">
         <b-col sm="2"><label><strong>Author:</strong></label> </b-col>
         <b-col sm="10">{{ reportForm.author }}</b-col>
+      </b-row>
+      <b-row class="my-2" v-if="reportConfig.option === 'Slack'">
+        <b-col sm="2"><label for="slack-id"><strong>Slack name:</strong></label></b-col>
+        <b-col sm="10">
+          <b-input-group prepend="@">
+            <b-input id="slack-id" placeholder="name.surname" v-model="reportForm.slackName"></b-input>
+          </b-input-group>
+        </b-col>
       </b-row>
       <b-row class="my-2">
         <b-col sm="2"><label><strong>Key:</strong></label> </b-col>
@@ -512,21 +563,24 @@
       </b-row>
       <label class="mt-3"><strong>Additional info:</strong></label>
       <b-form-textarea v-model="reportForm.additionalInfo" rows="3" max-rows="6"></b-form-textarea>
+      <h5 class="mt-5">Latest reports</h5>
       <table v-if="reportLogs" class="table table-sm b-table table-striped key-detail-table">
         <thead>
-          <th>Date</th>
-          <th>Author</th>
-          <th>Locale</th>
-          <th>Type</th>
-          <th>Description</th>
+          <th class="key-detail-header">Date</th>
+          <th class="key-detail-header">Author</th>
+          <th class="key-detail-header">Locale</th>
+          <th class="key-detail-header">Type</th>
+          <th class="key-detail-header">Description</th>
         </thead>
-        <tr v-for="report in reportLogs">
+        <tbody>
+        <tr v-for="report in reportLogs" :key="report.time + report.author">
           <td>{{ new Date(report.time).toLocaleDateString("en-GB") }}</td>
           <td>{{ report.author }}</td>
           <td>{{ report.locale }}</td>
           <td>{{ report.errorType }}</td>
-          <td>{{ report.description }}</td>
+          <td>{{ report.additionalInfo }}</td>
         </tr>
+        </tbody>
       </table>
     </b-modal>
   </div>
@@ -557,6 +611,7 @@ import saveJSON from "../modules/json"
 
 import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"
+import * as reporting from "../services/reporting"
 import maxExpansionRatio from "../../common/maxExpansionRatio"
 
 import * as defaults from "../../common/config"
@@ -638,6 +693,7 @@ export default {
       modalKeyDetail: !!this.$route.params.all,
       modalDictsExpansion: false,
       modalWriteGoodSettings: false,
+      modalReportingConfig: false,
       modalChecksConfig: false,
       modalPlaceholderConfig: false,
       modalReport: false,
@@ -649,8 +705,14 @@ export default {
         errorType: "not-specified",
         additionalInfo: "",
         author: "",
+        slackName: "",
       },
       reportLogs: {},
+      reportConfig: {
+        active: false,
+        option: "",
+        webhook: "",
+      },
     }
   },
   firebase() {
@@ -756,6 +818,11 @@ export default {
       FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
         this.dictsExpansionData = dictsData.val()
       })
+      FbDb.ref("reportingConf").once("value", (snapshot) => {
+        if (snapshot.val()) {
+          this.reportConfig = snapshot.val()
+        }
+      })
       FbDb.ref(`translations/${key}`).once("value", (snapshot) => {
         if (snapshot.val()) {
           this.activeTranslations = snapshot.val()
@@ -805,6 +872,32 @@ export default {
       if (ADMIN.includes(this.user.email)) {
         FbDb.ref("writeGood").update(this.writeGoodSettings)
         gcFunctions.inconsistenciesUpdate()
+      } else {
+        // eslint-disable-next-line no-alert
+        alert("You don't have permission to modify this setting") // TODO: friendlier
+      }
+    },
+    showReportingConfig() {
+      FbDb.ref("reportingConf/").once("value", (snapshot) => {
+        if (snapshot.val()) {
+          this.reportConfig = snapshot.val()
+        }
+        this.modalReportingConfig = true
+      })
+    },
+    getReportingOptions() {
+      return reporting.options
+    },
+    resetReportConf() {
+      this.reportConfig = {
+        active: false,
+        option: "",
+        webhook: "",
+      }
+    },
+    updateReportingConfig() {
+      if (ADMIN.includes(this.user.email)) {
+        FbDb.ref("reportingConf").update(this.reportConfig)
       } else {
         // eslint-disable-next-line no-alert
         alert("You don't have permission to modify this setting") // TODO: friendlier
@@ -1062,6 +1155,7 @@ export default {
       this.reportForm.author = this.user.email
       this.reportForm.additionalInfo = ""
       this.reportForm.errorType = ""
+      this.reportForm.slackName = ""
 
       FbDb.ref(`reports/${this.activeKey}`).once("value", (snapshot) => {
         if (snapshot.val()) {
@@ -1077,6 +1171,9 @@ export default {
       // create log
       const reportLog = _.cloneDeep(this.reportForm)
       delete reportLog.key
+      if (this.reportConfig.option !== "Slack") {
+        delete reportLog.slackName
+      }
       reportLog.time = new Date().toString()
       FbDb.ref(`reports/${this.activeKey}`).push(reportLog)
     },

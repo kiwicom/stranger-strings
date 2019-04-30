@@ -43,6 +43,10 @@
     "reports": {
       ".read": "true",
       ".write": "true"
+    },
+    "reportingConf": {
+      ".read": "true",
+      ".write": "true"
     }
   }
 }
