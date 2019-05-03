@@ -1171,7 +1171,7 @@ export default {
 
       // Slack reporting
       if (this.reportConfig.option === "Slack") {
-        reporting.reportOnSlack(this.reportConfig.webhook, this.reportForm)
+        reporting.reportOnSlack(this.reportConfig.webhook, this.reportForm, this.notifyUser)
       }
 
       // create log
@@ -1182,6 +1182,13 @@ export default {
       }
       reportLog.time = new Date().toString()
       FbDb.ref(`reports/${this.activeKey}`).push(reportLog)
+    },
+    notifyUser(title, text, variant) {
+      this.$bvToast.toast(text, {
+        title,
+        variant,
+        solid: true,
+      })
     },
   },
   destroyed() {
