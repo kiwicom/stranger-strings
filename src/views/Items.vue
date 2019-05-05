@@ -39,9 +39,14 @@
             <octicon name="mention"></octicon>&nbsp; placeholder config
           </b-dropdown-item-button>
           <b-dropdown-item-button
-            @click="showWriteGoodSettings"
+            @click="showWriteGoodConfig"
           >
-            <octicon name="checklist"></octicon>&nbsp;write good settings
+            <octicon name="checklist"></octicon>&nbsp;write good config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
+            @click="showInsensitivenessConfig"
+          >
+            <InsensitivenessIcon></InsensitivenessIcon> insensitiveness config
           </b-dropdown-item-button>
           <b-dropdown-item-button
             @click="showReportingConfig"
@@ -129,6 +134,7 @@
             <WriteGoodIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_writeGood'"></WriteGoodIcon>
             <TyposIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_typos'"></TyposIcon>
             <TagIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_tags'"></TagIcon>
+            <InsensitivenessIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_insensitiveness'"></InsensitivenessIcon>
             <WarningIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
           </td>
 
@@ -335,6 +341,11 @@
                 <WriteGoodIcon :size="30"></WriteGoodIcon>
               </div> - write-good suggestions (in locales: {{ items[activeKey][inconsistency].join(", ") }})
             </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_insensitiveness'">
+              <div class="inline-warning">
+                <InsensitivenessIcon :size="30"></InsensitivenessIcon>
+              </div> - insensitiveness (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+            </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_typos'">
               <div class="inline-error">
                 <TyposIcon :size="30"></TyposIcon>
@@ -418,6 +429,14 @@
                 title="write good"
               >
                 <WriteGoodIcon></WriteGoodIcon>
+              </div>
+              <div
+                v-if="activeTranslations[locale]._insensitiveness && allowedChecks.includes('_inconsistencies_insensitiveness')"
+                class="inline-warning"
+                v-b-popover.hover="activeTranslations[locale]._insensitiveness.join(',\n')"
+                title="insensitiveness"
+              >
+                <InsensitivenessIcon></InsensitivenessIcon>
               </div>
               <div
                 v-if="hasInconsistentLength(locale, activeTranslations) && allowedChecks.includes('_inconsistencies_length')"
@@ -620,6 +639,7 @@
 import NProgress from "nprogress"
 import "vue-octicon/icons"
 import WarningIcon from "vue-material-design-icons/AlertOutline"
+import InsensitivenessIcon from "vue-material-design-icons/EmoticonCryOutline"
 import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
 import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
 import TyposIcon from "vue-material-design-icons/Spellcheck"
@@ -656,6 +676,7 @@ export default {
   components: {
     Multiselect,
     WarningIcon,
+    InsensitivenessIcon,
     PlaceholderIcon,
     WriteGoodIcon,
     TyposIcon,
@@ -886,7 +907,7 @@ export default {
     showUserConfig() {
       this.modalChecksConfig = true
     },
-    showWriteGoodSettings() {
+    showWriteGoodConfig() {
       FbDb.ref("writeGood").once("value", (snapshot) => {
         if (snapshot.val()) {
           this.writeGoodSettings = snapshot.val() // if this line is removed dicts expansion cannot be modified
@@ -933,6 +954,9 @@ export default {
         // eslint-disable-next-line no-alert
         this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
       }
+    },
+    showInsensitivenessConfig() {
+
     },
     showPlaceholderConfig() {
       this.modalPlaceholderConfig = true

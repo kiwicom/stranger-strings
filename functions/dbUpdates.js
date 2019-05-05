@@ -8,6 +8,7 @@ if (LOCALEXEC) {
 // //////////////////////// //
 
 const superagent = require("superagent")
+const alex = require("alex")
 const _ = require("lodash")
 const moment = require("moment")
 const sanitizeHtml = require("sanitize-html")
@@ -27,7 +28,12 @@ const {
   updateDictsExpansion,
 } = require("./utils")
 // TODO: configurable
-const { DEFAULT_SPELLCHECKING_DICT_SUPPORT, DEFAULT_WRITE_GOOD_SETTINGS, DEFAULT_PLACEHOLDER_REGEX } = require("../common/config")
+const {
+  DEFAULT_SPELLCHECKING_DICT_SUPPORT,
+  DEFAULT_WRITE_GOOD_SETTINGS,
+  DEFAULT_PLACEHOLDER_REGEX,
+  DEFAULT_INSENSITIVENESS_CONFIG,
+} = require("../common/config")
 
 
 function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex) {
@@ -52,6 +58,8 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
       _tags: validateHtml(_val),
       _dynamic: detectDynamicValues(_val),
       _writeGood: writeGoodCheck(_val, _key, writeGoodSettings),
+      _insensitiveness: _key.toString() === "en-GB" ?
+        alex.text(sanitizeHtml(_val, { allowedTags: [], allowedAttributes: [] }), insensitivenessConfig).messages.map(out => out.message) : {},
     })
   })
   return mappedTranslations
@@ -89,6 +97,9 @@ function computeInconsistenciesOfKey(mappedTranslations, fbKey) {
   val._inconsistencies_dynamic = mappedTranslations[fbKey]
     && Object.values(mappedTranslations[fbKey])
       .some(x => x._dynamic.length > 0)
+  val._inconsistencies_insensitiveness = mappedTranslations[fbKey]
+    && Object.keys(mappedTranslations[fbKey])
+      .filter(lang => Array.isArray(mappedTranslations[fbKey][lang]._insensitiveness) && mappedTranslations[fbKey][lang]._insensitiveness.length > 0)
   return val
 }
 
@@ -159,11 +170,16 @@ async function originToFirebase() {
       || DEFAULT_WRITE_GOOD_SETTINGS
     const placeholderRegex = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/placeholders/regex.json`)).body
       || DEFAULT_PLACEHOLDER_REGEX
+    const insensitivenessConfig = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/insensitivenessConfig.json`)).body
+      || DEFAULT_INSENSITIVENESS_CONFIG
 
     _.forEach(translations, (val, key) => {
       const fbKey = key.includes(".") ? key.split(".").join("-") : key
 
-      mappedTranslations = { ...mappedTranslations, ...computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex) }
+      mappedTranslations = {
+        ...mappedTranslations,
+        ...computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig),
+      }
     })
 
     const dictsExpansion = updateDictsExpansion(
@@ -229,10 +245,15 @@ async function updateInconsistencies() {
       || DEFAULT_WRITE_GOOD_SETTINGS
     const placeholderRegex = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/placeholders/regex.json`)).body
       || DEFAULT_PLACEHOLDER_REGEX
+    const insensitivenessConfig = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/insensitivenessConfig.json`)).body
+      || DEFAULT_INSENSITIVENESS_CONFIG
 
     _.forEach(translations, (val, key) => {
       _.forEach(val, (x, locKey) => { val[locKey] = x.content }) // strip locale of everything except translation content
-      translations = { ...translations, ...computeInconsistenciesOfTranslations(val, key, writeGoodSettings, placeholderRegex) }
+      translations = {
+        ...translations,
+        ...computeInconsistenciesOfTranslations(val, key, writeGoodSettings, placeholderRegex, insensitivenessConfig),
+      }
     })
 
     const dictsExpansion = updateDictsExpansion(
