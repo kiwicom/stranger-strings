@@ -9,7 +9,7 @@ const {
   updateCollections,
 } = require("./dbUpdates")
 
-const { loader } = require("./config")
+const { loader } = require("./loaderManager")
 
 // We don't init with no params, as config depends on NODE_ENV
 admin.initializeApp({

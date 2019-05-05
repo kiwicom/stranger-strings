@@ -15,7 +15,7 @@ const sanitizeHtml = require("sanitize-html")
 
 const dbMutex = require("./dbMutex")
 
-const { loader, loaderType } = require("./config")
+const { loader, loaderType } = require("./loaderManager")
 
 const {
   validateHtml,
