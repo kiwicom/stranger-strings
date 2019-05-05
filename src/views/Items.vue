@@ -532,6 +532,7 @@
       ok-title="Send report"
       @ok="submitReport"
       :ok-disabled="reportForm.errorType.length < 1"
+      lazy
     >
       <b-row class="my-2">
         <b-col sm="2"><label><strong>Author:</strong></label> </b-col>
@@ -541,7 +542,13 @@
         <b-col sm="2"><label for="slack-id"><strong>Slack name:</strong></label></b-col>
         <b-col sm="10">
           <b-input-group prepend="@">
-            <b-input id="slack-id" placeholder="name.surname" v-model="reportForm.slackName"></b-input>
+            <!-- note: V-MODEL avoided due to performance issues -->
+            <b-input
+              id="slack-id"
+              placeholder="name.surname"
+              :value="reportForm.slackName"
+              @change.native="reportForm.slackName = $event.target.value"
+            ></b-input>
           </b-input-group>
         </b-col>
       </b-row>
@@ -558,11 +565,23 @@
       <b-row class="my-2">
         <b-col sm="2"><label><strong>Error Type:</strong></label></b-col>
         <b-col sm="10">
-          <b-form-input :state="reportForm.errorType.length > 0" placeholder="e.g. typo" v-model="reportForm.errorType"></b-form-input>
+          <b-form-input
+            :state="reportForm.errorType.length > 0"
+            placeholder="e.g. typo"
+            :value="reportForm.errorType"
+            @change.native="reportForm.errorType = $event.target.value"
+          >
+          </b-form-input>
         </b-col>
       </b-row>
       <label class="mt-3"><strong>Additional info:</strong></label>
-      <b-form-textarea v-model="reportForm.additionalInfo" rows="3" max-rows="6"></b-form-textarea>
+      <b-form-textarea
+        :value="reportForm.additionalInfo"
+        @change.native="reportForm.additionalInfo = $event.target.value"
+        rows="3"
+        max-rows="6"
+      >
+      </b-form-textarea>
       <h5 class="mt-5">Latest reports</h5>
       <table v-if="reportLogs" class="table table-sm b-table table-striped key-detail-table">
         <thead>
@@ -875,7 +894,7 @@ export default {
         gcFunctions.inconsistenciesUpdate()
       } else {
         // eslint-disable-next-line no-alert
-        alert("You don't have permission to modify this setting") // TODO: friendlier
+        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
       }
     },
     showReportingConfig() {
@@ -901,7 +920,7 @@ export default {
         FbDb.ref("reportingConf").update(this.reportConfig)
       } else {
         // eslint-disable-next-line no-alert
-        alert("You don't have permission to modify this setting") // TODO: friendlier
+        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
       }
     },
     showPlaceholderConfig() {
@@ -915,7 +934,7 @@ export default {
         gcFunctions.inconsistenciesUpdate()
       } else {
         // eslint-disable-next-line no-alert
-        alert("You don't have permission to modify this setting") // TODO: friendlier
+        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
       }
     },
     loadCurrentPlaceholder() {
@@ -1157,6 +1176,7 @@ export default {
       this.reportForm.additionalInfo = ""
       this.reportForm.errorType = ""
       this.reportForm.url = ""
+      this.reportForm.slackName = localStorage.getItem("slackName") ? JSON.parse(localStorage.getItem("slackName")) : ""
 
       FbDb.ref(`reports/${this.activeKey}`).once("value", (snapshot) => {
         if (snapshot.val()) {
@@ -1168,6 +1188,7 @@ export default {
     },
     submitReport() {
       this.reportForm.url = document.location.href
+      localStorage.setItem("slackName", JSON.stringify(this.reportForm.slackName))
 
       // Slack reporting
       if (this.reportConfig.option === "Slack") {
