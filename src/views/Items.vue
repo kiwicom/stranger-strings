@@ -291,8 +291,12 @@
       </div>
       <div v-if="reportConfig.active && reportConfig.option === 'Slack'" class="mt-3">
         <label for="webhook"><strong>Enter your <a href="https://api.slack.com/incoming-webhooks">Slack Incoming Webhook URL</a>:</strong></label>
-        <b-form-input id="webhook" v-model="reportConfig.webhook" placeholder="e.g. https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
-"></b-form-input>
+        <b-form-input
+          id="webhook"
+          v-model="reportConfig.webhook"
+          placeholder="e.g. https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+        >
+        </b-form-input>
       </div>
     </b-modal>
 
@@ -375,7 +379,14 @@
             Show tags in translations
           </b-form-checkbox>
           <b-form-checkbox class="ml-3" v-model="escapeTranslationsChecked">Escape translations</b-form-checkbox>
-          <b-button class="ml-auto p-2" :disabled="!reportConfig.active"  variant="outline-secondary" @click="showReportModal('not-specified')"><ReportIcon/>  Report</b-button>
+          <b-button
+            class="ml-auto p-2"
+            :disabled="!reportConfig.active"
+            variant="outline-secondary"
+            @click="showReportModal('not-specified')"
+          >
+            <ReportIcon/>  Report
+          </b-button>
         </b-form>
       </div>
 
