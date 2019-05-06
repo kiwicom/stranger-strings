@@ -36,7 +36,7 @@ const {
 } = require("../common/config")
 
 
-function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex) {
+function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig) {
   const mappedTranslations = {}
   _.forEach(val, (_val, _key) => {
     let trimmed

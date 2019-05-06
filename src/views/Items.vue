@@ -272,6 +272,23 @@
       </div>
     </b-modal>
 
+    <!-- MODAL: INSENSITIVENESS CONFIG -->
+    <b-modal
+      id="insensitivenessConfigModal"
+      v-model="modalInsensitivenessConfig"
+      title="Insensitiveness configuration"
+      size="lg"
+      ok-title="Save"
+      no-fade
+      @ok="updateInsensitivenessConfig"
+    >
+      <div>
+        <label for="range-1">Profanity sureness level: {{ insensitivenessConfig.profanitySureness }}</label>
+        <b-form-input number id="range-1" v-model="insensitivenessConfig.profanitySureness" type="range" min="0" max="2"></b-form-input>
+        <div class="mt-2">Detecting words that are <strong>{{ getProfanitySureness }}</strong></div>
+      </div>
+    </b-modal>
+
     <!--  MODAL: REPORTING CONFIG -->
     <b-modal
       id="reportingConfigModal"
@@ -726,7 +743,7 @@ export default {
       placeholderRegex: "",
       regexPreviewText: "Hi {{name}}, have a nice day!",
 
-      // Write good settings
+      // Write good config
       writeGoodSettings: {},
       optionsDescription: {
         passive: "Checks for passive voice.",
@@ -740,6 +757,12 @@ export default {
         eprime: "Checks for \"to-be\" verbs.",
       },
 
+      // Insensitiveness config
+      insensitivenessConfig: {
+        profanitySureness: 2,
+        allow: [],
+      },
+
       // Modals
       modalKeyDetail: !!this.$route.params.all,
       modalDictsExpansion: false,
@@ -748,6 +771,7 @@ export default {
       modalChecksConfig: false,
       modalPlaceholderConfig: false,
       modalReport: false,
+      modalInsensitivenessConfig: false,
 
       // Reporting
       reportForm: {
@@ -814,6 +838,16 @@ export default {
     }
   },
   computed: {
+    getProfanitySureness() {
+      const level = this.insensitivenessConfig.profanitySureness
+      if (level === 2) {
+        return "likely to be profanity"
+      }
+      if (level === 1) {
+        return "maybe profanity"
+      }
+      return "unlikely to be profanity"
+    },
     getMaximumTranslations() {
       return this.locales ? this.locales.length : 0
     },
@@ -956,7 +990,21 @@ export default {
       }
     },
     showInsensitivenessConfig() {
-
+      FbDb.ref("insensitivenessConfig/").once("value", (snapshot) => {
+        if (snapshot.val()) {
+          this.insensitivenessConfig = snapshot.val()
+        }
+        this.modalInsensitivenessConfig = true
+      })
+    },
+    updateInsensitivenessConfig() {
+      if (ADMIN.includes(this.user.email)) {
+        FbDb.ref("insensitivenessConfig").update(this.insensitivenessConfig)
+        gcFunctions.inconsistenciesUpdate()
+      } else {
+        // eslint-disable-next-line no-alert
+        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
+      }
     },
     showPlaceholderConfig() {
       this.modalPlaceholderConfig = true
