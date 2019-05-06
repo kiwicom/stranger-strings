@@ -8,11 +8,15 @@ if (LOCALEXEC) {
 // //////////////////////// //
 
 const superagent = require("superagent")
+const alex = require("alex")
 const _ = require("lodash")
 const moment = require("moment")
 const sanitizeHtml = require("sanitize-html")
 
 const dbMutex = require("./dbMutex")
+
+const { loader, loaderType } = require("./loaderManager")
+
 const {
   validateHtml,
   determineCharType,
@@ -24,124 +28,15 @@ const {
   updateDictsExpansion,
 } = require("./utils")
 // TODO: configurable
-const { DEFAULT_SPELLCHECKING_DICT_SUPPORT, DEFAULT_WRITE_GOOD_SETTINGS, DEFAULT_PLACEHOLDER_REGEX } = require("../common/config")
+const {
+  DEFAULT_SPELLCHECKING_DICT_SUPPORT,
+  DEFAULT_WRITE_GOOD_SETTINGS,
+  DEFAULT_PLACEHOLDER_REGEX,
+  DEFAULT_INSENSITIVENESS_CONFIG,
+} = require("../common/config")
 
 
-function getGithubApi(repo, path) { // just a preventions for incorrect repo path
-  // TODO: write tests
-  return repo
-    .replace(/^https:\/\/github\.com\//, "https://api.github.com/repos/")
-    .replace(/.git$/, "")
-    .replace(/\/$/, "")
-    .concat(path || "")
-}
-
-function fetchCommitSha() {
-  return new Promise((resolve, reject) => {
-    superagent
-      .get(getGithubApi(process.env.GITHUB_REPO, "/commits"))
-      .auth(process.env.GITHUB_USER, process.env.GITHUB_PASSWORD)
-      .end((err, res) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(res.body[0].sha)
-        }
-      })
-  })
-}
-
-function fetchCommit(sha) {
-  console.log("fetchCommit")
-  console.log(sha)
-
-  return new Promise((resolve, reject) => {
-    superagent
-      .get(getGithubApi(process.env.GITHUB_REPO, `/git/commits/${sha}`))
-      .auth(process.env.GITHUB_USER, process.env.GITHUB_PASSWORD)
-      .end((err, res) => {
-        if (err) {
-          console.log(err, "error")
-          reject(err)
-        } else {
-          console.log("resolving fetchCommit")
-          resolve(res.body.tree.sha)
-        }
-      })
-  })
-}
-
-function fetchNodes(sha) {
-  return new Promise((resolve, reject) => {
-    superagent
-      .get(getGithubApi(process.env.GITHUB_REPO, `/git/trees/${sha}`))
-      .auth(process.env.GITHUB_USER, process.env.GITHUB_PASSWORD)
-      .end((err, res) => {
-        if (err) {
-          reject(err)
-        } else { // TODO: refactor ignored files
-          const nodes = res.body.tree.filter(node => node.type === "blob"
-              && node.path.includes(".json")
-              && node.path !== "package.json"
-              && node.path !== ".releaserc.json")
-          resolve(nodes)
-        }
-      })
-  })
-}
-
-function fetchBlobs(nodes) {
-  return Promise.all(nodes.map((node) => { // eslint-disable-line
-    return new Promise((resolve, reject) => {
-      superagent
-        .get(node.url)
-        .auth(process.env.GITHUB_USER, process.env.GITHUB_PASSWORD)
-        .end((err, res) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve({ name: node.path, blob: res.body })
-          }
-        })
-    })
-  }))
-}
-
-function mapFiles(files) {
-  return files.map(file => ({
-    locale: file.name.replace(".json", ""),
-    sha: file.blob.sha,
-    data: JSON.parse(new Buffer(file.blob.content, file.blob.encoding).toString("utf8")), // eslint-disable-line no-buffer-constructor
-  }))
-}
-
-function processTranslations(translations) {
-  // take only english translated keys
-  const enTranslations = translations.filter(x => x.locale === "en-GB")[0].data // TODO: configurable default locale
-  const allTKeys = Object.keys(enTranslations)
-  // problem is there can be keys translated only in czech or some other locale and these should also be added
-  translations.forEach((trans) => {
-    Object.keys(trans.data).forEach((key) => {
-      if (allTKeys.indexOf(key) < 0) {
-        allTKeys.push(key)
-      }
-    })
-  })
-
-  return allTKeys.reduce((acc, key) => {
-    translations.forEach((trans) => {
-      if (trans.data[key]) {
-        if (!acc[key]) {
-          acc[key] = {}
-        }
-        acc[key][trans.locale] = trans.data[key]
-      }
-    })
-    return acc
-  }, {})
-}
-
-function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex) {
+function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig) {
   const mappedTranslations = {}
   _.forEach(val, (_val, _key) => {
     let trimmed
@@ -163,6 +58,8 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
       _tags: validateHtml(_val),
       _dynamic: detectDynamicValues(_val),
       _writeGood: writeGoodCheck(_val, _key, writeGoodSettings),
+      _insensitiveness: _key.toString() === "en-GB" ?
+        alex.text(sanitizeHtml(_val, { allowedTags: [], allowedAttributes: [] }), insensitivenessConfig).messages.map(out => out.message) : {},
     })
   })
   return mappedTranslations
@@ -200,6 +97,9 @@ function computeInconsistenciesOfKey(mappedTranslations, fbKey) {
   val._inconsistencies_dynamic = mappedTranslations[fbKey]
     && Object.values(mappedTranslations[fbKey])
       .some(x => x._dynamic.length > 0)
+  val._inconsistencies_insensitiveness = mappedTranslations[fbKey]
+    && Object.keys(mappedTranslations[fbKey])
+      .filter(lang => Array.isArray(mappedTranslations[fbKey][lang]._insensitiveness) && mappedTranslations[fbKey][lang]._insensitiveness.length > 0)
   return val
 }
 
@@ -243,18 +143,13 @@ function prepareTranslationsForExport(translations) {
   }, {})
 }
 
-async function githubToFirebase() {
-  if (!(await dbMutex.tryLock("downloading recent translations from GitHub"))) {
+async function originToFirebase() {
+  if (!(await dbMutex.tryLock(`downloading recent translations from ${loaderType}`))) {
     console.log("Update already in progress, stopping!")
     return
   }
   try {
-    const commitSha = await fetchCommitSha()
-    const repoTreeSha = await fetchCommit(commitSha)
-    const nodes = await fetchNodes(repoTreeSha)
-    const blobs = await fetchBlobs(nodes)
-    const files = mapFiles(blobs)
-    const translations = processTranslations(files)
+    const { version, translations } = await loader.fetch()
 
     const items = _.reduce(translations, (acc, val, key) => {
       const _key = key.includes(".") ? key.split(".").join("-") : key
@@ -275,11 +170,16 @@ async function githubToFirebase() {
       || DEFAULT_WRITE_GOOD_SETTINGS
     const placeholderRegex = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/placeholders/regex.json`)).body
       || DEFAULT_PLACEHOLDER_REGEX
+    const insensitivenessConfig = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/insensitivenessConfig.json`)).body
+      || DEFAULT_INSENSITIVENESS_CONFIG
 
     _.forEach(translations, (val, key) => {
       const fbKey = key.includes(".") ? key.split(".").join("-") : key
 
-      mappedTranslations = { ...mappedTranslations, ...computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex) }
+      mappedTranslations = {
+        ...mappedTranslations,
+        ...computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig),
+      }
     })
 
     const dictsExpansion = updateDictsExpansion(
@@ -323,7 +223,7 @@ async function githubToFirebase() {
       .put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/lastUpdate.json`)
       .send({
         updated: moment().format("DD-MM-YYYY HH:mm:ss"),
-        commitSha,
+        version,
       })
     console.log("SUCCESS: updated all translations")
     // eslint-disable-next-line consistent-return
@@ -345,10 +245,15 @@ async function updateInconsistencies() {
       || DEFAULT_WRITE_GOOD_SETTINGS
     const placeholderRegex = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/placeholders/regex.json`)).body
       || DEFAULT_PLACEHOLDER_REGEX
+    const insensitivenessConfig = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/insensitivenessConfig.json`)).body
+      || DEFAULT_INSENSITIVENESS_CONFIG
 
     _.forEach(translations, (val, key) => {
       _.forEach(val, (x, locKey) => { val[locKey] = x.content }) // strip locale of everything except translation content
-      translations = { ...translations, ...computeInconsistenciesOfTranslations(val, key, writeGoodSettings, placeholderRegex) }
+      translations = {
+        ...translations,
+        ...computeInconsistenciesOfTranslations(val, key, writeGoodSettings, placeholderRegex, insensitivenessConfig),
+      }
     })
 
     const dictsExpansion = updateDictsExpansion(
@@ -408,12 +313,11 @@ async function updateCollections() {
 }
 
 module.exports = {
-  getGithubApi,
-  githubToFirebase,
+  originToFirebase,
   updateInconsistencies,
   updateCollections,
 }
 
 // LOCAL DEBUGGING SETTINGS //
-if (LOCALEXEC) githubToFirebase()
+if (LOCALEXEC) originToFirebase()
 // //////////////////////// //
