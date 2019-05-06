@@ -27,7 +27,7 @@ const runtimeConfig = {
     memory: "2GB",
   },
   secondaryUpdate: {
-    timeoutSeconds: 150,
+    timeoutSeconds: 200,
     memory: "2GB",
   },
 }
