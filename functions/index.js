@@ -2,13 +2,14 @@ require("dotenv").config()
 
 const functions = require("firebase-functions")
 const admin = require("firebase-admin")
-const fetch = require("node-fetch")
+
 const {
-  githubToFirebase,
-  getGithubApi,
+  originToFirebase,
   updateInconsistencies,
   updateCollections,
 } = require("./dbUpdates")
+
+const { loader } = require("./loaderManager")
 
 // We don't init with no params, as config depends on NODE_ENV
 admin.initializeApp({
@@ -26,7 +27,7 @@ const runtimeConfig = {
     memory: "2GB",
   },
   secondaryUpdate: {
-    timeoutSeconds: 150,
+    timeoutSeconds: 200,
     memory: "2GB",
   },
 }
@@ -36,21 +37,16 @@ exports.update = functions.runWith(runtimeConfig.mainUpdate).https.onRequest(asy
   res.set("Access-Control-Allow-Origin", "*")
   res.set("Access-Control-Allow-Methods", "GET, POST")
 
-  const lastCommitFetch = await fetch(getGithubApi(process.env.GITHUB_REPO, "/commits"), {
-    headers: {
-      Authorization: `Basic ${Buffer.from((`${process.env.GITHUB_USER}:${process.env.GITHUB_PASSWORD}`)).toString("base64")}`,
-    },
-  })
-  const lastCommitJson = await lastCommitFetch.json()
-  const lastCommit = lastCommitJson[0].sha
-
-  const lastUpdate = (await admin.database().ref("/lastUpdate").once("value")).val()
-  if (lastUpdate && lastCommit === lastUpdate.commitSha) {
-    admin.database().ref("/updateInProgress").remove()
-    return res.send("no new updates")
+  const lastUpdateFirebase = (await admin.database().ref("/lastUpdate").once("value")).val()
+  if (lastUpdateFirebase) { // Nothing in firebase yet, update!
+    const lastVersionOrigin = await loader.version()
+    if (lastUpdateFirebase.version === lastVersionOrigin) {
+      admin.database().ref("/updateInProgress").remove()
+      return res.send("no new updates")
+    }
   }
 
-  return res.send(await githubToFirebase())
+  return res.send(await originToFirebase())
 })
 
 exports.inconsistenciesUpdate = functions.runWith(runtimeConfig.secondaryUpdate).https.onRequest(async (req, res) => {

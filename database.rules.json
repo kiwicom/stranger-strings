@@ -39,6 +39,18 @@
     "locales": {
       ".read": "true",
       ".write": "true"
+    },
+    "reports": {
+      ".read": "true",
+      ".write": "true"
+    },
+    "reportingConf": {
+      ".read": "true",
+      ".write": "true"
+    },
+    "insensitivenessConfig": {
+      ".read": "true",
+      ".write": "true"
     }
   }
 }
