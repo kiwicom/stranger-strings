@@ -14,7 +14,7 @@ function getLoaderType() {
 
 function selectLoader(loaderType) {
   switch (loaderType) {
-  case "Github":
+  case "GitHub":
     return GithubLoader(
       process.env.GITHUB_REPO,
       process.env.GITHUB_USER,
