@@ -39,9 +39,19 @@
             <octicon name="mention"></octicon>&nbsp; placeholder config
           </b-dropdown-item-button>
           <b-dropdown-item-button
-            @click="showWriteGoodSettings"
+            @click="showWriteGoodConfig"
           >
-            <octicon name="checklist"></octicon>&nbsp;write good settings
+            <octicon name="checklist"></octicon>&nbsp;write good config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
+            @click="showInsensitivenessConfig"
+          >
+            <InsensitivenessIcon></InsensitivenessIcon> insensitiveness config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
+            @click="showReportingConfig"
+          >
+            <octicon name="megaphone"></octicon>&nbsp;reporting config
           </b-dropdown-item-button>
           <b-dropdown-item-button
             @click="exportKeys"
@@ -61,7 +71,7 @@
     <div class="sticky-header-hack">
       <div class="ss-name">Stranger Strings</div>
     </div>
-    <table class="table table-sm b-table table-striped table-hover table-keys table-fixed">
+    <table class="table table-sm table-striped table-hover table-keys table-fixed">
       <thead>
         <tr>
           <th
@@ -124,6 +134,7 @@
             <WriteGoodIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_writeGood'"></WriteGoodIcon>
             <TyposIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_typos'"></TyposIcon>
             <TagIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_tags'"></TagIcon>
+            <InsensitivenessIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_insensitiveness'"></InsensitivenessIcon>
             <WarningIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
           </td>
 
@@ -191,7 +202,7 @@
         <h4>View</h4>
         <div class="setDefault"><b-button variant="link" @click="setDefaultViewConfig">Reset to default</b-button></div>
         <div>
-          <b-form-checkbox v-model="hardWrap">
+          <b-form-checkbox switch v-model="hardWrap">
             <strong>hard wrap</strong> (show english preview in main table with line breaks)
           </b-form-checkbox>
         </div>
@@ -261,6 +272,57 @@
       </div>
     </b-modal>
 
+    <!-- MODAL: INSENSITIVENESS CONFIG -->
+    <b-modal
+      id="insensitivenessConfigModal"
+      v-model="modalInsensitivenessConfig"
+      title="Insensitiveness configuration"
+      size="lg"
+      ok-title="Save"
+      no-fade
+      @ok="updateInsensitivenessConfig"
+    >
+      <div>
+        <label for="range-1">Profanity sureness level: {{ insensitivenessConfig.profanitySureness }}</label>
+        <b-form-input number id="range-1" v-model="insensitivenessConfig.profanitySureness" type="range" min="0" max="2"></b-form-input>
+        <div class="mt-2">Detecting words that are <strong>{{ getProfanitySureness }}</strong></div>
+      </div>
+    </b-modal>
+
+    <!--  MODAL: REPORTING CONFIG -->
+    <b-modal
+      id="reportingConfigModal"
+      v-model="modalReportingConfig"
+      title="Reporting configuration"
+      size="lg"
+      ok-title="Save"
+      no-fade
+      @ok="updateReportingConfig"
+      @hidden="resetReportConf"
+    >
+      <div class="mx-auto" style="width: fit-content">
+        <b-form-checkbox
+          switch
+          v-model="reportConfig.active"
+        >
+          Enable Reporting
+        </b-form-checkbox>
+      </div>
+      <div v-if="reportConfig.active" class="mt-3">
+        <label for="report-option"><strong>Select reporting option:</strong></label>
+        <b-form-select if="report-option" v-model="reportConfig.option" :options="getReportingOptions()"></b-form-select>
+      </div>
+      <div v-if="reportConfig.active && reportConfig.option === 'Slack'" class="mt-3">
+        <label for="webhook"><strong>Enter your <a href="https://api.slack.com/incoming-webhooks">Slack Incoming Webhook URL</a>:</strong></label>
+        <b-form-input
+          id="webhook"
+          v-model="reportConfig.webhook"
+          placeholder="e.g. https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+        >
+        </b-form-input>
+      </div>
+    </b-modal>
+
     <!-- MODAL: KEY DETAIL -->
     <b-modal
       id="keyDetailModal"
@@ -295,6 +357,11 @@
               <div class="inline-warning">
                 <WriteGoodIcon :size="30"></WriteGoodIcon>
               </div> - write-good suggestions (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+            </div>
+            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_insensitiveness'">
+              <div class="inline-warning">
+                <InsensitivenessIcon :size="30"></InsensitivenessIcon>
+              </div> - insensitiveness (in locales: {{ items[activeKey][inconsistency].join(", ") }})
             </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_typos'">
               <div class="inline-error">
@@ -339,7 +406,15 @@
           >
             Show tags in translations
           </b-form-checkbox>
-          <b-form-checkbox v-model="escapeTranslationsChecked">Escape translations</b-form-checkbox>
+          <b-form-checkbox class="ml-3" v-model="escapeTranslationsChecked">Escape translations</b-form-checkbox>
+          <b-button
+            class="ml-auto p-2"
+            :disabled="!reportConfig.active"
+            variant="outline-secondary"
+            @click="showReportModal('not-specified')"
+          >
+            <ReportIcon/>  Report
+          </b-button>
         </b-form>
       </div>
 
@@ -348,6 +423,7 @@
           <th colspan="2" class="key-detail-header">Locale</th>
           <th class="key-detail-header">Translation</th>
           <th class="key-detail-header">Errors</th>
+          <th class="key-detail-header"></th>
         </thead>
 
         <tbody>
@@ -370,6 +446,14 @@
                 title="write good"
               >
                 <WriteGoodIcon></WriteGoodIcon>
+              </div>
+              <div
+                v-if="activeTranslations[locale]._insensitiveness && allowedChecks.includes('_inconsistencies_insensitiveness')"
+                class="inline-warning"
+                v-b-popover.hover="activeTranslations[locale]._insensitiveness.join(',\n')"
+                title="insensitiveness"
+              >
+                <InsensitivenessIcon></InsensitivenessIcon>
               </div>
               <div
                 v-if="hasInconsistentLength(locale, activeTranslations) && allowedChecks.includes('_inconsistencies_length')"
@@ -458,6 +542,18 @@
                 </b-popover>
               </div>
             </td>
+            <td>
+              <b-button
+                v-b-tooltip.hover
+                :disabled="!reportConfig.active"
+                :title="`report ${locale}`"
+                size="sm"
+                variant="outline-secondary"
+                @click="showReportModal(locale)"
+              >
+                <ReportIcon/>
+              </b-button>
+            </td>
           </tr>
           <tr v-else>
             <td class="flag-id">
@@ -466,10 +562,90 @@
             <td :class="imporantLoc.includes(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'" scope="row">
               {{ locale }}
             </td>
-            <td colspan="2" :class="imporantLoc.includes(locale) ?'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">
+            <td colspan="3" :class="imporantLoc.includes(locale) ?'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">
               Not translated
             </td>
           </tr>
+        </tbody>
+      </table>
+    </b-modal>
+
+    <!-- MODAL: REPORTING -->
+    <b-modal
+      id="reportModal"
+      title="Report"
+      v-model="modalReport"
+      size="lg"
+      ok-title="Send report"
+      @ok="submitReport"
+      :ok-disabled="reportForm.errorType.length < 1"
+      lazy
+    >
+      <b-row class="my-2">
+        <b-col sm="2"><label><strong>Author:</strong></label> </b-col>
+        <b-col sm="10">{{ reportForm.author }}</b-col>
+      </b-row>
+      <b-row class="my-2" v-if="reportConfig.option === 'Slack'">
+        <b-col sm="2"><label for="slack-id"><strong>Slack name:</strong></label></b-col>
+        <b-col sm="10">
+          <b-input-group prepend="@">
+            <!-- note: V-MODEL avoided due to performance issues -->
+            <b-input
+              id="slack-id"
+              placeholder="name.surname"
+              :value="reportForm.slackName"
+              @change.native="reportForm.slackName = $event.target.value"
+            ></b-input>
+          </b-input-group>
+        </b-col>
+      </b-row>
+      <b-row class="my-2">
+        <b-col sm="2"><label><strong>Key:</strong></label> </b-col>
+        <b-col sm="10">{{ reportForm.key }}</b-col>
+      </b-row>
+      <b-row class="my-2">
+        <b-col sm="2"><label for="locale-select"><strong>Locale:</strong></label></b-col>
+        <b-col sm="10">
+          <b-form-select id="locale-select" :options="locales.concat(['not-specified'])" v-model="reportForm.locale"></b-form-select>
+        </b-col>
+      </b-row>
+      <b-row class="my-2">
+        <b-col sm="2"><label><strong>Error Type:</strong></label></b-col>
+        <b-col sm="10">
+          <b-form-input
+            :state="reportForm.errorType.length > 0"
+            placeholder="e.g. typo"
+            :value="reportForm.errorType"
+            @change.native="reportForm.errorType = $event.target.value"
+          >
+          </b-form-input>
+        </b-col>
+      </b-row>
+      <label class="mt-3"><strong>Additional info:</strong></label>
+      <b-form-textarea
+        :value="reportForm.additionalInfo"
+        @change.native="reportForm.additionalInfo = $event.target.value"
+        rows="3"
+        max-rows="6"
+      >
+      </b-form-textarea>
+      <h5 class="mt-5">Latest reports</h5>
+      <table v-if="reportLogs" class="table table-sm b-table table-striped key-detail-table">
+        <thead>
+          <th class="key-detail-header">Date</th>
+          <th class="key-detail-header">Author</th>
+          <th class="key-detail-header">Locale</th>
+          <th class="key-detail-header">Type</th>
+          <th class="key-detail-header">Description</th>
+        </thead>
+        <tbody>
+        <tr v-for="report in reportLogs" :key="report.time + report.author">
+          <td>{{ new Date(report.time).toLocaleDateString("en-GB") }}</td>
+          <td>{{ report.author }}</td>
+          <td>{{ report.locale }}</td>
+          <td>{{ report.errorType }}</td>
+          <td>{{ report.additionalInfo }}</td>
+        </tr>
         </tbody>
       </table>
     </b-modal>
@@ -480,6 +656,7 @@
 import NProgress from "nprogress"
 import "vue-octicon/icons"
 import WarningIcon from "vue-material-design-icons/AlertOutline"
+import InsensitivenessIcon from "vue-material-design-icons/EmoticonCryOutline"
 import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
 import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
 import TyposIcon from "vue-material-design-icons/Spellcheck"
@@ -489,6 +666,7 @@ import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
 import FirstIcon from "vue-material-design-icons/PageFirst"
 import LastIcon from "vue-material-design-icons/PageLast"
 import TagIcon from "vue-material-design-icons/CodeTags"
+import ReportIcon from "vue-material-design-icons/AlertOctagon"
 import CountryFlag from "vue-country-flag"
 
 
@@ -500,6 +678,7 @@ import saveJSON from "../modules/json"
 
 import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"
+import * as reporting from "../services/reporting"
 import maxExpansionRatio from "../../common/maxExpansionRatio"
 
 import * as defaults from "../../common/config"
@@ -514,6 +693,7 @@ export default {
   components: {
     Multiselect,
     WarningIcon,
+    InsensitivenessIcon,
     PlaceholderIcon,
     WriteGoodIcon,
     TyposIcon,
@@ -525,6 +705,7 @@ export default {
     TagIcon,
     LocalizationProgressChart,
     CountryFlag,
+    ReportIcon,
   },
   data() {
     return {
@@ -562,7 +743,7 @@ export default {
       placeholderRegex: "",
       regexPreviewText: "Hi {{name}}, have a nice day!",
 
-      // Write good settings
+      // Write good config
       writeGoodSettings: {},
       optionsDescription: {
         passive: "Checks for passive voice.",
@@ -576,12 +757,38 @@ export default {
         eprime: "Checks for \"to-be\" verbs.",
       },
 
+      // Insensitiveness config
+      insensitivenessConfig: {
+        profanitySureness: 2,
+        allow: [],
+      },
+
       // Modals
       modalKeyDetail: !!this.$route.params.all,
       modalDictsExpansion: false,
       modalWriteGoodSettings: false,
+      modalReportingConfig: false,
       modalChecksConfig: false,
       modalPlaceholderConfig: false,
+      modalReport: false,
+      modalInsensitivenessConfig: false,
+
+      // Reporting
+      reportForm: {
+        key: "",
+        locale: "",
+        errorType: "not-specified",
+        additionalInfo: "",
+        author: "",
+        slackName: "",
+        url: "",
+      },
+      reportLogs: {},
+      reportConfig: {
+        active: false,
+        option: "",
+        webhook: "",
+      },
     }
   },
   firebase() {
@@ -631,6 +838,16 @@ export default {
     }
   },
   computed: {
+    getProfanitySureness() {
+      const level = this.insensitivenessConfig.profanitySureness
+      if (level === 2) {
+        return "likely to be profanity"
+      }
+      if (level === 1) {
+        return "maybe profanity"
+      }
+      return "unlikely to be profanity"
+    },
     getMaximumTranslations() {
       return this.locales ? this.locales.length : 0
     },
@@ -687,6 +904,11 @@ export default {
       FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
         this.dictsExpansionData = dictsData.val()
       })
+      FbDb.ref("reportingConf").once("value", (snapshot) => {
+        if (snapshot.val()) {
+          this.reportConfig = snapshot.val()
+        }
+      })
       FbDb.ref(`translations/${key}`).once("value", (snapshot) => {
         if (snapshot.val()) {
           this.activeTranslations = snapshot.val()
@@ -719,7 +941,7 @@ export default {
     showUserConfig() {
       this.modalChecksConfig = true
     },
-    showWriteGoodSettings() {
+    showWriteGoodConfig() {
       FbDb.ref("writeGood").once("value", (snapshot) => {
         if (snapshot.val()) {
           this.writeGoodSettings = snapshot.val() // if this line is removed dicts expansion cannot be modified
@@ -738,7 +960,50 @@ export default {
         gcFunctions.inconsistenciesUpdate()
       } else {
         // eslint-disable-next-line no-alert
-        alert("You don't have permission to modify this setting") // TODO: friendlier
+        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
+      }
+    },
+    showReportingConfig() {
+      FbDb.ref("reportingConf/").once("value", (snapshot) => {
+        if (snapshot.val()) {
+          this.reportConfig = snapshot.val()
+        }
+        this.modalReportingConfig = true
+      })
+    },
+    getReportingOptions() {
+      return reporting.options
+    },
+    resetReportConf() {
+      this.reportConfig = {
+        active: false,
+        option: "",
+        webhook: "",
+      }
+    },
+    updateReportingConfig() {
+      if (ADMIN.includes(this.user.email)) {
+        FbDb.ref("reportingConf").update(this.reportConfig)
+      } else {
+        // eslint-disable-next-line no-alert
+        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
+      }
+    },
+    showInsensitivenessConfig() {
+      FbDb.ref("insensitivenessConfig/").once("value", (snapshot) => {
+        if (snapshot.val()) {
+          this.insensitivenessConfig = snapshot.val()
+        }
+        this.modalInsensitivenessConfig = true
+      })
+    },
+    updateInsensitivenessConfig() {
+      if (ADMIN.includes(this.user.email)) {
+        FbDb.ref("insensitivenessConfig").update(this.insensitivenessConfig)
+        gcFunctions.inconsistenciesUpdate()
+      } else {
+        // eslint-disable-next-line no-alert
+        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
       }
     },
     showPlaceholderConfig() {
@@ -752,7 +1017,7 @@ export default {
         gcFunctions.inconsistenciesUpdate()
       } else {
         // eslint-disable-next-line no-alert
-        alert("You don't have permission to modify this setting") // TODO: friendlier
+        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
       }
     },
     loadCurrentPlaceholder() {
@@ -984,6 +1249,49 @@ export default {
             this.dictsExpansionData = updatedData.val()
           })
         }
+      })
+    },
+    showReportModal(locale) {
+      NProgress.start()
+      this.reportForm.locale = locale
+      this.reportForm.key = this.items[this.activeKey] && this.items[this.activeKey].key
+      this.reportForm.author = this.user.email
+      this.reportForm.additionalInfo = ""
+      this.reportForm.errorType = ""
+      this.reportForm.url = ""
+      this.reportForm.slackName = localStorage.getItem("slackName") ? JSON.parse(localStorage.getItem("slackName")) : ""
+
+      FbDb.ref(`reports/${this.activeKey}`).once("value", (snapshot) => {
+        if (snapshot.val()) {
+          this.reportLogs = snapshot.val()
+        }
+        NProgress.done()
+        this.modalReport = true
+      })
+    },
+    submitReport() {
+      this.reportForm.url = document.location.href
+      localStorage.setItem("slackName", JSON.stringify(this.reportForm.slackName))
+
+      // Slack reporting
+      if (this.reportConfig.option === "Slack") {
+        reporting.reportOnSlack(this.reportConfig.webhook, this.reportForm, this.notifyUser)
+      }
+
+      // create log
+      const reportLog = _.cloneDeep(this.reportForm)
+      delete reportLog.key
+      if (this.reportConfig.option !== "Slack") {
+        delete reportLog.slackName
+      }
+      reportLog.time = new Date().toString()
+      FbDb.ref(`reports/${this.activeKey}`).push(reportLog)
+    },
+    notifyUser(title, text, variant) {
+      this.$bvToast.toast(text, {
+        title,
+        variant,
+        solid: true,
       })
     },
   },

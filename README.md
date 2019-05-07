@@ -18,9 +18,20 @@
 ### Installation
 **1.** Configure ``.env`` file (e.g.:)
 ```
+# note: select one data source and fill it's data
+
+################ DATASOURCE: PhraseApp ################
+
+PHRASEAPP_PROJECT_ID="yourPhraseAppProjectID"
+PHRASEAPP_TOKEN="yourPhraseAppToken"
+
+################# DATASOURCE: GitHub ##################
+
 GITHUB_USER="yourGitHubUserAccontName"
 GITHUB_PASSWORD="youtGitHubUserPassword"
 GITHUB_REPO="https://github.com/yourRepository/yourTranslations"
+
+#######################################################
 
 VUE_APP_FIREBASE_MESSAGING_SENDER_ID="seeImagesBelow"
 VUE_APP_FIREBASE_API_KEY="seeImagesBelow"
@@ -48,8 +59,8 @@ yarn deploy
 
 ![authproviderss](https://user-images.githubusercontent.com/26377907/50009509-76153700-ffb7-11e8-9666-224da7c46ca9.gif)
 
-## Source data
-For now **Stranger Strings** only supports importing translations from GitHub in JSON format.
+## Data sources
+**Stranger Strings** supports importing translations from PhraseApp or GitHub.
 
 ### GitHub repository structure
 ```
