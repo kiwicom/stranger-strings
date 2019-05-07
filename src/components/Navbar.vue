@@ -8,7 +8,15 @@
         <b-link to="/collections" style="color: rgba(255, 255, 255, 0.5);" active-class="activeView">Collections</b-link>
     </b-navbar-nav>
 
-    <div class="updating" v-if="updateInProgress.info">Update in progress ({{ updateInProgress.info.state }}...)</div>
+    <b-toast
+      title="Update in progress"
+      variant="primary"
+      :visible="updateInProgress.info"
+      toaster="b-toaster-top-right"
+      no-auto-hide
+    >
+      {{ updateInProgress.info && updateInProgress.info.state }}
+    </b-toast>
 
     <!-- Right aligned nav items -->
     <b-navbar-nav is-nav class="ml-auto">
@@ -71,20 +79,5 @@ export default {
   }
   .activeView {
     color: white !important;
-  }
-
-  .updating {
-    right: 0;
-    left: 0;
-    margin-left: auto;
-    margin-right: auto;
-    position: absolute;
-    margin-top: 45px;
-    z-index: 4;
-    color: grey;
-    font-size: 12px;
-    text-align: center;
-    font-weight: lighter;
-    width: max-content;
   }
 </style>
