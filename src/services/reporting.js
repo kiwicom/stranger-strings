@@ -10,7 +10,7 @@ export const options = ["Slack"]
 //   slackName: "name.surname",
 //   url: "https://stranger-strings.firebaseapp.com/common_content_some-key",
 // },
-export function reportOnSlack(hookURL, reportForm, callback) {
+export function reportOnSlack(hookURL, channelName, reportForm, callback) {
   const key = `*Key:* \`${reportForm.key}\`\n`
   const locale = `*Locale:* _${reportForm.locale}_\n`
   const type = `*Type of error:* _${reportForm.errorType}_\n`
@@ -20,6 +20,7 @@ export function reportOnSlack(hookURL, reportForm, callback) {
     method: "POST",
     mode: "no-cors",
     body: JSON.stringify({
+      channel: channelName || undefined,
       blocks: [
         {
           type: "section",
