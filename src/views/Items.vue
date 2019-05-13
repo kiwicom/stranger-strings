@@ -316,10 +316,21 @@
         <label for="webhook"><strong>Enter your <a href="https://api.slack.com/incoming-webhooks">Slack Incoming Webhook URL</a>:</strong></label>
         <b-form-input
           id="webhook"
-          v-model="reportConfig.webhook"
+          :value="reportConfig.webhook"
+          @change.native="reportConfig.webhook = $event.target.value"
           placeholder="e.g. https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
         >
         </b-form-input>
+        <label for="slack-channel">Channel:</label>
+        <b-input-group prepend="#">
+          <!-- note: V-MODEL avoided due to performance issues -->
+          <b-input
+            id="slack-channel"
+            placeholder="translation-bugs"
+            :value="reportConfig.slackChannel"
+            @change.native="reportConfig.slackChannel = $event.target.value"
+          ></b-input>
+        </b-input-group>
       </div>
     </b-modal>
 
@@ -788,6 +799,7 @@ export default {
         active: false,
         option: "",
         webhook: "",
+        slackChannel: "",
       },
     }
   },
@@ -979,6 +991,7 @@ export default {
         active: false,
         option: "",
         webhook: "",
+        slackChannel: "",
       }
     },
     updateReportingConfig() {
@@ -1275,7 +1288,7 @@ export default {
 
       // Slack reporting
       if (this.reportConfig.option === "Slack") {
-        reporting.reportOnSlack(this.reportConfig.webhook, this.reportForm, this.notifyUser)
+        reporting.reportOnSlack(this.reportConfig.webhook, this.reportConfig.slackChannel, this.reportForm, this.notifyUser)
       }
 
       // create log
