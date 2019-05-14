@@ -781,20 +781,9 @@ export default {
       modalReportingConfig: false,
       modalChecksConfig: false,
       modalPlaceholderConfig: false,
-      modalReport: false,
       modalInsensitivenessConfig: false,
 
       // Reporting
-      reportForm: {
-        key: "",
-        locale: "",
-        errorType: "not-specified",
-        additionalInfo: "",
-        author: "",
-        slackName: "",
-        url: "",
-      },
-      reportLogs: {},
       reportConfig: {
         active: false,
         option: "",
@@ -1263,42 +1252,6 @@ export default {
           })
         }
       })
-    },
-    showReportModal(locale) {
-      NProgress.start()
-      this.reportForm.locale = locale
-      this.reportForm.key = this.items[this.activeKey] && this.items[this.activeKey].key
-      this.reportForm.author = this.user.email
-      this.reportForm.additionalInfo = ""
-      this.reportForm.errorType = ""
-      this.reportForm.url = ""
-      this.reportForm.slackName = localStorage.getItem("slackName") ? JSON.parse(localStorage.getItem("slackName")) : ""
-
-      FbDb.ref(`reports/${this.activeKey}`).once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.reportLogs = snapshot.val()
-        }
-        NProgress.done()
-        this.modalReport = true
-      })
-    },
-    submitReport() {
-      this.reportForm.url = document.location.href
-      localStorage.setItem("slackName", JSON.stringify(this.reportForm.slackName))
-
-      // Slack reporting
-      if (this.reportConfig.option === "Slack") {
-        reporting.reportOnSlack(this.reportConfig.webhook, this.reportConfig.slackChannel, this.reportForm, this.notifyUser)
-      }
-
-      // create log
-      const reportLog = _.cloneDeep(this.reportForm)
-      delete reportLog.key
-      if (this.reportConfig.option !== "Slack") {
-        delete reportLog.slackName
-      }
-      reportLog.time = new Date().toString()
-      FbDb.ref(`reports/${this.activeKey}`).push(reportLog)
     },
     notifyUser(title, text, variant) {
       this.$bvToast.toast(text, {
