@@ -251,7 +251,7 @@
       :locale="reportedLocale"
       :key=""
       :email="user.email"
-      :close="closeReportModal"
+      @close="closeReportModal"
     />
   </div>
 </template>
