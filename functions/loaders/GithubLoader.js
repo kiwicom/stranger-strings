@@ -1,4 +1,5 @@
 const superagent = require("superagent")
+const fetch = require("node-fetch")
 
 function getGithubApi(repo, path) { // just a preventions for incorrect repo path
   // TODO: write tests
