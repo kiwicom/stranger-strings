@@ -153,7 +153,7 @@ export default {
       reportLog.time = new Date().toString()
       FbDb.ref(`reports/${this.activeKey}`).push(reportLog)
       this.modalReport = false
-      this.$emit("close");
+      this.$emit("close")
     },
     notifyUser(title, text, variant) {
       this.$bvToast.toast(text, {

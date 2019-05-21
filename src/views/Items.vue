@@ -480,6 +480,10 @@ export default {
           this.items = this.sortKeys(this.allItems)
           this.itemsLoaded = true
           NProgress.done()
+          if (this.activeKey) {
+            this.showKeyDetail(this.activeKey)
+            NProgress.start()
+          }
           this.errors = this.countErrors()
           this.allowedChecks = this.loadUserChecksConfig()
         },
@@ -504,7 +508,7 @@ export default {
       this.search()
     }
     this.errors = this.countErrors()
-    if (this.activeKey) {
+    if (this.activeKey && this.itemsLoaded) {
       this.showKeyDetail(this.activeKey)
       NProgress.start()
     }
