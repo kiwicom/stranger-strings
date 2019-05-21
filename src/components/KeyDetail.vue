@@ -10,6 +10,7 @@
       no-fade
       hide-footer
       lazy
+      @hide="$emit('close')"
     >
       <div class="keyOverview" v-if="items[activeKey]">
         <div class="errors-overview">
@@ -57,7 +58,7 @@
             :translated="items[activeKey].translated.length"
             :missingPrimary="importantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
             :missingSecondary="
-            getMaximumTranslations
+            getMaximumTranslations()
             - items[activeKey].translated.length
             - importantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
           ></LocalizationProgressChart>
@@ -276,7 +277,7 @@ import * as gcFunctions from "../modules/functionsApi"
 import * as defaults from "../../common/config"
 import maxExpansionRatio from "../../common/maxExpansionRatio"
 import Reporting from "./Reporting"
-import LocalizationProgressChart from "../components/LocalizationProgressChart"
+import LocalizationProgressChart from "./LocalizationProgressChart"
 
 
 export default {
@@ -506,6 +507,10 @@ export default {
   }
   .key-detail-table {
     font-size: 13px;
+  }
+  td {
+    vertical-align: middle;
+    padding: 5px;
   }
   .strikethrough {
     text-decoration: line-through;
