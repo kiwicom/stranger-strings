@@ -8,6 +8,7 @@
     ok-title="Send report"
     @ok="submitReport"
     :ok-disabled="reportForm.errorType.length < 1"
+    @hide="$emit('close')"
     lazy
   >
     <b-row class="my-2">
@@ -82,6 +83,7 @@
 
 <script>
 import NProgress from "nprogress"
+import _ from "lodash"
 import { FbDb } from "../modules/firebase"
 
 import * as reporting from "../services/reporting"
@@ -91,8 +93,9 @@ export default {
   name: "Reporting",
   props: {
     locale: { type: String, required: true },
-    key: { type: String, required: true },
+    translationKey: { type: String, required: true },
     email: { type: String, required: true },
+    locales: { type: Array, required: true },
   },
   data() {
     return {
@@ -119,7 +122,7 @@ export default {
   created() {
     NProgress.start()
     this.reportForm.locale = this.locale
-    this.reportForm.key = this.key
+    this.reportForm.key = this.translationKey
     this.reportForm.author = this.email
     this.reportForm.additionalInfo = ""
     this.reportForm.errorType = ""
@@ -153,7 +156,6 @@ export default {
       reportLog.time = new Date().toString()
       FbDb.ref(`reports/${this.activeKey}`).push(reportLog)
       this.modalReport = false
-      this.$emit("close")
     },
     notifyUser(title, text, variant) {
       this.$bvToast.toast(text, {

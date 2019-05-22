@@ -136,7 +136,10 @@
             <WriteGoodIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_writeGood'"></WriteGoodIcon>
             <TyposIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_typos'"></TyposIcon>
             <TagIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_tags'"></TagIcon>
-            <InsensitivenessIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_insensitiveness'"></InsensitivenessIcon>
+            <InsensitivenessIcon
+              :size="30"
+              v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_insensitiveness'">
+            </InsensitivenessIcon>
             <WarningIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
           </td>
 
@@ -336,10 +339,9 @@
       </div>
     </b-modal>
     <KeyDetail
-      v-if="activeKey"
+      v-if="activeKey && localesLoaded && itemsLoaded"
       :user="user"
-      :activeKey="activeKey"
-      :items="items"
+      :item="items[activeKey]"
       :locales="locales"
       :importantLoc="importantLoc"
       @close="hideKeyDetail"
@@ -404,6 +406,7 @@ export default {
       // View
       items: {}, // filtered items with search query
       itemsLoaded: false,
+      localesLoaded: false,
       locales: [],
 
 
@@ -478,14 +481,10 @@ export default {
         asObject: true,
         readyCallback: () => {
           this.items = this.sortKeys(this.allItems)
-          this.itemsLoaded = true
           NProgress.done()
-          if (this.activeKey) {
-            this.showKeyDetail(this.activeKey)
-            NProgress.start()
-          }
           this.errors = this.countErrors()
           this.allowedChecks = this.loadUserChecksConfig()
+          this.itemsLoaded = true
         },
       },
       localeList: {
@@ -494,6 +493,7 @@ export default {
         readyCallback: () => {
           this.locales = this.localeList.list
           this.importantLocales = this.loadUserLocalesConfig()
+          this.localesLoaded = true
         },
       },
     }
@@ -501,6 +501,7 @@ export default {
   created() {
     NProgress.start()
     this.itemsLoaded = false
+    this.localesLoaded = false
     this.hardWrap = localStorage.getItem("hardWrap") ? JSON.parse(localStorage.getItem("hardWrap")) : false
     this.items = this.sortKeys(this.allItems) // sort always
     NProgress.start()
@@ -508,18 +509,11 @@ export default {
       this.search()
     }
     this.errors = this.countErrors()
-    if (this.activeKey && this.itemsLoaded) {
-      this.showKeyDetail(this.activeKey)
-      NProgress.start()
-    }
     this.allowedChecks = this.loadUserChecksConfig()
     FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
       this.dictsExpansionData = dictsData.val()
     })
     window.addEventListener("scroll", this.toggleSSNameVisibility)
-    if (this.itemsLoaded) {
-      NProgress.done()
-    }
   },
   computed: {
     getProfanitySureness() {
@@ -583,6 +577,7 @@ export default {
     showKeyDetail(key) {
       this.activeKey = key
       this.$router.push({ name: "items", params: { all: key } })
+      NProgress.start()
     },
     showDictsExpansion() {
       FbDb.ref("dictsExpansion").once("value", (snapshot) => {
