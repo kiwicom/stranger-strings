@@ -4,7 +4,7 @@
     <b-modal
       id="keyDetailModal"
       v-model="modalKeyDetail"
-      :title="activeKey && items[activeKey] && items[activeKey].key"
+      :title="item.key"
       variant="primary"
       size="lg"
       no-fade
@@ -12,9 +12,9 @@
       lazy
       @hide="$emit('close')"
     >
-      <div class="keyOverview" v-if="items[activeKey]">
+      <div class="keyOverview" v-if="item">
         <div class="errors-overview">
-          <div v-for="inconsistency in getItemInconsistencies(items[activeKey])" :key="inconsistency" class="error">
+          <div v-for="inconsistency in getItemInconsistencies(item)" :key="inconsistency" class="error">
             <div v-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_placeholders'">
               <div class="inline-error"><PlaceholderIcon :size="30"></PlaceholderIcon></div> - missing placeholders
             </div>
@@ -33,17 +33,17 @@
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_writeGood'">
               <div class="inline-warning">
                 <WriteGoodIcon :size="30"></WriteGoodIcon>
-              </div> - write-good suggestions (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+              </div> - write-good suggestions (in locales: {{ item[inconsistency].join(", ") }})
             </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_insensitiveness'">
               <div class="inline-warning">
                 <InsensitivenessIcon :size="30"></InsensitivenessIcon>
-              </div> - insensitiveness (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+              </div> - insensitiveness (in locales: {{ item[inconsistency].join(", ") }})
             </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_typos'">
               <div class="inline-error">
                 <TyposIcon :size="30"></TyposIcon>
-              </div> - typos (in locales: {{ items[activeKey][inconsistency].join(", ") }})
+              </div> - typos (in locales: {{ item[inconsistency].join(", ") }})
             </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_tags'">
               <div class="inline-warning"><TagIcon :size="30"></TagIcon></div> - blacklisted HTML tags
@@ -55,22 +55,22 @@
         </div>
         <div class="progress-chart">
           <LocalizationProgressChart
-            :translated="items[activeKey].translated.length"
-            :missingPrimary="importantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
+            :translated="item.translated.length"
+            :missingPrimary="importantLoc.filter(l => !item.translated.includes(l)).length"
             :missingSecondary="
             getMaximumTranslations()
-            - items[activeKey].translated.length
-            - importantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
+            - item.translated.length
+            - importantLoc.filter(l => !item.translated.includes(l)).length"
           ></LocalizationProgressChart>
         </div>
         <div class="progress-legend">
-          <div v-if="importantLoc.filter(l => !items[activeKey].translated.includes(l)).length > 0">
+          <div v-if="importantLoc.filter(l => !item.translated.includes(l)).length > 0">
             <strong class="missing-important">Missing primary locales: </strong>
-            <strong>{{ importantLoc.filter(l => !items[activeKey].translated.includes(l)).join(", ") }}</strong>
+            <strong>{{ importantLoc.filter(l => !item.translated.includes(l)).join(", ") }}</strong>
           </div>
-          <div v-if="locales.filter(l => !items[activeKey].translated.includes(l) && !importantLoc.includes(l)).length > 0">
+          <div v-if="locales.filter(l => !item.translated.includes(l) && !importantLoc.includes(l)).length > 0">
             <strong class="missing-normal">Missing secondary locales: </strong>
-            {{ locales.filter(l => !items[activeKey].translated.includes(l) && !importantLoc.includes(l)).join(", ") }}
+            {{ locales.filter(l => !item.translated.includes(l) && !importantLoc.includes(l)).join(", ") }}
           </div>
         </div>
       </div>
@@ -94,7 +94,7 @@
         </b-form>
       </div>
 
-      <table v-if="items[activeKey]" class="table table-sm b-table table-striped key-detail-table">
+      <table v-if="item" class="table table-sm b-table table-striped key-detail-table">
         <thead>
         <th colspan="2" class="key-detail-header">Locale</th>
         <th class="key-detail-header">Translation</th>
@@ -248,7 +248,8 @@
     <Reporting
       v-if="showReporting"
       :locale="reportedLocale"
-      :key="items[activeKey].key"
+      :translationKey="item.key"
+      :locales="locales"
       :email="user.email"
       @close="closeReportModal"
     />
@@ -271,6 +272,7 @@ import ReportIcon from "vue-material-design-icons/AlertOctagon"
 import CountryFlag from "vue-country-flag"
 
 import NProgress from "nprogress"
+import _ from "lodash"
 import { FbDb } from "../modules/firebase"
 import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"
@@ -284,9 +286,8 @@ export default {
   name: "KeyDetail",
   props: {
     user: { type: Object, required: true },
-    items: { type: Object, required: true },
+    item: { type: Object, required: true },
     locales: { type: Array, required: true },
-    activeKey: { type: String, required: true },
     importantLoc: { type: Array, required: true },
   },
   components: {
@@ -339,7 +340,8 @@ export default {
         this.reportConfig = snapshot.val()
       }
     })
-    FbDb.ref(`translations/${this.activeKey}`).once("value", (snapshot) => {
+    const fbKey = this.item.key.includes(".") ? this.item.key.split(".").join("-") : this.item.key
+    FbDb.ref(`translations/${fbKey}`).once("value", (snapshot) => {
       if (snapshot.val()) {
         this.activeTranslations = snapshot.val()
         this.modalKeyDetail = true
@@ -347,7 +349,6 @@ export default {
       }
     })
     NProgress.done()
-    console.log(`1:${this.getMaximumTranslations()}2:${this.items[this.activeKey].translated.length}3:${this.importantLoc.filter(l => !this.items[this.activeKey].translated.includes(l)).length}`)
   },
   methods: {
     showReportModal(locale) {
