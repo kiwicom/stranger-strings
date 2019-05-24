@@ -351,35 +351,35 @@
 </template>
 
 <script type="text/javascript">
-  import NProgress from "nprogress"
-  import "vue-octicon/icons"
-  import WarningIcon from "vue-material-design-icons/AlertOutline"
-  import InsensitivenessIcon from "vue-material-design-icons/EmoticonCryOutline"
-  import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
-  import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
-  import TyposIcon from "vue-material-design-icons/Spellcheck"
-  import DynamicIcon from "vue-material-design-icons/Resistor"
-  import NoEnglishIcon from "vue-material-design-icons/EarthOff"
-  import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
-  import FirstIcon from "vue-material-design-icons/PageFirst"
-  import LastIcon from "vue-material-design-icons/PageLast"
-  import TagIcon from "vue-material-design-icons/CodeTags"
-  import _ from "lodash"
-  import Fuse from "fuse.js"
-  import {FbDb} from "../modules/firebase"
-  import saveJSON from "../modules/json"
+import NProgress from "nprogress"
+import "vue-octicon/icons"
+import WarningIcon from "vue-material-design-icons/AlertOutline"
+import InsensitivenessIcon from "vue-material-design-icons/EmoticonCryOutline"
+import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
+import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
+import TyposIcon from "vue-material-design-icons/Spellcheck"
+import DynamicIcon from "vue-material-design-icons/Resistor"
+import NoEnglishIcon from "vue-material-design-icons/EarthOff"
+import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
+import FirstIcon from "vue-material-design-icons/PageFirst"
+import LastIcon from "vue-material-design-icons/PageLast"
+import TagIcon from "vue-material-design-icons/CodeTags"
+import _ from "lodash"
+import Fuse from "fuse.js"
+import { FbDb } from "../modules/firebase"
+import saveJSON from "../modules/json"
 
-  import * as helpers from "../services/helpers"
-  import * as gcFunctions from "../modules/functionsApi"
-  import * as reporting from "../services/reporting"
+import * as helpers from "../services/helpers"
+import * as gcFunctions from "../modules/functionsApi"
+import * as reporting from "../services/reporting"
 
-  import * as defaults from "../../common/config"
-  import ADMIN from "../consts/admin"
+import * as defaults from "../../common/config"
+import ADMIN from "../consts/admin"
 
-  import KeyDetail from "../components/KeyDetail"
-  import TranslationProgress from "./TranslationProgress";
+import KeyDetail from "../components/KeyDetail"
+import TranslationProgress from "./TranslationProgress"
 
-  export default {
+export default {
   props: {
     user: { type: Object, required: true },
   },
