@@ -127,20 +127,20 @@
             v-if="allowedChecks && allowedChecks.includes(e) && getItemInconsistencies(val).includes(e)"
             class="indicators"
           >
-            <PlaceholderIcon :size="30" v-if="e === '_inconsistencies_placeholders'"></PlaceholderIcon>
-            <NoEnglishIcon :size="30" v-else-if="e === '_inconsistencies_noEnglish'"></NoEnglishIcon>
-            <LengthIcon :size="30" v-else-if="e === '_inconsistencies_length'"></LengthIcon>
-            <FirstIcon :size="30" v-else-if="e === '_inconsistencies_firstCharType'"></FirstIcon>
-            <LastIcon :size="30" v-else-if="e === '_inconsistencies_lastCharType'"></LastIcon>
-            <DynamicIcon :size="30" v-else-if="e === '_inconsistencies_dynamic'"></DynamicIcon>
-            <WriteGoodIcon :size="30" v-else-if="e === '_inconsistencies_writeGood'"></WriteGoodIcon>
-            <TyposIcon :size="30" v-else-if="e === '_inconsistencies_typos'"></TyposIcon>
-            <TagIcon :size="30" v-else-if="e === '_inconsistencies_tags'"></TagIcon>
+            <PlaceholderIcon :size="30" v-if="e === '_inconsistencies_placeholders'"/>
+            <NoEnglishIcon :size="30" v-else-if="e === '_inconsistencies_noEnglish'"/>
+            <LengthIcon :size="30" v-else-if="e === '_inconsistencies_length'"/>
+            <FirstIcon :size="30" v-else-if="e === '_inconsistencies_firstCharType'"/>
+            <LastIcon :size="30" v-else-if="e === '_inconsistencies_lastCharType'"/>
+            <DynamicIcon :size="30" v-else-if="e === '_inconsistencies_dynamic'"/>
+            <WriteGoodIcon :size="30" v-else-if="e === '_inconsistencies_writeGood'"/>
+            <TyposIcon :size="30" v-else-if="e === '_inconsistencies_typos'"/>
+            <TagIcon :size="30" v-else-if="e === '_inconsistencies_tags'"/>
             <InsensitivenessIcon
               :size="30"
-              v-else-if="e === '_inconsistencies_insensitiveness'">
-            </InsensitivenessIcon>
-            <WarningIcon :size="30" v-else></WarningIcon>
+              v-else-if="e === '_inconsistencies_insensitiveness'"
+            />
+            <WarningIcon :size="30" v-else/>
           </td>
           <td v-else class="indicators"></td>
 
