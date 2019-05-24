@@ -251,6 +251,7 @@
       :translationKey="item.key"
       :locales="locales"
       :email="user.email"
+      :notifyUser="notifyUser"
       @close="closeReportModal"
     />
   </div>
@@ -289,6 +290,7 @@ export default {
     item: { type: Object, required: true },
     locales: { type: Array, required: true },
     importantLoc: { type: Array, required: true },
+    notifyUser: { type: Function, required: true },
   },
   components: {
     Reporting,

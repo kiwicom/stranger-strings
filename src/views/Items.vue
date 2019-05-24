@@ -29,29 +29,15 @@
             <octicon name="settings"></octicon>&nbsp; user config
           </b-dropdown-item-button>
           <b-dropdown-item-button
+            @click="showAdminConfig = true"
+          >
+            <!-- TODO: icon  -->
+            admin config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
             @click="showDictsExpansion"
           >
             <octicon name="repo"></octicon>&nbsp; spellcheck dict
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="showPlaceholderConfig"
-          >
-            <octicon name="mention"></octicon>&nbsp; placeholder config
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="showWriteGoodConfig"
-          >
-            <octicon name="checklist"></octicon>&nbsp;write good config
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="showInsensitivenessConfig"
-          >
-            <InsensitivenessIcon></InsensitivenessIcon> insensitiveness config
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="showReportingConfig"
-          >
-            <octicon name="megaphone"></octicon>&nbsp;reporting config
           </b-dropdown-item-button>
           <b-dropdown-item-button
             @click="exportKeys"
@@ -215,136 +201,20 @@
       </div>
     </b-modal>
 
-    <!-- MODAL: WRITE GOOD CONFIG -->
-    <b-modal
-      id="writeGoodSettingsModal"
-      v-model="modalWriteGoodSettings"
-      :title="'Write good intentions settings'"
-      size="lg"
-      ok-title="Save"
-      @ok="updateWriteGoodSettings"
-      no-fade
-    >
-      <div class="setDefault"><b-button variant="link" @click="setDefaultWriteGoodConfig">Set default config</b-button></div>
-      <div v-for="(settings, lang) in writeGoodSettings" :key="lang">
-        <div class="wgLangHeader">{{ lang }}:</div>
-        <b-form-checkbox
-          v-for="(value, option) in settings"
-          :key="option"
-          :checked="value"
-          @change="toggleWriteGoodSetting(lang, option)"
-          style="display: block"
-        >
-          <strong>{{ option }}</strong> ({{ optionsDescription[option] }})
-        </b-form-checkbox>
-      </div>
-    </b-modal>
+    <AdminConfig
+      v-if="showAdminConfig"
+      :email="user.email"
+      :notifyUser="notifyUser"
+      @close="showAdminConfig = false"
+    />
 
-    <!-- MODAL: PLACEHOLDER CONFIG -->
-    <b-modal
-      id="placeholderConfigModal"
-      v-model="modalPlaceholderConfig"
-      title="Placeholder configuration"
-      size="lg"
-      ok-title="Save"
-      no-fade
-      @ok="updatePlaceholderConfig"
-      @shown="loadCurrentPlaceholder"
-    >
-      <div class="regexInput">
-        <label for="regFormIn">Regex:</label>
-        <b-form-input
-          if="regFormIn"
-          v-model="placeholderRegex"
-          type="text"
-          :placeholder="'e.g. ({{\\w+}})'"
-        ></b-form-input>
-      </div>
-      <div class="regexPreview">
-        <div class="previewText">
-          <label>Preview:</label>
-          <b-form-textarea id="textarea1"
-                           v-model="regexPreviewText"
-                           :rows="6"
-                           :max-rows="6">
-          </b-form-textarea>
-        </div>
-        <div class="matched-placeholders">
-          <label>Matched placeholders:</label>
-          <ul>
-            <li v-for="mp in matchedPlaceholders" :key="mp">{{ mp }}</li>
-          </ul>
-        </div>
-      </div>
-    </b-modal>
-
-    <!-- MODAL: INSENSITIVENESS CONFIG -->
-    <b-modal
-      id="insensitivenessConfigModal"
-      v-model="modalInsensitivenessConfig"
-      title="Insensitiveness configuration"
-      size="lg"
-      ok-title="Save"
-      no-fade
-      @ok="updateInsensitivenessConfig"
-    >
-      <div>
-        <label for="range-1">Profanity sureness level: {{ insensitivenessConfig.profanitySureness }}</label>
-        <b-form-input number id="range-1" v-model="insensitivenessConfig.profanitySureness" type="range" min="0" max="2"></b-form-input>
-        <div class="mt-2">Detecting words that are <strong>{{ getProfanitySureness }}</strong></div>
-      </div>
-    </b-modal>
-
-    <!--  MODAL: REPORTING CONFIG -->
-    <b-modal
-      id="reportingConfigModal"
-      v-model="modalReportingConfig"
-      title="Reporting configuration"
-      size="lg"
-      ok-title="Save"
-      no-fade
-      @ok="updateReportingConfig"
-      @hidden="resetReportConf"
-    >
-      <div class="mx-auto" style="width: fit-content">
-        <b-form-checkbox
-          switch
-          v-model="reportConfig.active"
-        >
-          Enable Reporting
-        </b-form-checkbox>
-      </div>
-      <div v-if="reportConfig.active" class="mt-3">
-        <label for="report-option"><strong>Select reporting option:</strong></label>
-        <b-form-select if="report-option" v-model="reportConfig.option" :options="getReportingOptions()"></b-form-select>
-      </div>
-      <div v-if="reportConfig.active && reportConfig.option === 'Slack'" class="mt-3">
-        <label for="webhook"><strong>Enter your <a href="https://api.slack.com/incoming-webhooks">Slack Incoming Webhook URL</a>:</strong></label>
-        <b-form-input
-          id="webhook"
-          :value="reportConfig.webhook"
-          @change.native="reportConfig.webhook = $event.target.value"
-          placeholder="e.g. https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
-        >
-        </b-form-input>
-        <label for="slack-channel">Channel:</label>
-        <b-input-group prepend="#">
-          <!-- note: V-MODEL avoided due to performance issues -->
-          <b-input
-            id="slack-channel"
-            placeholder="translation-bugs"
-            :value="reportConfig.slackChannel"
-            @change.native="reportConfig.slackChannel = $event.target.value"
-          ></b-input>
-        </b-input-group>
-      </div>
-    </b-modal>
     <KeyDetail
       v-if="activeKey && localesLoaded && itemsLoaded"
       :user="user"
       :item="items[activeKey]"
       :locales="locales"
       :importantLoc="importantLoc"
+      :notifyUser="notifyUser"
       @close="hideKeyDetail"
     />
   </div>
@@ -371,13 +241,13 @@ import saveJSON from "../modules/json"
 
 import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"
-import * as reporting from "../services/reporting"
 
 import * as defaults from "../../common/config"
-import ADMIN from "../consts/admin"
+
 
 import KeyDetail from "../components/KeyDetail"
-import TranslationProgress from "./TranslationProgress"
+import TranslationProgress from "../components/TranslationProgress"
+import AdminConfig from "../components/AdminConfig"
 
 export default {
   props: {
@@ -397,6 +267,7 @@ export default {
     LastIcon,
     TagIcon,
     KeyDetail,
+    AdminConfig,
   },
   data() {
     return {
@@ -426,49 +297,16 @@ export default {
       activeKey: this.$route.params.all ? this.$route.params.all : null,
       activeTranslations: null,
 
+      // Admin settings
+      showAdminConfig: false,
+
       // Custom dict expansion
       dictsExpansionData: {},
-
-      // Placeholder config
-      placeholderRegex: "",
-      regexPreviewText: "Hi {{name}}, have a nice day!",
-
-      // Write good config
-      writeGoodSettings: {},
-      optionsDescription: {
-        passive: "Checks for passive voice.",
-        illusion: "Checks for lexical illusions – cases where a word is repeated.",
-        so: "Checks for \"so\" at the beginning of the sentence.",
-        thereIs: "Checks for \"there is\" or \"there are\" at the beginning of the sentence.",
-        weasel: "Checks for weasel words.",
-        adverb: "Checks for adverbs that can weaken meaning: really, very, extremely, etc.",
-        tooWordy: "Checks for wordy phrases and unnecessary words.",
-        cliches: "Checks for common cliches.",
-        eprime: "Checks for \"to-be\" verbs.",
-      },
-
-      // Insensitiveness config
-      insensitivenessConfig: {
-        profanitySureness: 2,
-        allow: [],
-      },
 
       // Modals
       modalKeyDetail: !!this.$route.params.all,
       modalDictsExpansion: false,
-      modalWriteGoodSettings: false,
-      modalReportingConfig: false,
       modalChecksConfig: false,
-      modalPlaceholderConfig: false,
-      modalInsensitivenessConfig: false,
-
-      // Reporting
-      reportConfig: {
-        active: false,
-        option: "",
-        webhook: "",
-        slackChannel: "",
-      },
     }
   },
   firebase() {
@@ -513,31 +351,11 @@ export default {
     window.addEventListener("scroll", this.toggleSSNameVisibility)
   },
   computed: {
-    getProfanitySureness() {
-      const level = this.insensitivenessConfig.profanitySureness
-      if (level === 2) {
-        return "likely to be profanity"
-      }
-      if (level === 1) {
-        return "maybe profanity"
-      }
-      return "unlikely to be profanity"
-    },
     getMaximumTranslations() {
       return this.locales ? this.locales.length : 0
     },
     availableTags() {
       return helpers.getAvailableTags(this.allItems)
-    },
-    matchedPlaceholders() {
-      if (this.placeholderRegex === "" || this.placeholderRegex === null) {
-        return []
-      }
-      const matches = this.regexPreviewText.match(RegExp(this.placeholderRegex, "g"))
-      if (Array.isArray(matches) && matches.length > 10) {
-        return ["...too much matches..."]
-      }
-      return matches || []
     },
     importantLoc() {
       return _.reduce(this.importantLocales, (acc, val, key) => {
@@ -600,93 +418,6 @@ export default {
     showUserConfig() {
       this.modalChecksConfig = true
     },
-    showWriteGoodConfig() {
-      FbDb.ref("writeGood").once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.writeGoodSettings = snapshot.val() // if this line is removed dicts expansion cannot be modified
-        } else {
-          this.setDefaultWriteGoodConfig()
-        }
-        this.modalWriteGoodSettings = true
-      })
-    },
-    toggleWriteGoodSetting(lang, option) {
-      this.writeGoodSettings[lang][option] = !this.writeGoodSettings[lang][option]
-    },
-    updateWriteGoodSettings() {
-      if (ADMIN.includes(this.user.email)) {
-        FbDb.ref("writeGood").update(this.writeGoodSettings)
-        gcFunctions.inconsistenciesUpdate()
-      } else {
-        // eslint-disable-next-line no-alert
-        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
-      }
-    },
-    showReportingConfig() {
-      FbDb.ref("reportingConf/").once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.reportConfig = snapshot.val()
-        }
-        this.modalReportingConfig = true
-      })
-    },
-    getReportingOptions() {
-      return reporting.options
-    },
-    resetReportConf() {
-      this.reportConfig = {
-        active: false,
-        option: "",
-        webhook: "",
-        slackChannel: "",
-      }
-    },
-    updateReportingConfig() {
-      if (ADMIN.includes(this.user.email)) {
-        FbDb.ref("reportingConf").update(this.reportConfig)
-      } else {
-        // eslint-disable-next-line no-alert
-        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
-      }
-    },
-    showInsensitivenessConfig() {
-      FbDb.ref("insensitivenessConfig/").once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.insensitivenessConfig = snapshot.val()
-        }
-        this.modalInsensitivenessConfig = true
-      })
-    },
-    updateInsensitivenessConfig() {
-      if (ADMIN.includes(this.user.email)) {
-        FbDb.ref("insensitivenessConfig").update(this.insensitivenessConfig)
-        gcFunctions.inconsistenciesUpdate()
-      } else {
-        // eslint-disable-next-line no-alert
-        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
-      }
-    },
-    showPlaceholderConfig() {
-      this.modalPlaceholderConfig = true
-    },
-    updatePlaceholderConfig() {
-      if (ADMIN.includes(this.user.email)) {
-        FbDb.ref("placeholders").update({
-          regex: this.placeholderRegex,
-        })
-        gcFunctions.inconsistenciesUpdate()
-      } else {
-        // eslint-disable-next-line no-alert
-        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
-      }
-    },
-    loadCurrentPlaceholder() {
-      FbDb.ref("placeholders/regex").once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.placeholderRegex = snapshot.val()
-        }
-      })
-    },
     search() { // event param if needed
       NProgress.start()
       this.items = _.reduce(this.allItems, (acc, val, key) => {
@@ -729,9 +460,6 @@ export default {
     hideKeyDetail() {
       this.activeKey = null
       this.$router.replace({ name: "items" })
-    },
-    setDefaultWriteGoodConfig() {
-      this.writeGoodSettings = JSON.parse(JSON.stringify(defaults.DEFAULT_WRITE_GOOD_SETTINGS)) // deep copy to avoid modification of constant
     },
     getItemInconsistencies(key) {
       return helpers.getItemInconsistencies(key)
@@ -900,11 +628,6 @@ td.locale {
   width: 500px;
   font-size: 14px;
 }
-.wgLangHeader {
-  font-size: larger;
-  font-weight: bold;
-  margin-top: 10px;
-}
 .setDefault {
   display: inline-block;
 }
@@ -913,21 +636,6 @@ h4 {
   width: fit-content;
   display: inline-block;
 }
-  .regexPreview {
-    margin-top: 50px;
-  }
-  .regexPreview label {
-    font-size: larger;
-    padding-left: 5px;
-  }
-  .previewText {
-    display: inline-block;
-    width: 50%;
-  }
-  .matched-placeholders {
-    width: 50%;
-    display: inline-grid;
-  }
   .sticky-header-hack {
     width: 100%;
     height: 95px;

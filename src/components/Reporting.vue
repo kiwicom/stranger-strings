@@ -96,6 +96,7 @@ export default {
     translationKey: { type: String, required: true },
     email: { type: String, required: true },
     locales: { type: Array, required: true },
+    notifyUser: { type: Function, required: true },
   },
   data() {
     return {
@@ -156,13 +157,6 @@ export default {
       reportLog.time = new Date().toString()
       FbDb.ref(`reports/${this.activeKey}`).push(reportLog)
       this.modalReport = false
-    },
-    notifyUser(title, text, variant) {
-      this.$bvToast.toast(text, {
-        title,
-        variant,
-        solid: true,
-      })
     },
   },
 }
