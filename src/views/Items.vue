@@ -126,22 +126,28 @@
             </b-progress>
           </td>
 
-          <td v-for="(c, e) in errors" :key="e" v-if="allowedChecks && allowedChecks.includes(e)" class="indicators">
-            <PlaceholderIcon :size="30" v-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_placeholders'"></PlaceholderIcon>
-            <NoEnglishIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_noEnglish'"></NoEnglishIcon>
-            <LengthIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_length'"></LengthIcon>
-            <FirstIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_firstCharType'"></FirstIcon>
-            <LastIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_lastCharType'"></LastIcon>
-            <DynamicIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_dynamic'"></DynamicIcon>
-            <WriteGoodIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_writeGood'"></WriteGoodIcon>
-            <TyposIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_typos'"></TyposIcon>
-            <TagIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_tags'"></TagIcon>
+          <td
+            v-for="(c, e) in errors"
+            :key="e"
+            v-if="allowedChecks && allowedChecks.includes(e) && getItemInconsistencies(val).includes(e)"
+            class="indicators"
+          >
+            <PlaceholderIcon :size="30" v-if="e === '_inconsistencies_placeholders'"></PlaceholderIcon>
+            <NoEnglishIcon :size="30" v-else-if="e === '_inconsistencies_noEnglish'"></NoEnglishIcon>
+            <LengthIcon :size="30" v-else-if="e === '_inconsistencies_length'"></LengthIcon>
+            <FirstIcon :size="30" v-else-if="e === '_inconsistencies_firstCharType'"></FirstIcon>
+            <LastIcon :size="30" v-else-if="e === '_inconsistencies_lastCharType'"></LastIcon>
+            <DynamicIcon :size="30" v-else-if="e === '_inconsistencies_dynamic'"></DynamicIcon>
+            <WriteGoodIcon :size="30" v-else-if="e === '_inconsistencies_writeGood'"></WriteGoodIcon>
+            <TyposIcon :size="30" v-else-if="e === '_inconsistencies_typos'"></TyposIcon>
+            <TagIcon :size="30" v-else-if="e === '_inconsistencies_tags'"></TagIcon>
             <InsensitivenessIcon
               :size="30"
-              v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_insensitiveness'">
+              v-else-if="e === '_inconsistencies_insensitiveness'">
             </InsensitivenessIcon>
-            <WarningIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
+            <WarningIcon :size="30" v-else></WarningIcon>
           </td>
+          <td v-else class="indicators"></td>
 
           <td v-bind:class="{ 'locale-hard-wrap': hardWrap, 'locale': !hardWrap }">
             {{ getTranslation(val, "en-GB") || '» not translated «' }}
