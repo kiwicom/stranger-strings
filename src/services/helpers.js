@@ -81,7 +81,7 @@ export function getPlaceholders(s) {
 }
 
 export function getItemInconsistencies(key) {
-  const _inconsistencies = Object.keys(key).filter(x => /^_inconsistencies_/.test(x)).filter(x => key[x])
+  const _inconsistencies = Object.keys(key).filter(x => x.indexOf("_inconsistencies_") === 0).filter(x => key[x])
   if (!key["en-GB"] && key !== "items") {
     _inconsistencies.push("_inconsistencies_noEnglish")
   }
