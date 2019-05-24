@@ -49,7 +49,7 @@
               <div class="inline-warning"><TagIcon :size="30"></TagIcon></div> - blacklisted HTML tags
             </div>
             <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency)">
-              <div class="inline-warning"><WarningIcon :size="30"></WarningIcon></div> - {{ userifyInconsistency(inconsistency) }}
+              <div class="inline-warning"><WarningIcon :size="30"></WarningIcon></div> - {{ getItemInconsistencies(inconsistency) }}
             </div>
           </div>
         </div>
@@ -367,7 +367,7 @@ export default {
       return Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
     },
     getItemInconsistencies(key) {
-      return helpers.getItemInconsistencies(key)
+      return helpers.inconsistencies[key].title
     },
     getMaximumTranslations() {
       return this.locales ? this.locales.length : 0

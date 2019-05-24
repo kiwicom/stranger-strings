@@ -24,7 +24,7 @@
             <octicon name="gear"></octicon>
           </template>
           <b-dropdown-item-button
-            @click="showUserConfig"
+            @click="showUserConfig = true"
           >
             <octicon name="settings"></octicon>&nbsp; user config
           </b-dropdown-item-button>
@@ -161,45 +161,23 @@
     </b-modal>
 
     <!-- MODAL: USER CONFIG -->
-    <b-modal
-      id="writeGoodSettingsModal"
-      v-model="modalChecksConfig"
-      :title="'User configuration'"
-      size="lg"
-      @ok="saveUserConfig"
-      ok-only
-      no-fade
-    >
-      <div class="config-group">
-        <h4>Checks</h4>
-        <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Reset to default</b-button></div>
-        <b-form-checkbox-group v-model="allowedChecks" stacked style="width: fit-content">
-          <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">
-            <strong>{{ userifyInconsistency(error) }}</strong> ({{ getDescription(userifyInconsistency(error)) }})
-          </b-form-checkbox>
-        </b-form-checkbox-group>
-      </div>
-      <div class="config-group">
-        <h4>Locales</h4>
-        <div class="setDefault"><b-button variant="link" @click="setDefaultLocalesConfig">Reset to default</b-button></div>
-        <b-form-group v-for="loc in locales" :key="loc" label-cols="4" label-cols-lg="2">
-          <b-form-radio-group v-model="importantLocales[loc]">
-            <div class="loc-label">{{ loc }}</div>
-            <b-form-radio :value="true">Primary</b-form-radio>
-            <b-form-radio :value="false">Secondary</b-form-radio>
-          </b-form-radio-group>
-        </b-form-group>
-      </div>
-      <div class="config-group">
-        <h4>View</h4>
-        <div class="setDefault"><b-button variant="link" @click="setDefaultViewConfig">Reset to default</b-button></div>
-        <div>
-          <b-form-checkbox switch v-model="hardWrap">
-            <strong>hard wrap</strong> (show english preview in main table with line breaks)
-          </b-form-checkbox>
-        </div>
-      </div>
-    </b-modal>
+    <UserConfig
+      v-if="showUserConfig"
+      :locales="locales"
+      :errors="errors"
+
+      :currentChecks="allowedChecks"
+      :currentImportantLocales="importantLocales"
+      :currentHardWrap="hardWrap"
+
+      :setDefaultChecksConfig="setDefaultChecksConfig"
+      :setDefaultLocalesConfig="setDefaultLocalesConfig"
+      :setDefaultViewConfig="setDefaultViewConfig"
+      :applyConfig="saveUserConfig"
+
+      :notifyUser="notifyUser"
+      @close="showUserConfig = false"
+    />
 
     <AdminConfig
       v-if="showAdminConfig"
@@ -247,6 +225,7 @@ import * as defaults from "../../common/config"
 
 import KeyDetail from "../components/KeyDetail"
 import TranslationProgress from "../components/TranslationProgress"
+import UserConfig from "../components/UserConfig"
 import AdminConfig from "../components/AdminConfig"
 
 export default {
@@ -267,6 +246,7 @@ export default {
     LastIcon,
     TagIcon,
     KeyDetail,
+    UserConfig,
     AdminConfig,
   },
   data() {
@@ -297,7 +277,10 @@ export default {
       activeKey: this.$route.params.all ? this.$route.params.all : null,
       activeTranslations: null,
 
-      // Admin settings
+      // TODO: Check what could be refactored
+
+      // Configs
+      showUserConfig: true, // TEMP
       showAdminConfig: false,
 
       // Custom dict expansion
@@ -415,9 +398,6 @@ export default {
     triggerUpdate() {
       gcFunctions.update()
     },
-    showUserConfig() {
-      this.modalChecksConfig = true
-    },
     search() { // event param if needed
       NProgress.start()
       this.items = _.reduce(this.allItems, (acc, val, key) => {
@@ -464,19 +444,20 @@ export default {
     getItemInconsistencies(key) {
       return helpers.getItemInconsistencies(key)
     },
-    userifyInconsistency(inconsistency) {
-      return helpers.userifyInconsistency(inconsistency)
+    userifyInconsistency(inconsistency) { // TODO: Ref
+      return helpers.inconsistencies[inconsistency].title
     },
+
     loadUserChecksConfig() {
       if (localStorage.getItem("allowedChecks")) {
         return JSON.parse(localStorage.getItem("allowedChecks"))
       }
       return Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
     },
-    saveUserConfig() {
-      localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
-      localStorage.setItem("importantLocales", JSON.stringify(this.importantLocales))
-      localStorage.setItem("hardWrap", JSON.stringify(this.hardWrap))
+    saveUserConfig(allowedChecks, importantLocales, hardWrap) {
+      localStorage.setItem("allowedChecks", JSON.stringify(allowedChecks))
+      localStorage.setItem("importantLocales", JSON.stringify(importantLocales))
+      localStorage.setItem("hardWrap", JSON.stringify(hardWrap))
     },
     loadUserLocalesConfig() {
       if (localStorage.getItem("importantLocales")) {
@@ -499,9 +480,7 @@ export default {
     setDefaultViewConfig() {
       this.hardWrap = defaults.DEFAULT_VIEW.hardWrap
     },
-    getDescription(error) {
-      return helpers.descriptions[error] || ""
-    },
+
     toggleSSNameVisibility() {
       if (window.scrollY > 200) {
         document.getElementsByClassName("ss-name").item(0).setAttribute("style", "visibility: visible; opacity: 1;")
@@ -628,14 +607,7 @@ td.locale {
   width: 500px;
   font-size: 14px;
 }
-.setDefault {
-  display: inline-block;
-}
-h4 {
-  vertical-align: bottom;
-  width: fit-content;
-  display: inline-block;
-}
+
   .sticky-header-hack {
     width: 100%;
     height: 95px;
@@ -669,9 +641,7 @@ h4 {
     margin-right: 3px;
     position: sticky;
   }
-  .config-group {
-    margin-top: 20px;
-  }
+
   .loc-label {
     float: left;
     width: 200px;

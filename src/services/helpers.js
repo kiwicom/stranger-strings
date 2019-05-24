@@ -1,3 +1,4 @@
+/* eslint-disable global-require */
 import fp from "lodash/fp"
 import _ from "lodash"
 import * as R from "ramda"
@@ -5,19 +6,6 @@ import * as R from "ramda"
 const mapWithoutCap = fp.map.convert({
   cap: false,
 })
-
-export const descriptions = {
-  placeholders: "detects missing placeholders in translations",
-  first: "compares types of characters in the beginning of translations",
-  last: "compares types of characters in the end of translations",
-  tags: "checks for prohibited HTML tags",
-  length: "detects suspicious variations in length",
-  typos: "performs spellchecking",
-  "write-good": "detects stylistic issues in text",
-  insensitiveness: "detects gender favouring, polarising, race related, religion inconsiderate, or other unequal phrasing in text",
-  dynamic: "detects dynamic values e.g. numbers",
-  "no english": "looks for missing english translation",
-}
 
 // exact match for en translations
 export function strictSearch(items, query) {
@@ -88,29 +76,75 @@ export function getItemInconsistencies(key) {
   return _inconsistencies
 }
 
-export function userifyInconsistency(inconsistency) {
-  switch (inconsistency) {
-  case "_inconsistencies_placeholders":
-    return "placeholders"
-  case "_inconsistencies_firstCharType":
-    return "first"
-  case "_inconsistencies_lastCharType":
-    return "last"
-  case "_inconsistencies_tags":
-    return "tags"
-  case "_inconsistencies_length":
-    return "length"
-  case "_inconsistencies_typos":
-    return "typos"
-  case "_inconsistencies_writeGood":
-    return "write-good"
-  case "_inconsistencies_dynamic":
-    return "dynamic"
-  case "_inconsistencies_noEnglish":
-    return "no english"
-  case "_inconsistencies_insensitiveness":
-    return "insensitiveness"
-  default:
-    return inconsistency
-  }
+export const inconsistencies = {
+  _inconsistencies_placeholders: {
+    title: "Placeholders",
+    description: "Detect missing/excess/inconsistent placeholders",
+    icon: require("vue-material-design-icons/CodeBraces"),
+    level: "high",
+    default: true,
+  },
+  _inconsistencies_firstCharType: {
+    title: "First character",
+    description: "Detect inconsistencies of first character",
+    icon: require("vue-material-design-icons/PageFirst"),
+    level: "low",
+    default: false,
+  },
+  _inconsistencies_lastCharType: {
+    title: "Last character",
+    description: "Detect inconsistencies of last character",
+    icon: require("vue-material-design-icons/PageLast"),
+    level: "low",
+    default: false,
+  },
+  _inconsistencies_tags: {
+    title: "HTML",
+    description: "Detect invalid HTML and prohibited HTML tags",
+    icon: require("vue-material-design-icons/CodeTags"),
+    level: "high",
+    default: true,
+  },
+  _inconsistencies_length: {
+    title: "Length",
+    description: "Detects suspicious variations in length",
+    icon: require("vue-material-design-icons/ArrowExpandHorizontal"),
+    level: "high",
+    default: true,
+  },
+  _inconsistencies_typos: {
+    title: "Spelling",
+    description: "Detect spelling mistakes",
+    icon: require("vue-material-design-icons/Spellcheck"),
+    level: "high",
+    default: true,
+  },
+  _inconsistencies_writeGood: {
+    title: "Style",
+    description: "Detect stylistic issues – passive voice, weasel words, overuse of adverbs, cliches and similar",
+    icon: require("vue-material-design-icons/FileWordBox"),
+    level: "low",
+    default: false,
+  },
+  _inconsistencies_insensitiveness: {
+    title: "Insensitiveness",
+    description: "Detect gender favouring, polarising, race related, religion inconsiderate, or other unequal phrasing",
+    icon: require("vue-material-design-icons/EmoticonCryOutline"),
+    level: "low",
+    default: false,
+  },
+  _inconsistencies_dynamic: {
+    title: "Values",
+    description: "Detects values, that should/could be replaced by placeholders to make text more customizable",
+    icon: require("vue-material-design-icons/Resistor"),
+    level: "low",
+    default: false,
+  },
+  _inconsistencies_noEnglish: {
+    title: "Missing default translation",
+    description: "Detect missing translation for default locale",
+    icon: require("vue-material-design-icons/EarthOff"),
+    level: "high",
+    default: true,
+  },
 }
