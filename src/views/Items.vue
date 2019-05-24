@@ -442,6 +442,9 @@ export default {
       this.$router.replace({ name: "items" })
     },
     getItemInconsistencies(key) {
+      if (key === "items") {
+        return [] // because vuefire
+      }
       return helpers.getItemInconsistencies(key)
     },
     userifyInconsistency(inconsistency) { // TODO: Ref
@@ -458,6 +461,10 @@ export default {
       localStorage.setItem("allowedChecks", JSON.stringify(allowedChecks))
       localStorage.setItem("importantLocales", JSON.stringify(importantLocales))
       localStorage.setItem("hardWrap", JSON.stringify(hardWrap))
+
+      this.allowedChecks = allowedChecks
+      this.importantLocales = importantLocales
+      this.hardWrap = hardWrap
     },
     loadUserLocalesConfig() {
       if (localStorage.getItem("importantLocales")) {
