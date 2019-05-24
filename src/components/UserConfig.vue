@@ -22,7 +22,7 @@
 
       <b-row>
         <b-form-checkbox-group
-          v-for="error in Object.keys(errors)" :key="error"
+          v-for="error in errors" :key="error"
           v-model="allowedChecks"
           class="col-6"
           style="margin-bottom: 10px"
@@ -89,7 +89,6 @@ export default {
   name: "UserSettings",
   props: {
     locales: { type: Array, required: true },
-    errors: { type: Object, required: true },
 
     currentChecks: { type: Array, required: true },
     currentImportantLocales: { type: Object, required: true },
@@ -104,6 +103,8 @@ export default {
   },
   data() {
     return {
+      errors: Object.keys(helpers.inconsistencies), // TODO: Rename
+
       modalUserConfig: false,
 
       // new config

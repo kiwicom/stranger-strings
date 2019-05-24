@@ -74,10 +74,10 @@
           >
             Progress
           </th>
-          <th class="th-errors" v-for="(count, error) in errors" :key="error" v-if="allowedChecks && allowedChecks.includes(error)">
+          <th class="th-errors" v-for="check in sortedAllowedChecks" :key="check">
             <div>
-              <span :class="errorsFilter === error ? 'selected-error' : ''" @click="toggleErrorsFilter(error)">
-                {{ userifyInconsistency(error) }}
+              <span :class="errorsFilter === check ? 'selected-error' : ''" @click="toggleErrorsFilter(check)">
+                {{ userifyInconsistency(check).title }}
               </span>
             </div>
           </th>
@@ -108,27 +108,12 @@
           </td>
 
           <td
-            v-for="(c, e) in errors"
-            :key="e"
-            v-if="allowedChecks && allowedChecks.includes(e) && getItemInconsistencies(val).includes(e)"
+            v-for="check in sortedAllowedChecks"
+            :key="check"
             class="indicators"
           >
-            <PlaceholderIcon :size="30" v-if="e === '_inconsistencies_placeholders'"/>
-            <NoEnglishIcon :size="30" v-else-if="e === '_inconsistencies_noEnglish'"/>
-            <LengthIcon :size="30" v-else-if="e === '_inconsistencies_length'"/>
-            <FirstIcon :size="30" v-else-if="e === '_inconsistencies_firstCharType'"/>
-            <LastIcon :size="30" v-else-if="e === '_inconsistencies_lastCharType'"/>
-            <DynamicIcon :size="30" v-else-if="e === '_inconsistencies_dynamic'"/>
-            <WriteGoodIcon :size="30" v-else-if="e === '_inconsistencies_writeGood'"/>
-            <TyposIcon :size="30" v-else-if="e === '_inconsistencies_typos'"/>
-            <TagIcon :size="30" v-else-if="e === '_inconsistencies_tags'"/>
-            <InsensitivenessIcon
-              :size="30"
-              v-else-if="e === '_inconsistencies_insensitiveness'"
-            />
-            <WarningIcon :size="30" v-else/>
+            <div v-if="val[check]" :is="userifyInconsistency(check).icon.default"></div>
           </td>
-          <td v-else class="indicators"></td>
 
           <td v-bind:class="{ 'locale-hard-wrap': hardWrap, 'locale': !hardWrap }">
             {{ getTranslation(val, "en-GB") || '» not translated «' }}
@@ -280,7 +265,7 @@ export default {
       // TODO: Check what could be refactored
 
       // Configs
-      showUserConfig: true, // TEMP
+      showUserConfig: false,
       showAdminConfig: false,
 
       // Custom dict expansion
@@ -334,6 +319,9 @@ export default {
     window.addEventListener("scroll", this.toggleSSNameVisibility)
   },
   computed: {
+    sortedAllowedChecks() {
+      return Object.keys(helpers.inconsistencies).filter(x => this.allowedChecks.includes(x))
+    },
     getMaximumTranslations() {
       return this.locales ? this.locales.length : 0
     },
@@ -448,7 +436,7 @@ export default {
       return helpers.getItemInconsistencies(key)
     },
     userifyInconsistency(inconsistency) { // TODO: Ref
-      return helpers.inconsistencies[inconsistency].title
+      return helpers.inconsistencies[inconsistency]
     },
 
     loadUserChecksConfig() {
