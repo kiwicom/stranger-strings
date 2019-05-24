@@ -367,7 +367,7 @@ export default {
       return Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
     },
     getItemInconsistencies(key) {
-      return helpers.inconsistencies[key].title
+      return helpers.getItemInconsistencies(key)
     },
     getMaximumTranslations() {
       return this.locales ? this.locales.length : 0

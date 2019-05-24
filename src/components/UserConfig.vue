@@ -7,6 +7,7 @@
     @ok="updateUserConfig"
     ok-only
     no-fade
+    @hide="$emit('close')"
   >
     <div class="config-group">
       <h4>Checks</h4>
@@ -20,24 +21,25 @@
       </div>
 
       <b-row>
-        <b-col
-          cols="6"
+        <b-form-checkbox-group
           v-for="error in Object.keys(errors)" :key="error"
+          v-model="allowedChecks"
+          class="col-6"
           style="margin-bottom: 10px"
+          switches
         >
-          <div class="header">
-            <b-form-checkbox
-              inline="true"
-              switch
-              v-model="TODO"
-            />
-            <strong>{{ userifyInconsistency(error).title }}</strong>
-            <component :is="userifyInconsistency(error).icon.default"></component>
-          </div>
-          <div class="body">
-            <p>{{ userifyInconsistency(error).description }}</p>
-          </div>
-        </b-col>
+            <div class="header">
+              <b-form-checkbox
+                inline
+                :value="error"
+              />
+              <strong>{{ userifyInconsistency(error).title }}</strong>
+              <component :is="userifyInconsistency(error).icon.default"></component>
+            </div>
+            <div class="body">
+              <p>{{ userifyInconsistency(error).description }}</p>
+            </div>
+        </b-form-checkbox-group>
       </b-row>
     </div>
 
@@ -103,6 +105,12 @@ export default {
   data() {
     return {
       modalUserConfig: false,
+
+      // new config
+      allowedChecks: this.currentChecks,
+      important: this.currentImportantLocales,
+      hardWrap: this.currentHardWrap,
+
     }
   },
   created() {
@@ -113,10 +121,7 @@ export default {
   },
   methods: {
     updateUserConfig() {
-      const allowedChecks = ""
-      const importantLocales = ""
-      const hardWrap = ""
-      this.applyConfig(allowedChecks, importantLocales, hardWrap)
+      this.applyConfig(this.allowedChecks, this.important, this.hardWrap)
     },
     setDefaultChecks() {
       // this.writeGoodConfig = JSON.parse(JSON.stringify(defaults.DEFAULT_WRITE_GOOD_SETTINGS)) // deep copy to avoid modification of constant

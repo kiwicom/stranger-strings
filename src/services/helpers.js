@@ -141,7 +141,7 @@ export const inconsistencies = {
     default: false,
   },
   _inconsistencies_noEnglish: {
-    title: "Missing default translation",
+    title: "Missing 🌎",
     description: "Detect missing translation for default locale",
     icon: require("vue-material-design-icons/EarthOff"),
     level: "high",
