@@ -114,16 +114,11 @@
           </td>
 
           <td class="translationProgress">
-            <b-progress class="mt-2" :max="getMaximumTranslations" show-value>
-              <b-progress-bar :value="val.translated.length" variant="success"></b-progress-bar>
-              <b-progress-bar
-                :value="getMaximumTranslations - val.translated.length - importantLoc
-               .filter(l => !val.translated.includes(l)).length"
-                variant="warning">
-              </b-progress-bar>
-              <b-progress-bar :value="importantLoc
-             .filter(l => !val.translated.includes(l)).length" variant="danger"></b-progress-bar>
-            </b-progress>
+            <TranslationProgress
+              :get-maximum-translations="getMaximumTranslations"
+              :important-loc="importantLoc.filter(l => !val.translated.includes(l))"
+              :translated="val.translated"
+            />
           </td>
 
           <td v-for="(c, e) in errors" :key="e" v-if="allowedChecks && allowedChecks.includes(e)" class="indicators">
@@ -350,43 +345,40 @@
 </template>
 
 <script type="text/javascript">
-import NProgress from "nprogress"
-import "vue-octicon/icons"
-import WarningIcon from "vue-material-design-icons/AlertOutline"
-import InsensitivenessIcon from "vue-material-design-icons/EmoticonCryOutline"
-import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
-import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
-import TyposIcon from "vue-material-design-icons/Spellcheck"
-import DynamicIcon from "vue-material-design-icons/Resistor"
-import NoEnglishIcon from "vue-material-design-icons/EarthOff"
-import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
-import FirstIcon from "vue-material-design-icons/PageFirst"
-import LastIcon from "vue-material-design-icons/PageLast"
-import TagIcon from "vue-material-design-icons/CodeTags"
-import CountryFlag from "vue-country-flag"
+  import NProgress from "nprogress"
+  import "vue-octicon/icons"
+  import WarningIcon from "vue-material-design-icons/AlertOutline"
+  import InsensitivenessIcon from "vue-material-design-icons/EmoticonCryOutline"
+  import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
+  import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
+  import TyposIcon from "vue-material-design-icons/Spellcheck"
+  import DynamicIcon from "vue-material-design-icons/Resistor"
+  import NoEnglishIcon from "vue-material-design-icons/EarthOff"
+  import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
+  import FirstIcon from "vue-material-design-icons/PageFirst"
+  import LastIcon from "vue-material-design-icons/PageLast"
+  import TagIcon from "vue-material-design-icons/CodeTags"
+  import _ from "lodash"
+  import Fuse from "fuse.js"
+  import {FbDb} from "../modules/firebase"
+  import saveJSON from "../modules/json"
 
+  import * as helpers from "../services/helpers"
+  import * as gcFunctions from "../modules/functionsApi"
+  import * as reporting from "../services/reporting"
 
-import Multiselect from "vue-multiselect"
-import _ from "lodash"
-import Fuse from "fuse.js"
-import { FbDb } from "../modules/firebase"
-import saveJSON from "../modules/json"
+  import * as defaults from "../../common/config"
+  import ADMIN from "../consts/admin"
 
-import * as helpers from "../services/helpers"
-import * as gcFunctions from "../modules/functionsApi"
-import * as reporting from "../services/reporting"
+  import KeyDetail from "../components/KeyDetail"
+  import TranslationProgress from "./TranslationProgress";
 
-import * as defaults from "../../common/config"
-import ADMIN from "../consts/admin"
-
-import KeyDetail from "../components/KeyDetail"
-
-export default {
+  export default {
   props: {
     user: { type: Object, required: true },
   },
   components: {
-    Multiselect,
+    TranslationProgress,
     WarningIcon,
     InsensitivenessIcon,
     PlaceholderIcon,
@@ -398,7 +390,6 @@ export default {
     FirstIcon,
     LastIcon,
     TagIcon,
-    CountryFlag,
     KeyDetail,
   },
   data() {
@@ -980,15 +971,6 @@ h4 {
   }
   .table-keys {
     font-size: 12px;
-  }
-  .bg-success {
-    background-color: #42B3D5 !important
-  }
-  .bg-warning {
-    background-color: #FFB508 !important;
-  }
-  .bg-danger {
-    background-color: #D5011B !important;
   }
   .selected-error {
     font-weight: 900;
