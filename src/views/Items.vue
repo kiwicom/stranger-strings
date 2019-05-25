@@ -527,6 +527,9 @@ export default {
     font-weight: 500;
     font-size: 14px;
   }
+  .sorting {
+    cursor: pointer;
+  }
 td {
   vertical-align: middle;
   padding: 5px;
