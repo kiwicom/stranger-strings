@@ -76,13 +76,14 @@ export function getItemInconsistencies(key) {
   return _inconsistencies
 }
 
-export const inconsistencies = {
+export const checks = {
   _inconsistencies_placeholders: {
     title: "Placeholders",
     description: "Detect missing/excess/inconsistent placeholders",
     icon: require("vue-material-design-icons/CodeBraces"),
     level: "high",
     default: true,
+    // exampleImage: "placeholders",
   },
   _inconsistencies_firstCharType: {
     title: "First character",
@@ -90,6 +91,7 @@ export const inconsistencies = {
     icon: require("vue-material-design-icons/PageFirst"),
     level: "low",
     default: false,
+    exampleImage: null,
   },
   _inconsistencies_lastCharType: {
     title: "Last character",
@@ -97,6 +99,7 @@ export const inconsistencies = {
     icon: require("vue-material-design-icons/PageLast"),
     level: "low",
     default: false,
+    exampleImage: null,
   },
   _inconsistencies_tags: {
     title: "HTML",
@@ -104,6 +107,7 @@ export const inconsistencies = {
     icon: require("vue-material-design-icons/CodeTags"),
     level: "high",
     default: true,
+    exampleImage: null,
   },
   _inconsistencies_length: {
     title: "Length",
@@ -111,6 +115,7 @@ export const inconsistencies = {
     icon: require("vue-material-design-icons/ArrowExpandHorizontal"),
     level: "high",
     default: true,
+    exampleImage: null,
   },
   _inconsistencies_typos: {
     title: "Spelling",
@@ -118,6 +123,7 @@ export const inconsistencies = {
     icon: require("vue-material-design-icons/Spellcheck"),
     level: "high",
     default: true,
+    exampleImage: null,
   },
   _inconsistencies_writeGood: {
     title: "Style",
@@ -125,6 +131,7 @@ export const inconsistencies = {
     icon: require("vue-material-design-icons/FileWordBox"),
     level: "low",
     default: false,
+    exampleImage: null,
   },
   _inconsistencies_insensitiveness: {
     title: "Insensitiveness",
@@ -132,6 +139,7 @@ export const inconsistencies = {
     icon: require("vue-material-design-icons/EmoticonCryOutline"),
     level: "low",
     default: false,
+    exampleImage: null,
   },
   _inconsistencies_dynamic: {
     title: "Values",
@@ -139,12 +147,14 @@ export const inconsistencies = {
     icon: require("vue-material-design-icons/Resistor"),
     level: "low",
     default: false,
+    exampleImage: null,
   },
   _inconsistencies_noEnglish: {
-    title: "Missing 🌎",
+    title: "Missing default translation",
     description: "Detect missing translation for default locale",
     icon: require("vue-material-design-icons/EarthOff"),
     level: "high",
     default: true,
+    exampleImage: null,
   },
 }
