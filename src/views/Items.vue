@@ -14,14 +14,11 @@
           >
         </b-input-group>
       </b-input-group>
-    </div>
 
-    <!-- SETTINGS BUTTON -->
-    <div class="settings">
       <b-button-group>
         <b-dropdown down right variant="link" size="lg" no-caret>
           <template slot="button-content">
-            <octicon name="gear"></octicon>
+            <octicon name="gear" style="color: white; vertical-align: initial;"></octicon>
           </template>
           <b-dropdown-item-button
             @click="showUserConfig = true"
@@ -54,9 +51,6 @@
     </div>
 
     <!-- KEYS - MAIN TABLE -->
-    <div class="sticky-header-hack">
-      <div class="ss-name">Stranger Strings</div>
-    </div>
     <table class="table table-sm table-striped table-hover table-keys table-fixed">
       <thead>
         <tr>
@@ -74,12 +68,32 @@
           >
             Progress
           </th>
-          <th class="th-errors" v-for="check in sortedAllowedChecks" :key="check">
-            <div>
-              <span :class="errorsFilter === check ? 'selected-error' : ''" @click="toggleErrorsFilter(check)">
-                {{ userifyInconsistency(check).title }}
-              </span>
-            </div>
+          <th
+            v-for="(check, checkKey) in checks" :key="checkKey"
+            :class="{
+              'th-errors': true,
+              'disabled': !isCheckAllowed(checkKey),
+            }"
+          >
+            <v-popover trigger="hover">
+              <component
+                :class="{
+                  'icon': true,
+                  'selected-check': errorsFilter === checkKey,
+                }"
+                @click="toggleErrorsFilter(checkKey)"
+                :is="check.icon.default"
+                style="font-size: 18px;"
+              />
+              <template slot="popover">
+                <Check
+                  :checkKey="checkKey"
+                  :check="checks[checkKey]"
+                  :checked="isCheckAllowed(checkKey)"
+                  @change="x => setCheck(checkKey, x)"
+                />
+              </template>
+            </v-popover>
           </th>
           <th
             @click="changeSort('en-GB')"
@@ -108,14 +122,16 @@
           </td>
 
           <td
-            v-for="check in sortedAllowedChecks"
-            :key="check"
-            class="indicators"
+            v-for="(check, checkKey) in checks" :key="checkKey"
+            :class="{
+              'indicators': true,
+              'disabled': !isCheckAllowed(checkKey),
+            }"
           >
-            <div v-if="val[check]" :is="userifyInconsistency(check).icon.default"></div>
+            <component v-if="isCheckAllowed(checkKey) && val[checkKey]" :is="check.icon.default" />
           </td>
 
-          <td v-bind:class="{ 'locale-hard-wrap': hardWrap, 'locale': !hardWrap }">
+          <td v-bind:class="{ 'locale-hard-wrap': view.hardWrap, 'locale': !view.hardWrap }">
             {{ getTranslation(val, "en-GB") || '» not translated «' }}
           </td>
         </tr>
@@ -147,21 +163,25 @@
 
     <!-- MODAL: USER CONFIG -->
     <UserConfig
-      v-if="showUserConfig"
+      :show="showUserConfig"
+      @close="showUserConfig = false"
+
       :locales="locales"
-      :errors="errors"
 
-      :currentChecks="allowedChecks"
-      :currentImportantLocales="importantLocales"
-      :currentHardWrap="hardWrap"
+      :allowedChecks="allowedChecks"
+      :importantLocales="importantLocales"
+      :view="view"
 
-      :setDefaultChecksConfig="setDefaultChecksConfig"
-      :setDefaultLocalesConfig="setDefaultLocalesConfig"
-      :setDefaultViewConfig="setDefaultViewConfig"
-      :applyConfig="saveUserConfig"
+
+      :setDefaultChecks="setDefaultChecks"
+      :setDefaultLocales="setDefaultLocales"
+      :setDefaultView="setDefaultView"
+
+      :setCheck="setCheck"
+      :setLocale="setLocale"
+      :setView="setView"
 
       :notifyUser="notifyUser"
-      @close="showUserConfig = false"
     />
 
     <AdminConfig
@@ -207,7 +227,7 @@ import * as gcFunctions from "../modules/functionsApi"
 
 import * as defaults from "../../common/config"
 
-
+import Check from "../components/Check"
 import KeyDetail from "../components/KeyDetail"
 import TranslationProgress from "../components/TranslationProgress"
 import UserConfig from "../components/UserConfig"
@@ -230,6 +250,7 @@ export default {
     FirstIcon,
     LastIcon,
     TagIcon,
+    Check,
     KeyDetail,
     UserConfig,
     AdminConfig,
@@ -250,13 +271,16 @@ export default {
       errors: {},
 
       // Checks configuration
+      checks: helpers.checks,
       allowedChecks: [],
 
       // Locales configuration
       importantLocales: {},
 
       // View configuration
-      hardWrap: false,
+      view: {
+        hardWrap: false,
+      },
 
       // Active
       activeKey: this.$route.params.all ? this.$route.params.all : null,
@@ -265,7 +289,7 @@ export default {
       // TODO: Check what could be refactored
 
       // Configs
-      showUserConfig: false,
+      showUserConfig: true,
       showAdminConfig: false,
 
       // Custom dict expansion
@@ -305,7 +329,7 @@ export default {
     NProgress.start()
     this.itemsLoaded = false
     this.localesLoaded = false
-    this.hardWrap = localStorage.getItem("hardWrap") ? JSON.parse(localStorage.getItem("hardWrap")) : false
+    this.view = localStorage.getItem("view") ? JSON.parse(localStorage.getItem("view")) : {}
     this.items = this.sortKeys(this.allItems) // sort always
     NProgress.start()
     if (this.searchQuery || this.errorsFilter !== "all") {
@@ -316,12 +340,8 @@ export default {
     FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
       this.dictsExpansionData = dictsData.val()
     })
-    window.addEventListener("scroll", this.toggleSSNameVisibility)
   },
   computed: {
-    sortedAllowedChecks() {
-      return Object.keys(helpers.inconsistencies).filter(x => this.allowedChecks.includes(x))
-    },
     getMaximumTranslations() {
       return this.locales ? this.locales.length : 0
     },
@@ -338,6 +358,9 @@ export default {
     },
   },
   methods: {
+    isCheckAllowed(checkKey) {
+      return this.allowedChecks.includes(checkKey)
+    },
     sortKeys(translations) {
       NProgress.start()
       const res = helpers.sortTranslationKeys(translations, this.sort[0], this.sort[1])
@@ -435,9 +458,6 @@ export default {
       }
       return helpers.getItemInconsistencies(key)
     },
-    userifyInconsistency(inconsistency) { // TODO: Ref
-      return helpers.inconsistencies[inconsistency]
-    },
 
     loadUserChecksConfig() {
       if (localStorage.getItem("allowedChecks")) {
@@ -445,14 +465,14 @@ export default {
       }
       return Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
     },
-    saveUserConfig(allowedChecks, importantLocales, hardWrap) {
+    saveUserConfig(allowedChecks, importantLocales, view) {
       localStorage.setItem("allowedChecks", JSON.stringify(allowedChecks))
       localStorage.setItem("importantLocales", JSON.stringify(importantLocales))
-      localStorage.setItem("hardWrap", JSON.stringify(hardWrap))
+      localStorage.setItem("view", JSON.stringify(view))
 
       this.allowedChecks = allowedChecks
       this.importantLocales = importantLocales
-      this.hardWrap = hardWrap
+      this.view = view
     },
     loadUserLocalesConfig() {
       if (localStorage.getItem("importantLocales")) {
@@ -463,26 +483,39 @@ export default {
         return acc
       }, {})
     },
-    setDefaultChecksConfig() {
+
+    setCheck(checkKey, val) {
+      console.log("setCheck", arguments)
+      if (val) {
+        this.allowedChecks = _.uniq(this.allowedChecks.concat([checkKey]))
+      } else {
+        this.allowedChecks = _.reject(this.allowedChecks, x => x === checkKey)
+      }
+    },
+
+    setLocale(localeId, isPrimary) {
+      console.log("setLocale", arguments)
+
+    },
+
+    setView(key, val) {
+      console.log("setView", arguments)
+
+    },
+
+    setDefaultChecks() {
       this.allowedChecks = Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
     },
-    setDefaultLocalesConfig() {
+    setDefaultLocales() {
       this.importantLocales = this.locales.reduce((acc, loc) => {
         acc[loc] = defaults.IMPORTANT_LOCALES.includes(loc)
         return acc
       }, {})
     },
-    setDefaultViewConfig() {
-      this.hardWrap = defaults.DEFAULT_VIEW.hardWrap
+    setDefaultView() {
+      this.view = defaults.DEFAULT_VIEW
     },
 
-    toggleSSNameVisibility() {
-      if (window.scrollY > 200) {
-        document.getElementsByClassName("ss-name").item(0).setAttribute("style", "visibility: visible; opacity: 1;")
-      } else {
-        document.getElementsByClassName("ss-name").item(0).setAttribute("style", "visibility: hidden; opacity: 0;")
-      }
-    },
     toggleErrorsFilter(error) {
       this.errorsFilter = this.errorsFilter === error ? "all" : error
       this.search()
@@ -495,9 +528,6 @@ export default {
       })
     },
   },
-  destroyed() {
-    window.removeEventListener("scroll", this.toggleSSNameVisibility)
-  },
 }
 </script>
 
@@ -506,7 +536,6 @@ export default {
 
   .table-fixed {
     width: 100%;
-    margin-top: -25px;
   }
 
   .table-fixed thead {
@@ -514,77 +543,77 @@ export default {
     z-index: 1;
   }
 
-  .table-fixed thead tr {
-    background-color: #f9fafc;
-  }
-
   .table-fixed thead th {
-    top: 63.5px;
+    top: -1px;
     z-index: 1;
     position: sticky;
     position: -webkit-sticky;
-    background-color: rgb(0,0,0,0);
+    background-color: #f9fafc;
     font-weight: 500;
     font-size: 14px;
   }
   .sorting {
     cursor: pointer;
   }
-td {
-  vertical-align: middle;
-  padding: 5px;
-}
-th {
-  font-size: 13px;
-  background-color: white;
-}
-.th-errors {
-  white-space: nowrap;
-}
-  th.th-errors div {
-    transform:  translate(22px, -5px) rotate(-45deg);
-    z-index: 3;
-    width: 30px;
+
+  th {
+    font-size: 13px;
+    background-color: white;
     cursor: pointer;
+    padding: 5px 8px;
   }
-  th.th-errors span {
-    z-index: 1000;
-    border-bottom: 1px solid #ccc;
-    padding: 5px 10px;
-    cursor: pointer;
+
+  th.th-errors, td.indicators {
+    width: 1px; /* fit the width of the content */
+    text-align: center;
+    font-size: 18px;
+    vertical-align: bottom;
   }
-th a {
-  cursor: pointer;
-}
-td.key {
-  width: 30vw;
-  max-width: 30vw;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-td.key a {
-  color: #26539B;
-}
-td.translationProgress {
-  width: 50px;
-  border-right: 1px solid #ccc;
-}
-.locale {
-  padding-left: 30px;
-}
-td.locale {
-  max-height: 50px;
-  width: 38vw;
-  max-width: 38vw;
-  min-width: 38vw;
-  overflow: hidden;
-  overflow-x: scroll;
-  white-space: nowrap;
-  -ms-overflow-style: none;
-  overflow: -moz-scrollbars-none;
-  padding-right: 10px;
-}
+
+  td.indicators {
+    border-right: 1px solid #ccc;
+  }
+
+  th.th-errors.disabled .material-design-icon {
+    opacity: .3;
+  }
+
+  th.th-errors.disabled, td.indicators.disabled {
+    padding-left: 3px;
+    padding-right: 3px;
+  }
+
+  td {
+    vertical-align: middle;
+  }
+
+  td.key {
+    width: 30vw;
+    max-width: 30vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  td.key a {
+    color: #26539B;
+  }
+  td.translationProgress {
+    width: 50px;
+    border-right: 1px solid #ccc;
+  }
+
+  td.locale {
+    max-height: 50px;
+    width: 38vw;
+    max-width: 38vw;
+    min-width: 38vw;
+    overflow: hidden;
+    overflow-x: scroll;
+    white-space: nowrap;
+    -ms-overflow-style: none;
+    overflow: -moz-scrollbars-none;
+    padding-right: 10px;
+  }
   td.locale-hard-wrap {
     max-height: max-content;
     width: 38vw;
@@ -596,65 +625,38 @@ td.locale {
   td.locale::-webkit-scrollbar {
     display: none;
   }
-.row-visited td {
-  background-color: #DFE7F2;
-}
+  .row-visited td {
+    background-color: #DFE7F2;
+  }
 
-.textInput {
-  max-width: 100%;
-  width: 500px;
-  font-size: 14px;
-}
+  .textInput {
+    max-width: 100%;
+    width: 500px;
+    font-size: 14px;
+  }
 
-  .sticky-header-hack {
-    width: 100%;
-    height: 95px;
-    z-index: 1;
-    position: sticky;
-    top: 0;
-    background-image: linear-gradient(rgba(255,255,255,0.95) 30%, #f9fafc 100%);
-  }
-  .ss-name {
-    visibility: hidden;
-    color: darkgrey;
-    font-family: 'Megrim', cursive;
-    font-weight: 900;
-    font-size: 30px;
-    letter-spacing: 1px;
-    padding: 14px;
-    opacity: 0;
-    transition: visibility 0.5s, opacity 0.5s linear;
-  }
-  .indicators {
-    text-align: center;
-    border-right: 1px solid #ccc;
-    font-size: 20px;
-  }
-  .settings {
-    float: right;
-    margin-top: 10px;
-    top: 5px;
-    z-index: 3;
-    width: max-content;
-    margin-right: 3px;
-    position: sticky;
-  }
 
   .loc-label {
     float: left;
     width: 200px;
     font-weight: bolder;
   }
+
   .search-input {
     position: absolute;
-    left: 475px;
-    width: 300px;
-    top: 15px;
+    left: 455px;
+    top: 12px;
   }
+
+  .search-input .input-group {
+    width: 280px;
+    display: inline-flex;
+  }
+
   .table-keys {
     font-size: 12px;
   }
-  .selected-error {
+  .selected-check {
     font-weight: 900;
   }
 </style>
