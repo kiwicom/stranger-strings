@@ -1,24 +1,20 @@
 {
   "rules": {
-    "itemsMetaData": {
-      ".read": "true",
-      ".write": "true"
-    },
     "items": {
       ".read": "true",
-      ".write": "true"
+      ".write": "false"
     },
     "translations": {
       ".read": "true",
-      ".write": "true"
+      ".write": "false"
     },
     "lastUpdate": {
       ".read": "true",
-      ".write": "true"
+      ".write": "false"
     },
     "updateInProgress": {
       ".read": "true",
-      ".write": "true"
+      ".write": "false"
     },
     "dictsExpansion": {
       ".read": "true",
@@ -26,19 +22,19 @@
     },
     "collections": {
       ".read": "true",
-      ".write": "true"
+      ".write": "false"
     },
     "writeGood": {
       ".read": "true",
       ".write": "true"
     },
     "placeholders": {
-       ".read": "true",
-       ".write": "true"
+      ".read": "true",
+      ".write": "true"
     },
     "locales": {
       ".read": "true",
-      ".write": "true"
+      ".write": "false"
     },
     "reports": {
       ".read": "true",
