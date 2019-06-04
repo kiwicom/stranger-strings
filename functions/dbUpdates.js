@@ -7,13 +7,13 @@ if (LOCALEXEC) {
 }
 // //////////////////////// //
 
-const superagent = require("superagent")
 const alex = require("alex")
 const _ = require("lodash")
 const moment = require("moment")
 const sanitizeHtml = require("sanitize-html")
 
 const dbMutex = require("./dbMutex")
+const database = require("./database")
 
 const { loader, loaderType } = require("./loaderManager")
 
@@ -166,11 +166,11 @@ async function originToFirebase() {
     }, {})
 
     let mappedTranslations = {}
-    const writeGoodSettings = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/writeGood.json`)).body
+    const writeGoodSettings = (await database.ref("/writeGood").once("value")).val()
       || DEFAULT_WRITE_GOOD_SETTINGS
-    const placeholderRegex = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/placeholders/regex.json`)).body
+    const placeholderRegex = (await database.ref("/regex").once("value")).val()
       || DEFAULT_PLACEHOLDER_REGEX
-    const insensitivenessConfig = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/insensitivenessConfig.json`)).body
+    const insensitivenessConfig = (await database.ref("/insensitivenessConfig").once("value")).val()
       || DEFAULT_INSENSITIVENESS_CONFIG
 
     _.forEach(translations, (val, key) => {
@@ -183,10 +183,10 @@ async function originToFirebase() {
     })
 
     const dictsExpansion = updateDictsExpansion(
-      (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`)).body,
+      (await database.ref("/dictsExpansion").once("value")).val(),
       DEFAULT_SPELLCHECKING_DICT_SUPPORT,
     )
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`).send(dictsExpansion)
+    await database.ref("/dictsExpansion").set(dictsExpansion)
     mappedTranslations = grammarNazi(mappedTranslations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT, placeholderRegex)
 
     _.forEach(items, (val, key) => {
@@ -195,36 +195,32 @@ async function originToFirebase() {
       items[key] = { ...val, ...computeInconsistenciesOfKey(mappedTranslations, fbKey) }
     })
 
-    let collections = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`)).body
+    let collections = (await database.ref("/collections").once("value")).val()
     collections = assignCollectionKeys(collections, Object.keys(mappedTranslations))
     collections = computeInconsistenciesOfCollection(collections, mappedTranslations)
 
     const finalItems = prepareItemsForExport(items)
     const finalTranslations = prepareTranslationsForExport(mappedTranslations)
 
+
     console.log("removing old data")
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/lastUpdate.json`)
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/items.json`)
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`)
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`)
-
+    await database.ref("/lastUpdate").remove()
+    await database.ref("/items").remove()
+    await database.ref("/translations").remove()
+    await database.ref("/collections").remove()
     console.log("uploading new keys")
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/items.json`).send(finalItems)
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`).send(finalTranslations)
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`).send(collections)
+    await database.ref("/items").set(finalItems)
+    await database.ref("/translations").set(finalTranslations)
+    await database.ref("/collections").set(collections)
 
-    await superagent
-      .put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/locales.json`)
-      .send({
-        list: [...new Set(_.reduce(translations, (acc, translation) => acc.concat(Object.keys(translation)), []))],
-      })
+    await database.ref("/locales").set({
+      list: [...new Set(_.reduce(translations, (acc, translation) => acc.concat(Object.keys(translation)), []))],
+    })
 
-    await superagent
-      .put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/lastUpdate.json`)
-      .send({
-        updated: moment().format("DD-MM-YYYY HH:mm:ss"),
-        version,
-      })
+    await database.ref("/lastUpdate").set({
+      updated: moment().format("DD-MM-YYYY HH:mm:ss"),
+      version,
+    })
     console.log("SUCCESS: updated all translations")
     // eslint-disable-next-line consistent-return
     return "SUCCESS: updated all translations"
@@ -239,13 +235,13 @@ async function updateInconsistencies() {
     return
   }
   try {
-    let items = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/items.json`)).body
-    let translations = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`)).body
-    const writeGoodSettings = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/writeGood.json`)).body
+    let items = (await database.ref("/items").once("value")).val()
+    let translations = (await database.ref("/translations").once("value")).val()
+    const writeGoodSettings = (await database.ref("/writeGood").once("value")).val()
       || DEFAULT_WRITE_GOOD_SETTINGS
-    const placeholderRegex = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/placeholders/regex.json`)).body
+    const placeholderRegex = (await database.ref("/regex").once("value")).val()
       || DEFAULT_PLACEHOLDER_REGEX
-    const insensitivenessConfig = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/insensitivenessConfig.json`)).body
+    const insensitivenessConfig = (await database.ref("/insensitivenessConfig").once("value")).val()
       || DEFAULT_INSENSITIVENESS_CONFIG
 
     _.forEach(translations, (val, key) => {
@@ -257,10 +253,10 @@ async function updateInconsistencies() {
     })
 
     const dictsExpansion = updateDictsExpansion(
-      (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`)).body,
+      (await database.ref("/dictsExpansion").once("value")).val(),
       DEFAULT_SPELLCHECKING_DICT_SUPPORT,
     )
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`).send(dictsExpansion)
+    await database.ref("/dictsExpansion").set(dictsExpansion)
     translations = grammarNazi(translations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT, placeholderRegex)
 
     _.forEach(items, (val, key) => {
@@ -271,12 +267,11 @@ async function updateInconsistencies() {
     translations = prepareTranslationsForExport(translations)
 
     console.log("removing old data")
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/items.json`)
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`)
-
+    await database.ref("/items").remove()
+    await database.ref("/translations").remove()
     console.log("uploading new keys")
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/items.json`).send(items)
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`).send(translations)
+    await database.ref("/items").set(items)
+    await database.ref("/translations").set(translations)
 
     console.log("SUCCESS: updated all inconsistencies")
     // eslint-disable-next-line consistent-return
@@ -292,17 +287,16 @@ async function updateCollections() {
     return
   }
   try {
-    const translations = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`)).body
-    let collections = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`)).body
+    const translations = (await database.ref("/translations").once("value")).val()
+    let collections = (await database.ref("/collections").once("value")).val()
 
     collections = assignCollectionKeys(collections, Object.keys(translations))
     collections = computeInconsistenciesOfCollection(collections, translations)
 
     console.log("removing old data")
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`)
-
+    await database.ref("/collections").remove()
     console.log("uploading new collections")
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`).send(collections)
+    await database.ref("/collections").set(collections)
 
     console.log("SUCCESS: updated all collections")
     // eslint-disable-next-line consistent-return
