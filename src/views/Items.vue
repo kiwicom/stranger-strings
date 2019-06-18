@@ -289,7 +289,7 @@ export default {
       // TODO: Check what could be refactored
 
       // Configs
-      showUserConfig: true,
+      showUserConfig: false,
       showAdminConfig: false,
 
       // Custom dict expansion
