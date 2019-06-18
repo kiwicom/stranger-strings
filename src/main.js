@@ -9,6 +9,7 @@ import "../styles/tooltip.css"
 
 import App from "./App"
 import router from "./router"
+import store from "./store"
 
 Vue.use(VueFire)
 Vue.use(BootstrapVue)
