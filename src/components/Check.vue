@@ -2,19 +2,18 @@
   <div>
     <div class="header">
       <div class="icon">
-        <component :is="check.icon.default" />
+        <component :is="checks[checkKey].icon.default" />
       </div>
       <div class="wrapper">
-        <div class="title">{{ check.title }}</div>
+        <div class="title">{{ checks[checkKey].title }}</div>
         <div class="controls">
           <b-form-checkbox
-            v-on="$listeners"
+            v-model="toggleCheck"
             class="toggle"
             inline
             switch
-            :checked="checked"
           />
-          <small v-if="checked">Check enabled</small>
+          <small v-if="isActive(checkKey)">Check enabled</small>
           <small v-else>Check disabled</small>
 
           <!-- TODO -->
@@ -28,11 +27,11 @@
       </div>
     </div>
     <div class="body">
-      <p>{{ check.description }}</p>
-      <p v-if="check.exampleImage">
+      <p>{{ checks[checkKey].description }}</p>
+      <p v-if="checks[checkKey].exampleImage">
         <img
           class="example"
-          :src="'/examples/' + check.exampleImage  + '.png'"
+          :src="'/examples/' + checks[checkKey].exampleImage  + '.png'"
         />
       </p>
     </div>
@@ -40,13 +39,34 @@
 </template>
 
 <script>
+import { mapMutations, mapGetters, mapState } from "vuex"
+
 export default {
   name: "Check",
   inheritAttrs: false,
   props: {
     checkKey: { type: String, required: true },
-    check: { type: Object, required: true },
-    checked: { type: Boolean, required: true },
+  },
+  computed: {
+    ...mapState([
+      "checks",
+    ]),
+    ...mapGetters([
+      "isActive",
+    ]),
+    toggleCheck: {
+      get() {
+        return this.$store.state.message
+      },
+      set(value) {
+        this.setCheckActiveness({ check: this.checkKey, newValue: value })
+      },
+    },
+  },
+  methods: {
+    ...mapMutations([
+      "setCheckActiveness",
+    ]),
   },
 }
 </script>

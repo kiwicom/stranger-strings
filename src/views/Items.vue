@@ -72,7 +72,7 @@
             v-for="(check, checkKey) in checks" :key="checkKey"
             :class="{
               'th-errors': true,
-              'disabled': !isCheckAllowed(checkKey),
+              'disabled': !isActive(checkKey),
             }"
           >
             <v-popover trigger="hover">
@@ -88,9 +88,6 @@
               <template slot="popover">
                 <Check
                   :checkKey="checkKey"
-                  :check="checks[checkKey]"
-                  :checked="isCheckAllowed(checkKey)"
-                  @change="x => setCheck(checkKey, x)"
                 />
               </template>
             </v-popover>
@@ -116,7 +113,7 @@
           <td class="translationProgress">
             <TranslationProgress
               :get-maximum-translations="getMaximumTranslations"
-              :important-loc="importantLoc.filter(l => !val.translated.includes(l))"
+              :important-loc="getImportantLocales.filter(l => !val.translated.includes(l))"
               :translated="val.translated"
             />
           </td>
@@ -125,13 +122,13 @@
             v-for="(check, checkKey) in checks" :key="checkKey"
             :class="{
               'indicators': true,
-              'disabled': !isCheckAllowed(checkKey),
+              'disabled': !isActive(checkKey),
             }"
           >
-            <component v-if="isCheckAllowed(checkKey) && val[checkKey]" :is="check.icon.default" />
+            <component v-if="isActive(checkKey) && val[checkKey]" :is="check.icon.default" />
           </td>
 
-          <td v-bind:class="{ 'locale-hard-wrap': view.hardWrap, 'locale': !view.hardWrap }">
+          <td v-bind:class="{ 'locale-hard-wrap': hardWrap, 'locale': !hardWrap }">
             {{ getTranslation(val, "en-GB") || '» not translated «' }}
           </td>
         </tr>
@@ -165,22 +162,6 @@
     <UserConfig
       :show="showUserConfig"
       @close="showUserConfig = false"
-
-      :locales="locales"
-
-      :allowedChecks="allowedChecks"
-      :importantLocales="importantLocales"
-      :view="view"
-
-
-      :setDefaultChecks="setDefaultChecks"
-      :setDefaultLocales="setDefaultLocales"
-      :setDefaultView="setDefaultView"
-
-      :setCheck="setCheck"
-      :setLocale="setLocale"
-      :setView="setView"
-
       :notifyUser="notifyUser"
     />
 
@@ -195,8 +176,6 @@
       v-if="activeKey && localesLoaded && itemsLoaded"
       :user="user"
       :item="items[activeKey]"
-      :locales="locales"
-      :importantLoc="importantLoc"
       :notifyUser="notifyUser"
       @close="hideKeyDetail"
     />
@@ -219,6 +198,7 @@ import LastIcon from "vue-material-design-icons/PageLast"
 import TagIcon from "vue-material-design-icons/CodeTags"
 import _ from "lodash"
 import Fuse from "fuse.js"
+import { mapMutations, mapGetters, mapState } from "vuex"
 import { FbDb } from "../modules/firebase"
 import saveJSON from "../modules/json"
 
@@ -261,26 +241,12 @@ export default {
       items: {}, // filtered items with search query
       itemsLoaded: false,
       localesLoaded: false,
-      locales: [],
-
 
       // Searching, sorting, filtering
       searchQuery: "",
       sort: ["key", "asc"], // key/count asc/desc
       errorsFilter: "all",
       errors: {},
-
-      // Checks configuration
-      checks: helpers.checks,
-      allowedChecks: [],
-
-      // Locales configuration
-      importantLocales: {},
-
-      // View configuration
-      view: {
-        hardWrap: false,
-      },
 
       // Active
       activeKey: this.$route.params.all ? this.$route.params.all : null,
@@ -310,7 +276,6 @@ export default {
           this.items = this.sortKeys(this.allItems)
           NProgress.done()
           this.errors = this.countErrors()
-          this.allowedChecks = this.loadUserChecksConfig()
           this.itemsLoaded = true
         },
       },
@@ -318,8 +283,7 @@ export default {
         source: FbDb.ref("locales"),
         asObject: true,
         readyCallback: () => {
-          this.locales = this.localeList.list
-          this.importantLocales = this.loadUserLocalesConfig()
+          this.localeList.list.forEach(loc => this.addLocale(loc))
           this.localesLoaded = true
         },
       },
@@ -329,38 +293,38 @@ export default {
     NProgress.start()
     this.itemsLoaded = false
     this.localesLoaded = false
-    this.view = localStorage.getItem("view") ? JSON.parse(localStorage.getItem("view")) : {}
     this.items = this.sortKeys(this.allItems) // sort always
     NProgress.start()
     if (this.searchQuery || this.errorsFilter !== "all") {
       this.search()
     }
     this.errors = this.countErrors()
-    this.allowedChecks = this.loadUserChecksConfig()
     FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
       this.dictsExpansionData = dictsData.val()
     })
   },
   computed: {
+    ...mapGetters([
+      "isActive",
+    ]),
+    ...mapState([
+      "checks",
+      "locales",
+    ]),
+    getImportantLocales() {
+      return Object.keys(this.locales).filter(l => this.locales[l].important)
+    },
     getMaximumTranslations() {
-      return this.locales ? this.locales.length : 0
+      return Array.isArray(Object.keys(this.locales)) ? Object.keys(this.locales).length : 0
     },
     availableTags() {
       return helpers.getAvailableTags(this.allItems)
     },
-    importantLoc() {
-      return _.reduce(this.importantLocales, (acc, val, key) => {
-        if (val) {
-          acc.push(key)
-        }
-        return acc
-      }, [])
-    },
   },
   methods: {
-    isCheckAllowed(checkKey) {
-      return this.allowedChecks.includes(checkKey)
-    },
+    ...mapMutations([
+      "addLocale",
+    ]),
     sortKeys(translations) {
       NProgress.start()
       const res = helpers.sortTranslationKeys(translations, this.sort[0], this.sort[1])
@@ -458,64 +422,6 @@ export default {
       }
       return helpers.getItemInconsistencies(key)
     },
-
-    loadUserChecksConfig() {
-      if (localStorage.getItem("allowedChecks")) {
-        return JSON.parse(localStorage.getItem("allowedChecks"))
-      }
-      return Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
-    },
-    saveUserConfig(allowedChecks, importantLocales, view) {
-      localStorage.setItem("allowedChecks", JSON.stringify(allowedChecks))
-      localStorage.setItem("importantLocales", JSON.stringify(importantLocales))
-      localStorage.setItem("view", JSON.stringify(view))
-
-      this.allowedChecks = allowedChecks
-      this.importantLocales = importantLocales
-      this.view = view
-    },
-    loadUserLocalesConfig() {
-      if (localStorage.getItem("importantLocales")) {
-        return JSON.parse(localStorage.getItem("importantLocales"))
-      }
-      return this.locales.reduce((acc, loc) => {
-        acc[loc] = defaults.IMPORTANT_LOCALES.includes(loc)
-        return acc
-      }, {})
-    },
-
-    setCheck(checkKey, val) {
-      console.log("setCheck", arguments)
-      if (val) {
-        this.allowedChecks = _.uniq(this.allowedChecks.concat([checkKey]))
-      } else {
-        this.allowedChecks = _.reject(this.allowedChecks, x => x === checkKey)
-      }
-    },
-
-    setLocale(localeId, isPrimary) {
-      console.log("setLocale", arguments)
-
-    },
-
-    setView(key, val) {
-      console.log("setView", arguments)
-
-    },
-
-    setDefaultChecks() {
-      this.allowedChecks = Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
-    },
-    setDefaultLocales() {
-      this.importantLocales = this.locales.reduce((acc, loc) => {
-        acc[loc] = defaults.IMPORTANT_LOCALES.includes(loc)
-        return acc
-      }, {})
-    },
-    setDefaultView() {
-      this.view = defaults.DEFAULT_VIEW
-    },
-
     toggleErrorsFilter(error) {
       this.errorsFilter = this.errorsFilter === error ? "all" : error
       this.search()

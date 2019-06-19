@@ -36,4 +36,5 @@ Vue.config.performance = true
 new Vue({
   router,
   render: h => h(App),
+  store,
 }).$mount("#app")
