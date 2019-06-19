@@ -51,7 +51,7 @@ export default new Vuex.Store({
         title: "Length",
         description: "Detects suspicious variations in length",
         icon: require("vue-material-design-icons/ArrowExpandHorizontal"),
-        level: "high",
+        level: "low",
         active: false,
         exampleImage: null,
       },

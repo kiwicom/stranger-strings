@@ -2,10 +2,10 @@
   <div>
     <div class="header">
       <div class="icon">
-        <component :is="checks[checkKey].icon.default" />
+        <component :is="getCheckData(checkKey).icon.default" />
       </div>
       <div class="wrapper">
-        <div class="title">{{ checks[checkKey].title }}</div>
+        <div class="title">{{ getCheckData(checkKey).title }}</div>
         <div class="controls">
           <b-form-checkbox
             v-model="toggleCheck"
@@ -27,11 +27,11 @@
       </div>
     </div>
     <div class="body">
-      <p>{{ checks[checkKey].description }}</p>
-      <p v-if="checks[checkKey].exampleImage">
+      <p>{{ getCheckData(checkKey).description }}</p>
+      <p v-if="getCheckData(checkKey).exampleImage">
         <img
           class="example"
-          :src="'/examples/' + checks[checkKey].exampleImage  + '.png'"
+          :src="'/examples/' + getCheckData(checkKey).exampleImage  + '.png'"
         />
       </p>
     </div>
@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import { mapMutations, mapGetters, mapState } from "vuex"
+import { mapMutations, mapGetters } from "vuex"
 
 export default {
   name: "Check",
@@ -48,11 +48,9 @@ export default {
     checkKey: { type: String, required: true },
   },
   computed: {
-    ...mapState([
-      "checks",
-    ]),
     ...mapGetters([
       "isActive",
+      "getCheckData",
     ]),
     toggleCheck: {
       get() {

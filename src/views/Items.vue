@@ -112,7 +112,7 @@
 
           <td class="translationProgress">
             <TranslationProgress
-              :get-maximum-translations="getMaximumTranslations"
+              :get-maximum-translations="getLocalesCount"
               :important-loc="getImportantLocales.filter(l => !val.translated.includes(l))"
               :translated="val.translated"
             />
@@ -185,17 +185,6 @@
 <script type="text/javascript">
 import NProgress from "nprogress"
 import "vue-octicon/icons"
-import WarningIcon from "vue-material-design-icons/AlertOutline"
-import InsensitivenessIcon from "vue-material-design-icons/EmoticonCryOutline"
-import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
-import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
-import TyposIcon from "vue-material-design-icons/Spellcheck"
-import DynamicIcon from "vue-material-design-icons/Resistor"
-import NoEnglishIcon from "vue-material-design-icons/EarthOff"
-import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
-import FirstIcon from "vue-material-design-icons/PageFirst"
-import LastIcon from "vue-material-design-icons/PageLast"
-import TagIcon from "vue-material-design-icons/CodeTags"
 import _ from "lodash"
 import Fuse from "fuse.js"
 import { mapMutations, mapGetters, mapState } from "vuex"
@@ -204,8 +193,6 @@ import saveJSON from "../modules/json"
 
 import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"
-
-import * as defaults from "../../common/config"
 
 import Check from "../components/Check"
 import KeyDetail from "../components/KeyDetail"
@@ -219,17 +206,6 @@ export default {
   },
   components: {
     TranslationProgress,
-    WarningIcon,
-    InsensitivenessIcon,
-    PlaceholderIcon,
-    WriteGoodIcon,
-    TyposIcon,
-    DynamicIcon,
-    NoEnglishIcon,
-    LengthIcon,
-    FirstIcon,
-    LastIcon,
-    TagIcon,
     Check,
     KeyDetail,
     UserConfig,
@@ -306,17 +282,12 @@ export default {
   computed: {
     ...mapGetters([
       "isActive",
+      "getImportantLocales",
+      "getLocalesCount",
     ]),
     ...mapState([
       "checks",
-      "locales",
     ]),
-    getImportantLocales() {
-      return Object.keys(this.locales).filter(l => this.locales[l].important)
-    },
-    getMaximumTranslations() {
-      return Array.isArray(Object.keys(this.locales)) ? Object.keys(this.locales).length : 0
-    },
     availableTags() {
       return helpers.getAvailableTags(this.allItems)
     },

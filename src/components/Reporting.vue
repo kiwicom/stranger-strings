@@ -36,7 +36,7 @@
     <b-row class="my-2">
       <b-col sm="2"><label for="locale-select"><strong>Locale:</strong></label></b-col>
       <b-col sm="10">
-        <b-form-select id="locale-select" :options="locales.concat(['not-specified'])" v-model="reportForm.locale"></b-form-select>
+        <b-form-select id="locale-select" :options="getLocales.concat(['not-specified'])" v-model="reportForm.locale"></b-form-select>
       </b-col>
     </b-row>
     <b-row class="my-2">
@@ -84,6 +84,7 @@
 <script>
 import NProgress from "nprogress"
 import _ from "lodash"
+import { mapGetters } from "vuex"
 import { FbDb } from "../modules/firebase"
 
 import * as reporting from "../services/reporting"
@@ -92,10 +93,8 @@ import * as reporting from "../services/reporting"
 export default {
   name: "Reporting",
   props: {
-    locale: { type: String, required: true },
     translationKey: { type: String, required: true },
     email: { type: String, required: true },
-    locales: { type: Array, required: true },
     notifyUser: { type: Function, required: true },
   },
   data() {
@@ -137,6 +136,11 @@ export default {
       NProgress.done()
       this.modalReport = true
     })
+  },
+  computed: {
+    ...mapGetters([
+      "getLocales",
+    ]),
   },
   methods: {
     submitReport() {
