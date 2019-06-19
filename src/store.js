@@ -120,6 +120,10 @@ export default new Vuex.Store({
       state.checks[check].active = !state.checks[check].active
     },
     setCheckActiveness(state, payload) {
+      // payload = {
+      //   check,
+      //   newValue,
+      // }
       state.checks[payload.check].active = payload.newValue
     },
     setDefaultCheckActiveness(state) {
@@ -127,8 +131,12 @@ export default new Vuex.Store({
         state.checks[c].active = !defaults.DEFAULT_DISABLED_CHECKS.includes(c)
       })
     },
-    setCheckLevel(state, check, level) {
-      state.checks[check].level = level
+    setCheckLevel(state, payload) {
+      // payload = {
+      //   check,
+      //   level,
+      // }
+      state.checks[payload.check].level = payload.level
     },
     setDefaultCheckLevels(state) {
       Object.keys(state.checks).forEach((c) => {
@@ -144,8 +152,12 @@ export default new Vuex.Store({
         important: defaults.IMPORTANT_LOCALES.includes(locale),
       }
     },
-    setLocaleImportance(state, locale, important) {
-      state.locales[locale].important = important
+    setLocaleImportance(state, payload) {
+      // payload = {
+      //   locale,
+      //   important, // Boolean
+      // }
+      state.locales[payload.locale].important = payload.important
     },
     toggleHardWrap(state) {
       state.view.hardWrap = !state.view.hardWrap
