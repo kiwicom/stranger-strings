@@ -1,10 +1,16 @@
 /* eslint-disable global-require,no-param-reassign */
 import Vue from "vue"
 import Vuex from "vuex"
+import VuexPersist from "vuex-persist"
 
 import * as defaults from "../common/config"
 
 Vue.use(Vuex)
+
+const vuexPersist = new VuexPersist({
+  key: "Stranger-Strings",
+  storage: localStorage,
+})
 
 export default new Vuex.Store({
   state: {
@@ -100,31 +106,21 @@ export default new Vuex.Store({
     },
   },
   getters: {
-    getActiveChecks(state) {
-      return Object.keys(state.checks).filter(c => state.checks[c].active)
-    },
-    getCheckData(state, check) {
-      return state.checks[check]
-    },
-    getLocales(state) {
-      return Object.keys(state.locales)
-    },
-    getLocalesCount(state) {
-      return Object.keys(state.locales).length
-    },
-    isImportant(state, locale) {
-      return state.locales[locale].important
-    },
-    hardWrap(state) {
-      return state.view.hardWrap
-    },
+    getActiveChecks: state => Object.keys(state.checks).filter(c => state.checks[c].active),
+    isActive: state => check => state.checks[check] && state.checks[check].active,
+    getCheckData: state => check => state.checks[check],
+    getLocales: state => Object.keys(state.locales),
+    getLocalesCount: state => Object.keys(state.locales).length,
+    getImportantLocales: state => Object.keys(state.locales).filter(l => state.locales[l].important),
+    isImportant: state => locale => state.locales[locale].important,
+    hardWrap: state => state.view.hardWrap,
   },
   mutations: {
     toggleCheckActiveness(state, check) {
       state.checks[check].active = !state.checks[check].active
     },
-    setCheckActiveness(state, check, newValue) {
-      state.checks[check].active = newValue
+    setCheckActiveness(state, payload) {
+      state.checks[payload.check].active = payload.newValue
     },
     setDefaultCheckActiveness(state) {
       Object.keys(state.checks).forEach((c) => {
@@ -140,14 +136,12 @@ export default new Vuex.Store({
       })
     },
     addLocale(state, locale) {
-      let imp
-      if (localStorage.getItem("importantLocales")) {
-        imp = JSON.parse(localStorage.getItem("importantLocales"))
-      } else {
-        imp = defaults.IMPORTANT_LOCALES.includes(locale)
-      }
+      // let imp
+      // if (localStorage.getItem("Stranger-Strings")) {
+      //   imp = JSON.parse(localStorage.getItem("Stranger-Strings")).locales[locale]
+      // }
       state.locales[locale] = {
-        important: imp,
+        important: defaults.IMPORTANT_LOCALES.includes(locale),
       }
     },
     setLocaleImportance(state, locale, important) {
@@ -157,4 +151,5 @@ export default new Vuex.Store({
       state.view.hardWrap = !state.view.hardWrap
     },
   },
+  plugins: [vuexPersist.plugin],
 })
