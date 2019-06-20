@@ -112,7 +112,7 @@ export default new Vuex.Store({
     getLocales: state => Object.keys(state.locales),
     getLocalesCount: state => Object.keys(state.locales).length,
     getImportantLocales: state => Object.keys(state.locales).filter(l => state.locales[l].important),
-    isImportant: state => locale => state.locales[locale].important,
+    isImportant: state => locale => state.locales[locale] && state.locales[locale].important,
     hardWrap: state => state.view.hardWrap,
   },
   mutations: {
@@ -159,8 +159,14 @@ export default new Vuex.Store({
       // }
       state.locales[payload.locale].important = payload.important
     },
+    setDefaultLocaleImportance(state) {
+      Object.keys(state.locales).forEach(l => this.addLocale(l))
+    },
     toggleHardWrap(state) {
       state.view.hardWrap = !state.view.hardWrap
+    },
+    setDefaultHardWrap(state) {
+      state.view.hardWrap = false
     },
   },
   plugins: [vuexPersist.plugin],
