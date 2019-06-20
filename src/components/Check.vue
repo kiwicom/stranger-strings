@@ -12,6 +12,8 @@
             class="toggle"
             inline
             switch
+            :value="true"
+            :unchecked-value="false"
           />
           <small v-if="isActive(checkKey)">Check enabled</small>
           <small v-else>Check disabled</small>
@@ -54,7 +56,7 @@ export default {
     ]),
     toggleCheck: {
       get() {
-        return this.$store.state.message
+        return this.isActive(this.checkKey)
       },
       set(value) {
         this.setCheckActiveness({ check: this.checkKey, newValue: value })

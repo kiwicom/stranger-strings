@@ -92,6 +92,7 @@
 .tooltiper.popoverer .popoverer-arrow {
   border-color: #f9f9f9;
   z-index: 1;
+  padding: 50px;
 }
 
 .tooltiper[aria-hidden='true'] {

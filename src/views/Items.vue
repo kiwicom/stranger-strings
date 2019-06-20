@@ -75,16 +75,23 @@
               'disabled': !isActive(checkKey),
             }"
           >
-            <v-popover trigger="hover">
-              <component
-                :class="{
-                  'icon': true,
-                  'selected-check': errorsFilter === checkKey,
-                }"
-                @click="toggleErrorsFilter(checkKey)"
-                :is="check.icon.default"
-                style="font-size: 18px;"
-              />
+            <v-popover
+              trigger="hover"
+              :class="{
+                'check-filter': isActive(checkKey) && checkFilter === checkKey,
+              }"
+            >
+              <keep-alive>
+                <component
+                  :class="{
+                    'icon': true,
+                    'selected-check': checkFilter === checkKey,
+                  }"
+                  @click="isActive(checkKey) && toggleCheckFilter(checkKey)"
+                  :is="check.icon && check.icon.default"
+                  style="font-size: 18px;"
+                />
+              </keep-alive>
               <template slot="popover">
                 <Check
                   :checkKey="checkKey"
@@ -125,7 +132,9 @@
               'disabled': !isActive(checkKey),
             }"
           >
-            <component v-if="isActive(checkKey) && val[checkKey]" :is="check.icon.default" />
+            <keep-alive>
+              <component v-if="isActive(checkKey) && val[checkKey]" :is="check.icon.default" />
+            </keep-alive>
           </td>
 
           <td v-bind:class="{ 'locale-hard-wrap': hardWrap, 'locale': !hardWrap }">
@@ -221,7 +230,7 @@ export default {
       // Searching, sorting, filtering
       searchQuery: "",
       sort: ["key", "asc"], // key/count asc/desc
-      errorsFilter: "all",
+      checkFilter: "all",
       errors: {},
 
       // Active
@@ -271,7 +280,7 @@ export default {
     this.localesLoaded = false
     this.items = this.sortKeys(this.allItems) // sort always
     NProgress.start()
-    if (this.searchQuery || this.errorsFilter !== "all") {
+    if (this.searchQuery || this.checkFilter !== "all") {
       this.search()
     }
     this.errors = this.countErrors()
@@ -284,6 +293,7 @@ export default {
       "isActive",
       "getImportantLocales",
       "getLocalesCount",
+      "hardWrap",
     ]),
     ...mapState([
       "checks",
@@ -347,7 +357,7 @@ export default {
     search() { // event param if needed
       NProgress.start()
       this.items = _.reduce(this.allItems, (acc, val, key) => {
-        if (this.errorsFilter === "all" || this.getItemInconsistencies(val).includes(this.errorsFilter)) {
+        if (this.checkFilter === "all" || this.getItemInconsistencies(val).includes(this.checkFilter)) {
           acc[key] = val
         }
         return acc
@@ -393,8 +403,8 @@ export default {
       }
       return helpers.getItemInconsistencies(key)
     },
-    toggleErrorsFilter(error) {
-      this.errorsFilter = this.errorsFilter === error ? "all" : error
+    toggleCheckFilter(error) {
+      this.checkFilter = this.checkFilter === error ? "all" : error
       this.search()
     },
     notifyUser(title, text, variant) {
@@ -512,6 +522,9 @@ export default {
     font-size: 14px;
   }
 
+  .check-filter {
+    border-bottom: solid 1px black;
+  }
 
   .loc-label {
     float: left;
