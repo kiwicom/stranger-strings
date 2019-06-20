@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <div class="icon">
-        <component :is="getCheckData(checkKey).icon.default" />
+        <component :is="getCheckData(checkKey).icon" />
       </div>
       <div class="wrapper">
         <div class="title">{{ getCheckData(checkKey).title }}</div>

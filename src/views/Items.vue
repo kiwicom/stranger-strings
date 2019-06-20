@@ -88,7 +88,7 @@
                     'selected-check': checkFilter === checkKey,
                   }"
                   @click="isActive(checkKey) && toggleCheckFilter(checkKey)"
-                  :is="check.icon && check.icon.default"
+                  :is="check.icon && check.icon"
                   style="font-size: 18px;"
                 />
               </keep-alive>
@@ -133,7 +133,7 @@
             }"
           >
             <keep-alive>
-              <component v-if="isActive(checkKey) && val[checkKey]" :is="check.icon.default" />
+              <component v-if="isActive(checkKey) && val[checkKey]" :is="check.icon" />
             </keep-alive>
           </td>
 
@@ -465,9 +465,15 @@ export default {
     opacity: .3;
   }
 
-  th.th-errors.disabled, td.indicators.disabled {
+  th.th-errors.disabled {
     padding-left: 3px;
     padding-right: 3px;
+  }
+
+  td.indicators.disabled {
+    padding-left: 3px;
+    padding-right: 3px;
+    background-image: repeating-linear-gradient(-45deg, #E6E7E9, #cfd8e2 1px, white 2px, white 5px)
   }
 
   td {
