@@ -234,7 +234,7 @@ import CountryFlag from "vue-country-flag"
 
 import NProgress from "nprogress"
 import _ from "lodash"
-import { mapMutations, mapGetters, mapState } from "vuex"
+import { mapGetters } from "vuex"
 import { FbDb } from "../modules/firebase"
 import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"

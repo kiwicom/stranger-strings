@@ -72,7 +72,6 @@ export default {
       NProgress.done()
       this.loading = false
     })
-
     gcFunctions.update()
   },
   methods: {
