@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <div class="icon">
-        <component :is="getCheckData(checkKey).icon" />
+        <component :is="getIcon(checkKey)" />
       </div>
       <div class="wrapper">
         <div class="title">{{ getCheckData(checkKey).title }}</div>
@@ -67,6 +67,9 @@ export default {
     ...mapMutations([
       "setCheckActiveness",
     ]),
+    getIcon(checkKey) {
+      return `${checkKey.replace(/.*_/g, "")}Icon`
+    },
   },
 }
 </script>

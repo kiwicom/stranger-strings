@@ -130,7 +130,7 @@
               <b-popover
                 :target="`typosIndicator_${locale}`"
                 title="Typos"
-                triggers="click"
+                triggers="click blur"
               >
                 <div v-for="typo in removeDuplicates(activeTranslations[locale]._typos)" :key="typo">
                   <strong :class="dictsExpansionData[locale].includes(typo) ? 'strikethrough' : ''">{{ typo }}  </strong>
@@ -470,6 +470,10 @@ export default {
   }
   .clickable {
     cursor: pointer;
+  }
+  .clickable:hover {
+    color: #f9fafc;
+    background-color: #D5011B;
   }
   .errors-overview {
     width: 33%;
