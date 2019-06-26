@@ -2,10 +2,10 @@
   <!-- MODAL: REPORTING -->
   <b-modal
     id="reportModal"
-    title="Report"
+    :title="'Report translation bug to ' + reportConfig.option"
     v-model="modalReport"
     size="lg"
-    ok-title="Send report"
+    :ok-title="'Send report to ' + reportConfig.option"
     @ok="submitReport"
     :ok-disabled="reportForm.errorType.length < 1"
     @hide="$emit('close')"
@@ -16,7 +16,7 @@
       <b-col sm="10">{{ reportForm.author }}</b-col>
     </b-row>
     <b-row class="my-2" v-if="reportConfig.option === 'Slack'">
-      <b-col sm="2"><label for="slack-id"><strong>Slack name:</strong></label></b-col>
+      <b-col sm="2"><label for="slack-id"><strong>Your Slack name:</strong></label></b-col>
       <b-col sm="10">
         <b-input-group prepend="@">
           <!-- note: V-MODEL avoided due to performance issues -->
@@ -31,7 +31,7 @@
     </b-row>
     <b-row class="my-2">
       <b-col sm="2"><label><strong>Key:</strong></label> </b-col>
-      <b-col sm="10">{{ reportForm.key }}</b-col>
+      <b-col sm="10" class="translation-key">{{ reportForm.key }}</b-col>
     </b-row>
     <b-row class="my-2">
       <b-col sm="2"><label for="locale-select"><strong>Locale:</strong></label></b-col>
@@ -62,11 +62,11 @@
     <h5 class="mt-5">Latest reports</h5>
     <table v-if="reportLogs" class="table table-sm b-table table-striped key-detail-table">
       <thead>
-      <th class="key-detail-header">Date</th>
-      <th class="key-detail-header">Author</th>
-      <th class="key-detail-header">Locale</th>
-      <th class="key-detail-header">Type</th>
-      <th class="key-detail-header">Description</th>
+      <th class="report-table-head">Date</th>
+      <th class="report-table-head">Author</th>
+      <th class="report-table-head">Locale</th>
+      <th class="report-table-head">Type</th>
+      <th class="report-table-head">Description</th>
       </thead>
       <tbody>
       <tr v-for="report in reportLogs" :key="report.time + report.author">
@@ -75,6 +75,9 @@
         <td>{{ report.locale }}</td>
         <td>{{ report.errorType }}</td>
         <td>{{ report.additionalInfo }}</td>
+      </tr>
+      <tr v-if="!Object.keys(reportLogs).length" class="no-reports">
+        <td colspan="5">No reports</td>
       </tr>
       </tbody>
     </table>
@@ -133,8 +136,13 @@ export default {
       if (snapshot.val()) {
         this.reportLogs = snapshot.val()
       }
-      NProgress.done()
-      this.modalReport = true
+      FbDb.ref("reportingConf").once("value", (snap) => {
+        if (snap.val()) {
+          this.reportConfig = snap.val()
+        }
+        NProgress.done()
+        this.modalReport = true
+      })
     })
   },
   computed: {
@@ -167,5 +175,19 @@ export default {
 </script>
 
 <style scoped>
-
+  .no-reports {
+    text-align: center;
+    font-size: 18px;
+    background-color: #f9fafc !important;
+    font-weight: 200;
+    padding: 10px !important;
+    color: grey;
+  }
+  .translation-key {
+    font-weight: 300;
+    font-style: italic;
+  }
+  .report-table-head {
+    border-top: 0px;
+  }
 </style>

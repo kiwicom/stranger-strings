@@ -3,18 +3,6 @@ import Vue from "vue"
 import Vuex from "vuex"
 import VuexPersist from "vuex-persist"
 
-/* ICONS */
-import placeholderIcon from "vue-material-design-icons/CodeBraces"
-import firstCharIcon from "vue-material-design-icons/PageFirst"
-import lastCharIcon from "vue-material-design-icons/PageLast"
-import tagsIcon from "vue-material-design-icons/CodeTags"
-import lengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
-import typosIcon from "vue-material-design-icons/Spellcheck"
-import writeGoodIcon from "vue-material-design-icons/FileWordBox"
-import insensitivenessIcon from "vue-material-design-icons/EmoticonCryOutline"
-import dynamicIcon from "vue-material-design-icons/Resistor"
-import noEnglishIcon from "vue-material-design-icons/EarthOff"
-
 import * as defaults from "../common/config"
 
 Vue.use(Vuex)
@@ -30,7 +18,6 @@ export default new Vuex.Store({
       _inconsistencies_placeholders: {
         title: "Placeholders",
         description: "Detect missing/excess/inconsistent placeholders",
-        icon: placeholderIcon,
         level: "high",
         active: false,
         exampleImage: "placeholders",
@@ -38,7 +25,6 @@ export default new Vuex.Store({
       _inconsistencies_firstCharType: {
         title: "First character",
         description: "Detect inconsistencies of first character",
-        icon: firstCharIcon,
         level: "low",
         active: false,
         exampleImage: null,
@@ -46,7 +32,6 @@ export default new Vuex.Store({
       _inconsistencies_lastCharType: {
         title: "Last character",
         description: "Detect inconsistencies of last character",
-        icon: lastCharIcon,
         level: "low",
         active: false,
         exampleImage: null,
@@ -54,7 +39,6 @@ export default new Vuex.Store({
       _inconsistencies_tags: {
         title: "HTML",
         description: "Detect invalid HTML and prohibited HTML tags",
-        icon: tagsIcon,
         level: "high",
         active: false,
         exampleImage: null,
@@ -62,7 +46,6 @@ export default new Vuex.Store({
       _inconsistencies_length: {
         title: "Length",
         description: "Detects suspicious variations in length",
-        icon: lengthIcon,
         level: "low",
         active: false,
         exampleImage: null,
@@ -70,7 +53,6 @@ export default new Vuex.Store({
       _inconsistencies_typos: {
         title: "Spelling",
         description: "Detect spelling mistakes",
-        icon: typosIcon,
         level: "high",
         active: false,
         exampleImage: null,
@@ -78,7 +60,6 @@ export default new Vuex.Store({
       _inconsistencies_writeGood: {
         title: "Style",
         description: "Detect stylistic issues – passive voice, weasel words, overuse of adverbs, cliches and similar",
-        icon: writeGoodIcon,
         level: "low",
         active: false,
         exampleImage: null,
@@ -86,7 +67,6 @@ export default new Vuex.Store({
       _inconsistencies_insensitiveness: {
         title: "Insensitiveness",
         description: "Detect gender favouring, polarising, race related, religion inconsiderate, or other unequal phrasing",
-        icon: insensitivenessIcon,
         level: "low",
         active: false,
         exampleImage: null,
@@ -94,7 +74,6 @@ export default new Vuex.Store({
       _inconsistencies_dynamic: {
         title: "Values",
         description: "Detects values, that should/could be replaced by placeholders to make text more customizable",
-        icon: dynamicIcon,
         level: "low",
         active: false,
         exampleImage: null,
@@ -102,7 +81,6 @@ export default new Vuex.Store({
       _inconsistencies_noEnglish: {
         title: "Missing default translation",
         description: "Detect missing translation for default locale",
-        icon: noEnglishIcon,
         level: "high",
         active: false,
         exampleImage: null,

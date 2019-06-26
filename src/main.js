@@ -29,6 +29,27 @@ Vue.use(VTooltip, {
 Vue.component("octicon", Octicon)
 Vue.component("vue-country-flag", CountryFlag)
 
+/* ICONS
+* template for naming icon components for checks:
+* -----------------------------------------------
+* example:
+* _inconsistencies_placeholders => placeholdersIcon
+* -----------------------------------------------
+* regex:
+* "_inconsistencies_placeholders".replace(/.*_/g, "") + "Icon"
+* _______________________________________________
+* */
+Vue.component("placeholdersIcon", require("vue-material-design-icons/CodeBraces").default)
+Vue.component("firstCharTypeIcon", require("vue-material-design-icons/PageFirst").default)
+Vue.component("lastCharTypeIcon", require("vue-material-design-icons/PageLast").default)
+Vue.component("tagsIcon", require("vue-material-design-icons/CodeTags").default)
+Vue.component("lengthIcon", require("vue-material-design-icons/ArrowExpandHorizontal").default)
+Vue.component("typosIcon", require("vue-material-design-icons/Spellcheck").default)
+Vue.component("writeGoodIcon", require("vue-material-design-icons/FileWordBox").default)
+Vue.component("insensitivenessIcon", require("vue-material-design-icons/EmoticonCryOutline").default)
+Vue.component("dynamicIcon", require("vue-material-design-icons/Resistor").default)
+Vue.component("noEnglishIcon", require("vue-material-design-icons/EarthOff").default)
+
 Vue.config.productionTip = false
 Vue.config.devtools = true
 Vue.config.performance = true

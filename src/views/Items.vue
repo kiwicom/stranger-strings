@@ -88,7 +88,7 @@
                     'selected-check': checkFilter === checkKey,
                   }"
                   @click="isActive(checkKey) && toggleCheckFilter(checkKey)"
-                  :is="check.icon && check.icon"
+                  :is="getIcon(checkKey)"
                   style="font-size: 18px;"
                 />
               </keep-alive>
@@ -133,7 +133,7 @@
             }"
           >
             <keep-alive>
-              <component v-if="isActive(checkKey) && val[checkKey]" :is="check.icon" />
+              <component v-if="isActive(checkKey) && val[checkKey]" :is="getIcon(checkKey)" />
             </keep-alive>
           </td>
 
@@ -413,6 +413,9 @@ export default {
         variant,
         solid: true,
       })
+    },
+    getIcon(checkKey) {
+      return `${checkKey.replace(/.*_/g, "")}Icon`
     },
   },
 }
