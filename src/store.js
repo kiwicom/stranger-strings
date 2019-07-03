@@ -134,13 +134,11 @@ export default new Vuex.Store({
       })
     },
     addLocale(state, locale) {
-      // let imp
-      // if (localStorage.getItem("Stranger-Strings")) {
-      //   imp = JSON.parse(localStorage.getItem("Stranger-Strings")).locales[locale]
-      // }
-      state.locales[locale] = {
+      const newLocale = {}
+      newLocale[locale] = {
         important: defaults.IMPORTANT_LOCALES.includes(locale),
       }
+      state.locales = { ...state.locales, ...newLocale } // allows computed behaviour
     },
     setLocaleImportance(state, payload) {
       // payload = {
