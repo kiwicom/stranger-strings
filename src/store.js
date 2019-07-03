@@ -19,70 +19,70 @@ export default new Vuex.Store({
         title: "Placeholders",
         description: "Detect missing/excess/inconsistent placeholders",
         level: "high",
-        active: false,
-        exampleImage: "placeholders",
+        active: true,
+        exampleImage: null,
       },
       _inconsistencies_firstCharType: {
         title: "First character",
         description: "Detect inconsistencies of first character",
         level: "low",
-        active: false,
+        active: true,
         exampleImage: null,
       },
       _inconsistencies_lastCharType: {
         title: "Last character",
         description: "Detect inconsistencies of last character",
         level: "low",
-        active: false,
+        active: true,
         exampleImage: null,
       },
       _inconsistencies_tags: {
         title: "HTML",
         description: "Detect invalid HTML and prohibited HTML tags",
         level: "high",
-        active: false,
+        active: true,
         exampleImage: null,
       },
       _inconsistencies_length: {
         title: "Length",
         description: "Detects suspicious variations in length",
         level: "low",
-        active: false,
+        active: true,
         exampleImage: null,
       },
       _inconsistencies_typos: {
         title: "Spelling",
         description: "Detect spelling mistakes",
         level: "high",
-        active: false,
+        active: true,
         exampleImage: null,
       },
       _inconsistencies_writeGood: {
         title: "Style",
         description: "Detect stylistic issues – passive voice, weasel words, overuse of adverbs, cliches and similar",
         level: "low",
-        active: false,
+        active: true,
         exampleImage: null,
       },
       _inconsistencies_insensitiveness: {
         title: "Insensitiveness",
         description: "Detect gender favouring, polarising, race related, religion inconsiderate, or other unequal phrasing",
         level: "low",
-        active: false,
+        active: true,
         exampleImage: null,
       },
       _inconsistencies_dynamic: {
         title: "Values",
         description: "Detects values, that should/could be replaced by placeholders to make text more customizable",
         level: "low",
-        active: false,
+        active: true,
         exampleImage: null,
       },
       _inconsistencies_noEnglish: {
         title: "Missing default translation",
         description: "Detect missing translation for default locale",
         level: "high",
-        active: false,
+        active: true,
         exampleImage: null,
       },
     },
@@ -150,7 +150,11 @@ export default new Vuex.Store({
       state.locales[payload.locale].important = payload.important
     },
     setDefaultLocaleImportance(state) {
-      Object.keys(state.locales).forEach(l => this.addLocale(l))
+      Object.keys(state.locales).forEach((l) => {
+        state.locales[l] = {
+          important: defaults.IMPORTANT_LOCALES.includes(l),
+        }
+      })
     },
     toggleHardWrap(state) {
       state.view.hardWrap = !state.view.hardWrap

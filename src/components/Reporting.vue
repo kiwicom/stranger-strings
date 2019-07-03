@@ -97,6 +97,7 @@ export default {
   name: "Reporting",
   props: {
     translationKey: { type: String, required: true },
+    locale: { type: String, required: true },
     email: { type: String, required: true },
     notifyUser: { type: Function, required: true },
   },
