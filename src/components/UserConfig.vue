@@ -12,7 +12,6 @@
     <div class="config-group">
       <h4>Checks</h4>
       <ResetDefaults :cb="setDefaultCheckActiveness"/>
-
       <b-row>
         <Check
           v-for="(checkKey) in Object.keys(checks)" :key="checkKey"

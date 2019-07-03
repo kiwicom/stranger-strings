@@ -21,7 +21,7 @@
                 v-b-tooltip.hover
                 :title="getCheckData(inconsistency).description"
               >
-                <component :is="getCheckData(inconsistency).icon" :size="30" /></div> - {{ getCheckData(inconsistency).title }}
+                <component :is="getIcon(inconsistency)" :size="30" /></div> - {{ getCheckData(inconsistency).title }}
             </div>
           </div>
         </div>
@@ -93,7 +93,7 @@
               v-b-popover.hover="getWriteGoodReasons(activeTranslations[locale]._writeGood)"
               title="write good"
             >
-              <component :is="getCheckData('_inconsistencies_writeGood').icon" />
+              <component :is="getIcon('_inconsistencies_writeGood')" />
             </div>
             <div
               v-if="activeTranslations[locale]._insensitiveness && isActive('_inconsistencies_insensitiveness')"
@@ -101,7 +101,7 @@
               v-b-popover.hover="activeTranslations[locale]._insensitiveness.join(',\n')"
               title="insensitiveness"
             >
-              <component :is="getCheckData('_inconsistencies_insensitiveness').icon" />
+              <component :is="getIcon('_inconsistencies_insensitiveness')" />
             </div>
             <div
               v-if="hasInconsistentLength(locale, activeTranslations) && isActive('_inconsistencies_length')"
@@ -109,7 +109,7 @@
               v-b-popover.hover="'suspiciously long translation'"
               title="length"
             >
-              <component :is="getCheckData('_inconsistencies_length').icon" />
+              <component :is="getIcon('_inconsistencies_length')" />
             </div>
             <div
               v-if="getMissingPlaceholders(locale, activeTranslations).length && isActive('_inconsistencies_placeholders')"
@@ -117,7 +117,7 @@
               v-b-popover.hover="getMissingPlaceholders(locale, activeTranslations).join('\n')"
               title="Missing placeholders"
             >
-              <component :is="getCheckData('_inconsistencies_placeholders').icon" fill-color="#ef0000"/>
+              <component :is="getIcon('_inconsistencies_placeholders')" fill-color="#ef0000"/>
             </div>
             <div
               :id="`typosIndicator_${locale}`"
@@ -126,7 +126,7 @@
                 && isActive('_inconsistencies_typos')"
               class="inline-error clickable"
             >
-              <component :is="getCheckData('_inconsistencies_typos').icon" fill-color="#ef0000"/>
+              <component :is="getIcon('_inconsistencies_typos')" fill-color="#ef0000"/>
               <b-popover
                 :target="`typosIndicator_${locale}`"
                 title="Typos"
@@ -151,7 +151,7 @@
               v-b-popover.hover="removeDuplicates(activeTranslations[locale]._dynamic).join('\n')"
               title="Dynamic values"
             >
-              <component :is="getCheckData('_inconsistencies_dynamic').icon" fill-color="#800080" />
+              <component :is="getIcon('_inconsistencies_dynamic')" fill-color="#800080" />
             </div>
             <div
               :id="`firstIndicator_${locale}`"
@@ -159,7 +159,7 @@
                 && activeTranslations[locale]._firstCharType !== getExpectedFirstCharType(activeTranslations)"
               class="inline-warning"
             >
-              <component :is="getCheckData('_inconsistencies_firstCharType').icon" />
+              <component :is="getIcon('_inconsistencies_firstCharType')" />
               <b-popover
                 :target="`firstIndicator_${locale}`"
                 title="First character inconsistency"
@@ -177,7 +177,7 @@
                 && activeTranslations[locale]._lastCharType !== getExpectedLastCharType(activeTranslations)"
               class="inline-warning"
             >
-              <component :is="getCheckData('_inconsistencies_lastCharType').icon" />
+              <component :is="getIcon('_inconsistencies_lastCharType')" />
               <b-popover
                 :target="`lastIndicator_${locale}`"
                 title="Last character inconsistency"
@@ -439,6 +439,9 @@ export default {
         return null
       }
       return helpers.getPlaceholders(translation._placeholders)
+    },
+    getIcon(checkKey) {
+      return `${checkKey.replace(/.*_/g, "")}Icon`
     },
   },
 }
