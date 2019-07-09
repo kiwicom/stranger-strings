@@ -12,44 +12,10 @@
       lazy
       @hide="$emit('close')"
     >
-      <div class="keyOverview" v-if="item">
-        <div class="errors-overview">
-          <div v-for="inconsistency in getItemInconsistencies(item)" :key="inconsistency" class="error">
-            <div v-if="isActive(inconsistency)">
-              <div
-                :class="getCheckData(inconsistency).level === 'high' ? 'inline-error' : 'inline-warning'"
-                v-b-tooltip.hover
-                :title="getCheckData(inconsistency).description"
-              >
-                <component :is="getIcon(inconsistency)" :size="30" /></div> - {{ getCheckData(inconsistency).title }}
-            </div>
-          </div>
-        </div>
-        <div class="progress-chart">
-          <LocalizationProgressChart
-            :translated="item.translated.length"
-            :missingPrimary="getImportantLocales.filter(l => !item.translated.includes(l)).length"
-            :missingSecondary="
-            getLocalesCount
-            - item.translated.length
-            - getImportantLocales.filter(l => !item.translated.includes(l)).length"
-          ></LocalizationProgressChart>
-        </div>
-        <div class="progress-legend">
-          <div v-if="getImportantLocales.filter(l => !item.translated.includes(l)).length > 0">
-            <strong class="missing-important">Missing primary locales: </strong>
-            <strong>{{ getImportantLocales.filter(l => !item.translated.includes(l)).join(", ") }}</strong>
-          </div>
-          <div v-if="getLocales.filter(l => !item.translated.includes(l) && !isImportant(l)).length > 0">
-            <strong class="missing-normal">Missing secondary locales: </strong>
-            {{ getLocales.filter(l => !item.translated.includes(l) && !isImportant(l)).join(", ") }}
-          </div>
-        </div>
-      </div>
-
       <div class="translationsForm">
         <b-form inline>
           <b-form-checkbox
+            switch
             v-b-tooltip.hover title="If enabled error highlighting in text will be turn off"
             v-model="showTagsChecked"
           >
@@ -83,8 +49,12 @@
             {{ locale }}
           </td>
           <td class="translation">
-            <div v-if="!showTagsChecked" style="display: inline-block;" v-html="highlightContent(activeTranslations[locale])"></div>
-            <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>
+            <Highlighting
+              :content="activeTranslations[locale].content"
+              :writeGood="activeTranslations[locale]._writeGood"
+            />
+            <!--<div v-if="!showTagsChecked" style="display: inline-block;" v-html="highlightContent(activeTranslations[locale])"></div>-->
+            <!--<div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>-->
           </td>
           <td class="errors-col">
             <div
@@ -240,7 +210,8 @@ import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"
 import maxExpansionRatio from "../../common/maxExpansionRatio"
 import Reporting from "./Reporting"
-import LocalizationProgressChart from "./LocalizationProgressChart"
+import TranslationProgress from "../components/TranslationProgress"
+import Highlighting from "../components/Highlighting"
 
 
 export default {
@@ -251,10 +222,11 @@ export default {
     notifyUser: { type: Function, required: true },
   },
   components: {
+    TranslationProgress,
     Reporting,
-    LocalizationProgressChart,
     CountryFlag,
     ReportIcon,
+    Highlighting,
   },
   data() {
     return {
@@ -478,29 +450,6 @@ export default {
     color: #f9fafc;
     background-color: #D5011B;
   }
-  .errors-overview {
-    width: 33%;
-  }
-  .progress-chart {
-    width: 33%;
-    text-align: center;
-  }
-  .progress-legend {
-    font-size: 16px;
-    display: inline-block;
-    width: 33%;
-    float: right;
-  }
-  .missing-important {
-    color: #D5011B;
-  }
-  .missing-normal {
-    color: #ffb508;
-  }
-  .unimportant {
-    color: gray;
-    display: contents;
-  }
   .inline-warning {
     color: orange;
     font-size: 12px;
@@ -531,29 +480,8 @@ export default {
     display: inline-block;
     margin-left: 5px;
   }
-  .keyOverview {
-    font-size: 14px;
-    margin-bottom: 15px;
-    margin-top: 15px;
-    width: 100%;
-    display: flex;
-  }
   .translationsForm {
     margin-bottom: 16px;
-  }
-  .error {
-    display: list-item;
-    margin: 1px;
-    font-size: 16px;
-    border: 1px;
-    list-style: none;
-    padding-bottom: 10px;
-  }
-  .not-translated-primary {
-    color: rgba(255, 0, 0, 0.65);
-  }
-  .not-translated-secondary {
-    color: #FFC107;
   }
   .locale-id {
     font-weight: bolder;
@@ -580,5 +508,10 @@ export default {
   .transparent {
     opacity: 0.3;
   }
-
+  .not-translated-primary {
+    color: rgba(255, 0, 0, 0.65);
+  }
+  .not-translated-secondary {
+    color: #FFC107;
+  }
 </style>
