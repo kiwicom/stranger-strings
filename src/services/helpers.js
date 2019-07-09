@@ -24,21 +24,6 @@ export function strictSearch(items, query) {
   }, matchContent)
 }
 
-// get all tags used across translations
-export function getAvailableTags(translations) {
-  return R.reduce((acc, key) => {
-    if (!translations[key].tags) {
-      return acc
-    }
-    translations[key].tags.forEach((tag) => {
-      if (!acc.includes(tag)) {
-        acc.push(tag)
-      }
-    })
-    return acc
-  }, [], R.keys(translations)).sort()
-}
-
 // sort by property either "asc" or "desc"
 export function sortTranslationKeys(translations, sortProperty, ascOrDesc) {
   const preserveOriginalKeyFunc = mapWithoutCap((x, key) => Object.assign({}, x, { _key: key }))

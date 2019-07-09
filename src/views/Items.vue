@@ -298,9 +298,6 @@ export default {
     ...mapState([
       "checks",
     ]),
-    availableTags() {
-      return helpers.getAvailableTags(this.allItems)
-    },
   },
   methods: {
     ...mapMutations([

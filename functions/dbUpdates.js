@@ -168,7 +168,7 @@ async function originToFirebase() {
     let mappedTranslations = {}
     const writeGoodSettings = (await database.ref("/writeGood").once("value")).val()
       || DEFAULT_WRITE_GOOD_SETTINGS
-    const placeholderRegex = (await database.ref("/regex").once("value")).val()
+    const placeholderRegex = (await database.ref("/placeholders/regex").once("value")).val()
       || DEFAULT_PLACEHOLDER_REGEX
     const insensitivenessConfig = (await database.ref("/insensitivenessConfig").once("value")).val()
       || DEFAULT_INSENSITIVENESS_CONFIG
@@ -208,6 +208,7 @@ async function originToFirebase() {
     await database.ref("/items").remove()
     await database.ref("/translations").remove()
     await database.ref("/collections").remove()
+    await database.ref("/locales").remove()
     console.log("uploading new keys")
     await database.ref("/items").set(finalItems)
     await database.ref("/translations").set(finalTranslations)
@@ -239,7 +240,7 @@ async function updateInconsistencies() {
     let translations = (await database.ref("/translations").once("value")).val()
     const writeGoodSettings = (await database.ref("/writeGood").once("value")).val()
       || DEFAULT_WRITE_GOOD_SETTINGS
-    const placeholderRegex = (await database.ref("/regex").once("value")).val()
+    const placeholderRegex = (await database.ref("/placeholders/regex").once("value")).val()
       || DEFAULT_PLACEHOLDER_REGEX
     const insensitivenessConfig = (await database.ref("/insensitivenessConfig").once("value")).val()
       || DEFAULT_INSENSITIVENESS_CONFIG
