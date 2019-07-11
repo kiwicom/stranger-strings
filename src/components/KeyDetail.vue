@@ -52,6 +52,7 @@
             <Highlighting
               :content="activeTranslations[locale].content"
               :writeGood="activeTranslations[locale]._writeGood"
+              :typos="activeTranslations[locale]._typos !== 'unsupported language' ? activeTranslations[locale]._typos : null"
             />
             <!--<div v-if="!showTagsChecked" style="display: inline-block;" v-html="highlightContent(activeTranslations[locale])"></div>-->
             <!--<div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>-->
@@ -436,9 +437,6 @@ export default {
     vertical-align: middle;
     padding: 5px;
   }
-  .strikethrough {
-    text-decoration: line-through;
-  }
   .note {
     font-size: 8px;
     color: gray;
@@ -493,7 +491,7 @@ export default {
     border: none !important;
   }
   .translation {
-    width: 80%;
+    max-width: 900px;
     border: none !important;
   }
   .errors-col {

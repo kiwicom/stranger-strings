@@ -20,6 +20,11 @@
   z-index: 1;
 }
 
+.tooltiper.popoverer .popoverer-inner {
+  padding: 0px !important;
+  width: fit-content !important;
+}
+
 .tooltiper[x-placement^="top"] {
   margin-bottom: 5px;
 }
@@ -106,3 +111,4 @@
   opacity: 1;
   transition: opacity .15s;
 }
+
