@@ -45,7 +45,7 @@ Vue.component("lastCharTypeIcon", require("vue-material-design-icons/PageLast").
 Vue.component("tagsIcon", require("vue-material-design-icons/CodeTags").default)
 Vue.component("lengthIcon", require("vue-material-design-icons/ArrowExpandHorizontal").default)
 Vue.component("typosIcon", require("vue-material-design-icons/Spellcheck").default)
-Vue.component("writeGoodIcon", require("vue-material-design-icons/FileWordBox").default)
+Vue.component("writeGoodIcon", require("vue-material-design-icons/CommentAlertOutline").default)
 Vue.component("insensitivenessIcon", require("vue-material-design-icons/EmoticonCryOutline").default)
 Vue.component("dynamicIcon", require("vue-material-design-icons/Resistor").default)
 Vue.component("noEnglishIcon", require("vue-material-design-icons/EarthOff").default)

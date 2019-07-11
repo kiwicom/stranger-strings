@@ -95,6 +95,7 @@
               <template slot="popover">
                 <Check
                   :checkKey="checkKey"
+                  class="p-3"
                 />
               </template>
             </v-popover>
