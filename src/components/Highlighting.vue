@@ -100,7 +100,6 @@ export default {
     insensitivenessHighLights() {
       const matches = this.insensitiveness.map((ins) => {
         const thinSingleQMarks = Array.isArray(ins.match(/`\w+(?=`)/g)) && ins.match(/`\w+(?=`)/g)[0].slice(1)
-        console.log(thinSingleQMarks)
         if (thinSingleQMarks) {
           return thinSingleQMarks
         }
@@ -121,7 +120,7 @@ export default {
       return [...new Set(array)]
     },
     escape(content) {
-      return _.replace(content)
+      return _.escape(content)
     },
     parseContent(content) {
       let parsedContent = [{
