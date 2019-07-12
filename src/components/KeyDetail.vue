@@ -14,13 +14,6 @@
     >
       <div class="translationsForm">
         <b-form inline>
-          <b-form-checkbox
-            switch
-            v-b-tooltip.hover title="If enabled error highlighting in text will be turn off"
-            v-model="showTagsChecked"
-          >
-            Show tags in translations
-          </b-form-checkbox>
           <b-button
             class="ml-auto p-2"
             :disabled="!reportConfig.active"
@@ -51,8 +44,15 @@
           <td class="translation">
             <Highlighting
               :content="activeTranslations[locale].content"
-              :writeGood="activeTranslations[locale]._writeGood"
-              :typos="activeTranslations[locale]._typos !== 'unsupported language' ? activeTranslations[locale]._typos : null"
+              :locale="locale"
+              :writeGood="isActive('_inconsistencies_writeGood') && activeTranslations[locale]._writeGood"
+              :typos="activeTranslations[locale]._typos !== 'unsupported language' && isActive('_inconsistencies_writeGood') ?
+                      activeTranslations[locale]._typos : null"
+              :placeholders="activeTranslations[locale]._placeholders"
+              :dynamics="isActive('_inconsistencies_dynamic') && activeTranslations[locale]._dynamic"
+              :insensitiveness="isActive('_inconsistencies_insensitiveness') && activeTranslations[locale]._insensitiveness"
+              :firstCharType="isActive('_inconsistencies_firstCharType') && activeTranslations[locale]._firstCharType"
+              :lastCharType="isActive('_inconsistencies_lastCharType') && activeTranslations[locale]._lastCharType"
             />
             <!--<div v-if="!showTagsChecked" style="display: inline-block;" v-html="highlightContent(activeTranslations[locale])"></div>-->
             <!--<div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>-->

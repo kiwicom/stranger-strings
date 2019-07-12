@@ -95,9 +95,9 @@
 }
 
 .tooltiper.popoverer .popoverer-arrow {
-  border-color: #f9f9f9;
+  border-color: rgba(249, 249, 249, 0);
   z-index: 1;
-  padding: 50px;
+  padding: 10px 50px;
 }
 
 .tooltiper[aria-hidden='true'] {
