@@ -4,13 +4,13 @@
       trigger="hover"
       v-if="token.content !== ''"
       v-for="token in parseContent(content)"
-      :key="token.order"
+      :key="token.order + token.typelessOrder"
       :disabled="!token.type"
       style="display: inline-block"
       placement="top"
     >
       <span
-        :class="['text', token.type && getCheckData(token.type).level + '-highlight']"
+        :class="['text', token.type && /^_entity_/g.test(token.type) ? token.type : getCheckData(token.type).level + '-highlight']"
         v-html="escape(token.content)"
       >
      </span>
@@ -25,7 +25,7 @@
               />
             </div>
             <div class="check-title">
-              {{ getCheckData(token.type).title }} {{ getCheckData(token.type).level }}
+              {{ getCheckData(token.type).title }} {{ getCheckData(token.type).level || getEntity(token.type) }}
             </div>
           </div>
           <div
@@ -33,6 +33,27 @@
             class="popover-content"
           >
             {{ getWriteGoodReason(token.content) }}
+          </div>
+          <div
+            v-if="token.type === '_inconsistencies_insensitiveness'"
+            class="popover-content"
+          >
+            {{ getInsensitivenessReason(token.content) }}
+          </div>
+          <div
+            v-if="token.type === '_inconsistencies_typos'"
+            class="popover-content"
+          >
+            <p>Couldn't find word "{{ token.content }}" in dictionary</p>
+            <b-button
+              @click="addWordToDict(token.content)"
+              :disabled="dictsExpansionData[locale] && dictsExpansionData[locale].includes(token.content)"
+              variant="outline-success"
+              size="sm"
+            >
+              add to {{ locale }} dictionary
+            </b-button>
+            <div class="note">note: please take in mind that changes in dictionaries will be visible after next spellchecking (&lt;1 min)</div>
           </div>
         </div>
       </template>
@@ -43,20 +64,31 @@
 <script>
 import _ from "lodash"
 import { mapGetters } from "vuex"
+import { FbDb } from "../modules/firebase"
+import * as gcFunctions from "../modules/functionsApi"
 
 export default {
   name: "Highlighting",
   props: {
     content: { type: String },
+    locale: { type: String },
     placeholders: { type: Array },
     tags: { type: Array },
     restrictedTags: { type: Array },
     dynamics: { type: Array },
     typos: { type: Array },
-    firstCharType: { type: Boolean },
-    lastCharType: { type: Boolean },
+    firstCharType: { type: String },
+    lastCharType: { type: String },
     writeGood: { type: Array },
     insensitiveness: { type: Array },
+  },
+  firebase() {
+    return {
+      dictsExpansionData: {
+        source: FbDb.ref("dictsExpansion/"),
+        asObject: true,
+      },
+    }
   },
   computed: {
     ...mapGetters([
@@ -65,10 +97,25 @@ export default {
     writeGoodHighlights() {
       return this.writeGood.map(wg => wg.reason.match(/".+(?=")/m) && wg.reason.match(/".+(?=")/m)[0].slice(1))
     },
+    insensitivenessHighLights() {
+      const matches = this.insensitiveness.map((ins) => {
+        const thinSingleQMarks = Array.isArray(ins.match(/`\w+(?=`)/g)) && ins.match(/`\w+(?=`)/g)[0].slice(1)
+        console.log(thinSingleQMarks)
+        if (thinSingleQMarks) {
+          return thinSingleQMarks
+        }
+        const doubleQMarks = Array.isArray(ins.match(/"\w+(?=")/g)) && ins.match(/"\w+(?=")/g)[0].slice(1)
+        return doubleQMarks
+      })
+      return matches
+    },
   },
   methods: {
     getWriteGoodReason(word) {
       return this.writeGood.find(wg => new RegExp(`"${word}(?=")`, "m").test(wg.reason)).reason
+    },
+    getInsensitivenessReason(word) {
+      return this.insensitiveness.find(ins => new RegExp(word, "m").test(word))
     },
     removeDuplicates(array) {
       return [...new Set(array)]
@@ -89,20 +136,41 @@ export default {
       if (this.typos) {
         parsedContent = this.parseTokens(parsedContent, this.typos, "_inconsistencies_typos")
       }
-      parsedContent.filter(t => !t.type && t.content.split(" ").length).forEach((token) => {
-        // parse remaining typeless tokens to smaller blocks to avoid messing UI
-        const splitten = token.content.split(" ")
+      if (this.insensitiveness) {
+        parsedContent = this.parseTokens(parsedContent, this.insensitivenessHighLights, "_inconsistencies_insensitiveness")
+      }
+      if (this.placeholders) {
+        parsedContent = this.parseTokens(parsedContent, this.placeholders, "_entity_placeholders")
+      }
+      parsedContent.filter(t => !t.type && t.content.split(" ").length > 1).forEach((token) => {
+        // chop remaining typeless tokens to smaller blocks to avoid messing UI
         const newTokens = []
         let counter = 0
-        splitten.forEach((word) => {
-          newTokens.push({
-            order: token.order,
-            typelessOrder: counter,
-            content: `${word} `,
-            type: null,
+        // special splitting for japan and chinese
+        if (this.locale.substring(0, 2).toLowerCase() === "zh" || this.locale.substring(0, 2).toLowerCase() === "ja") {
+          const splitten = token.content.split("")
+          splitten.forEach((word) => {
+            newTokens.push({
+              order: token.order,
+              typelessOrder: counter,
+              content: `${word}`,
+              type: null,
+            })
+            counter += 1
           })
-          counter += 1
-        })
+        } else {
+          counter = 0
+          const splitten = token.content.replace(/\s$/g, "").split(" ")
+          splitten.forEach((word) => {
+            newTokens.push({
+              order: token.order,
+              typelessOrder: counter,
+              content: `${word} `,
+              type: null,
+            })
+            counter += 1
+          })
+        }
         parsedContent = parsedContent.filter(tkn => tkn.order !== token.order).concat(newTokens)
       })
 
@@ -121,17 +189,15 @@ export default {
       highlights.forEach((highlight) => {
         let regex = {}
         switch (type) {
+        case "_inconsistencies_insensitiveness":
         case "_inconsistencies_writeGood":
           regex = new RegExp(`${highlight}(?=[^\\w]|$)`, "g")
-          break
-        case "_inconsistencies_dynamic":
-          regex = new RegExp(highlight, "gm")
           break
         case "_inconsistencies_typos":
           regex = new RegExp(`${_.escapeRegExp(highlight)}(?=[^\\w]|$)`, "g")
           break
         default:
-          regex = new RegExp(highlight, "g")
+          regex = new RegExp(highlight, "gm")
           break
         }
         parsedContent.filter(token => regex.test(token.content) && !token.type)
@@ -162,6 +228,24 @@ export default {
     getIcon(checkKey) {
       return `${checkKey.replace(/.*_/g, "")}Icon`
     },
+    addWordToDict(word) {
+      FbDb.ref(`dictsExpansion/${this.locale}`).once("value", (snapshot) => {
+        if (!snapshot.val().includes(word)) {
+          FbDb.ref(`dictsExpansion/${this.locale}/${snapshot.val().length}`).set(word)
+          gcFunctions.inconsistenciesUpdate()
+        }
+      })
+    },
+    getEntity(type) {
+      switch (type) {
+      case "_entity_placeholders":
+        return "Placeholder"
+      case "_entity_tag":
+        return "HTML tag"
+      default:
+        return ""
+      }
+    },
   },
 }
 </script>
@@ -175,6 +259,9 @@ export default {
   }
   .suggestion-highlight {
     background-color: rgba(0, 123, 255, 0.16);
+  }
+  ._entity_placeholders {
+    color: #26539B;
   }
   .text {
     display: inline-block;
@@ -205,6 +292,10 @@ export default {
   .popover-content {
     display: inline-block;
     width: 300px;
+    padding: 8px;
+    text-align: center;
+    font-size: 15px;
+    z-index: 5;
   }
   .check-icon {
     margin-right: 15px;
@@ -224,6 +315,11 @@ export default {
     font-size: larger;
     vertical-align: text-bottom;
     color: #1f3a68;
+  }
+  .note {
+    font-size: 9px;
+    color: gray;
+    margin-top: 10px;
   }
 
 </style>

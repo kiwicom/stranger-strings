@@ -98,7 +98,7 @@ export default new Vuex.Store({
   getters: {
     getActiveChecks: state => Object.keys(state.checks).filter(c => state.checks[c].active),
     isActive: state => check => state.checks[check] && state.checks[check].active,
-    getCheckData: state => check => state.checks[check],
+    getCheckData: state => check => state.checks[check] || {},
     getLocales: state => Object.keys(state.locales),
     getLocalesCount: state => Object.keys(state.locales).length,
     getImportantLocales: state => Object.keys(state.locales).filter(l => state.locales[l].important),
