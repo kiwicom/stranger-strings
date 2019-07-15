@@ -51,8 +51,10 @@
               :placeholders="activeTranslations[locale]._placeholders"
               :dynamics="isActive('_inconsistencies_dynamic') && activeTranslations[locale]._dynamic"
               :insensitiveness="isActive('_inconsistencies_insensitiveness') && activeTranslations[locale]._insensitiveness"
-              :firstCharType="isActive('_inconsistencies_firstCharType') && activeTranslations[locale]._firstCharType"
-              :lastCharType="isActive('_inconsistencies_lastCharType') && activeTranslations[locale]._lastCharType"
+              :firstCharType="isActive('_inconsistencies_firstCharType')
+                && [activeTranslations[locale]._firstCharType, getExpectedFirstCharType(activeTranslations)]"
+              :lastCharType="isActive('_inconsistencies_lastCharType')
+                && [activeTranslations[locale]._lastCharType, getExpectedLastCharType(activeTranslations)]"
             />
             <!--<div v-if="!showTagsChecked" style="display: inline-block;" v-html="highlightContent(activeTranslations[locale])"></div>-->
             <!--<div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>-->

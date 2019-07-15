@@ -5,55 +5,90 @@
       v-if="token.content !== ''"
       v-for="token in parseContent(content)"
       :key="token.order + token.typelessOrder"
-      :disabled="!token.type"
+      :disabled="!token.type && !token.first && !token.last"
       style="display: inline-block"
       placement="top"
     >
       <span
-        :class="['text', token.type && /^_entity_/g.test(token.type) ? token.type : getCheckData(token.type).level + '-highlight']"
-        v-html="escape(token.content)"
+        :class="[
+          'text',
+          token.type && /^_entity_/g.test(token.type) ? token.type : getCheckData(token.type).level + '-highlight',
+          token.first ? 'first-char-' + getCheckData('_inconsistencies_firstCharType').level : '',
+          token.last ? 'last-char-' + getCheckData('_inconsistencies_lastCharType').level : '',
+          ]"
+        :last-char="token.content.slice(-1)"
+        :first-char="token.content.slice(0,1)"
+        v-html="escape(token.content.slice(Number(token.first), token.content.length - Number(token.last)))"
       >
      </span>
       <template slot="popover">
-        <div v-if="token.type">
-          <div
-            :class="['popover-header' , getCheckData(token.type).level]"
-          >
-            <div class="check-icon">
-              <component
-                :is="getIcon(token.type)"
-              />
-            </div>
-            <div class="check-title">
-              {{ getCheckData(token.type).title }} {{ getCheckData(token.type).level || getEntity(token.type) }}
-            </div>
-          </div>
-          <div
-            v-if="token.type === '_inconsistencies_writeGood'"
-            class="popover-content"
-          >
-            {{ getWriteGoodReason(token.content) }}
-          </div>
-          <div
-            v-if="token.type === '_inconsistencies_insensitiveness'"
-            class="popover-content"
-          >
-            {{ getInsensitivenessReason(token.content) }}
-          </div>
-          <div
-            v-if="token.type === '_inconsistencies_typos'"
-            class="popover-content"
-          >
-            <p>Couldn't find word "{{ token.content }}" in dictionary</p>
-            <b-button
-              @click="addWordToDict(token.content)"
-              :disabled="dictsExpansionData[locale] && dictsExpansionData[locale].includes(token.content)"
-              variant="outline-success"
-              size="sm"
+        <div>
+          <div v-if="token.type">
+            <div
+              :class="['popover-header' , getCheckData(token.type).level]"
             >
-              add to {{ locale }} dictionary
-            </b-button>
-            <div class="note">note: please take in mind that changes in dictionaries will be visible after next spellchecking (&lt;1 min)</div>
+              <div class="check-icon">
+                <component
+                  :is="getIcon(token.type)"
+                />
+              </div>
+              <div class="check-title">
+                {{ getCheckData(token.type).title }} {{ getCheckData(token.type).level || getEntity(token.type) }}
+              </div>
+            </div>
+            <div
+              v-if="token.type === '_inconsistencies_writeGood'"
+              class="popover-content"
+            >
+              {{ getWriteGoodReason(token.content) }}
+            </div>
+            <div
+              v-if="token.type === '_inconsistencies_insensitiveness'"
+              class="popover-content"
+            >
+              {{ getInsensitivenessReason(token.content) }}
+            </div>
+            <div
+              v-if="token.type === '_inconsistencies_typos'"
+              class="popover-content"
+            >
+              <p>Couldn't find word "{{ token.content }}" in dictionary</p>
+              <b-button
+                @click="addWordToDict(token.content)"
+                :disabled="dictsExpansionData[locale] && dictsExpansionData[locale].includes(token.content)"
+                variant="outline-success"
+                size="sm"
+              >
+                add to {{ locale }} dictionary
+              </b-button>
+              <div class="note">note: please take in mind that changes in dictionaries will be visible after next spellchecking (&lt;1 min)</div>
+            </div>
+          </div>
+          <div
+            v-if="token.first || token.last"
+          >
+            <div
+              :class="['popover-header' , getCheckData(token.first ? '_inconsistencies_firstCharType' : '_inconsistencies_lastCharType').level]"
+            >
+              <div class="check-icon">
+                <component
+                  :is="getIcon(token.first ? '_inconsistencies_firstCharType' : '_inconsistencies_lastCharType')"
+                />
+              </div>
+              <div class="check-title">
+                {{ token.first ? 'First' : 'Last' }}
+                character
+                {{ getCheckData(token.first ? '_inconsistencies_firstCharType' : '_inconsistencies_lastCharType').level }}
+              </div>
+            </div>
+            <div
+              class="popover-content"
+            >
+              {{ token.first ? 'First' : 'Last' }} character is
+              <strong>{{ token.first ? firstCharType[0] : lastCharType[0] }}</strong>
+              but expected
+              <strong>{{ token.first ? firstCharType[1] : lastCharType[1] }}</strong>
+            </div>
           </div>
         </div>
       </template>
@@ -77,8 +112,8 @@ export default {
     restrictedTags: { type: Array },
     dynamics: { type: Array },
     typos: { type: Array },
-    firstCharType: { type: String },
-    lastCharType: { type: String },
+    firstCharType: { type: Array }, // [actual, expected]
+    lastCharType: { type: Array }, // [actual, expected]
     writeGood: { type: Array },
     insensitiveness: { type: Array },
   },
@@ -128,6 +163,8 @@ export default {
         typelessOrder: null,
         content,
         type: null,
+        first: false,
+        last: false,
       }]
       if (this.writeGood) {
         parsedContent = this.parseTokens(parsedContent, this.writeGoodHighlights, "_inconsistencies_writeGood")
@@ -154,6 +191,8 @@ export default {
               typelessOrder: counter,
               content: `${word}`,
               type: null,
+              first: false,
+              last: false,
             })
             counter += 1
           })
@@ -166,6 +205,8 @@ export default {
               typelessOrder: counter,
               content: `${word} `,
               type: null,
+              first: false,
+              last: false,
             })
             counter += 1
           })
@@ -173,7 +214,7 @@ export default {
         parsedContent = parsedContent.filter(tkn => tkn.order !== token.order).concat(newTokens)
       })
 
-      return parsedContent.sort((a, b) => {
+      const sorted = parsedContent.sort((a, b) => {
         if (a.order < b.order) {
           return -1
         }
@@ -182,6 +223,14 @@ export default {
         }
         return a.typelessOrder - b.typelessOrder
       })
+      if (this.firstCharType && this.firstCharType[0] !== this.firstCharType[1]) {
+        sorted[0].first = true // mark first
+      }
+      if (this.lastCharType && this.lastCharType[0] !== this.lastCharType[1]) {
+        sorted[sorted.length - 1].last = true // mark last
+        sorted[sorted.length - 1].content = sorted[sorted.length - 1].content.replace(/\s$/g, "")
+      }
+      return sorted
     },
     parseTokens(chunks, highlights, type) {
       let parsedContent = chunks
@@ -206,18 +255,24 @@ export default {
               typelessOrder: null,
               content: token.content.slice(0, token.content.search(regex)),
               type: null,
+              first: false,
+              last: false,
             })
             parsedContent.push({
               order: `${token.order}b`,
               typelessOrder: null,
               content: highlight,
               type,
+              first: false,
+              last: false,
             })
             parsedContent.push({
               order: `${token.order}c`,
               typelessOrder: null,
               content: token.content.slice(token.content.search(regex) + highlight.length),
               type: null,
+              first: false,
+              last: false,
             })
             parsedContent = parsedContent.filter(tkn => tkn.order !== token.order)
           })
@@ -261,6 +316,42 @@ export default {
   }
   ._entity_placeholders {
     color: #26539B;
+  }
+  .first-char-error::before {
+    font-size: 16px;
+    color: red;
+    text-decoration: overline;
+    content: attr(first-char);
+  }
+  .last-char-error::after {
+    font-size: 16px;
+    color: red;
+    text-decoration: overline;
+    content: attr(last-char);
+  }
+  .first-char-warning::before {
+    font-size: 16px;
+    color: #ff7800;
+    text-decoration: overline;
+    content: attr(first-char);
+  }
+  .last-char-warning::after {
+    font-size: 16px;
+    color: #ff7800;
+    text-decoration: overline;
+    content: attr(last-char);
+  }
+  .first-char-suggestion::before {
+    font-size: 16px;
+    color: dodgerblue;
+    text-decoration: overline;
+    content: attr(first-char);
+  }
+  .last-char-suggestion::after {
+    font-size: 16px;
+    color: dodgerblue;
+    text-decoration: overline;
+    content: attr(last-char);
   }
   .text {
     display: inline-block;
