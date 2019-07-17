@@ -318,39 +318,39 @@ export default {
     color: #26539B;
   }
   .first-char-error::before {
-    font-size: 16px;
     color: red;
-    text-decoration: overline;
+    border-left: solid red 2px;
+    padding-left: 2px;
     content: attr(first-char);
   }
   .last-char-error::after {
-    font-size: 16px;
     color: red;
-    text-decoration: overline;
+    border-right: solid red 2px;
+    padding-right: 2px;
     content: attr(last-char);
   }
   .first-char-warning::before {
-    font-size: 16px;
     color: #ff7800;
-    text-decoration: overline;
+    border-left: solid #ff7800 2px;
+    padding-left: 2px;
     content: attr(first-char);
   }
   .last-char-warning::after {
-    font-size: 16px;
     color: #ff7800;
-    text-decoration: overline;
+    border-right: solid #ff7800 2px;
+    padding-right: 2px;
     content: attr(last-char);
   }
   .first-char-suggestion::before {
-    font-size: 16px;
     color: dodgerblue;
-    text-decoration: overline;
+    border-left: solid dodgerblue 2px;
+    padding-left: 2px;
     content: attr(first-char);
   }
   .last-char-suggestion::after {
-    font-size: 16px;
     color: dodgerblue;
-    text-decoration: overline;
+    border-right: solid dodgerblue 2px;
+    padding-right: 2px;
     content: attr(last-char);
   }
   .text {

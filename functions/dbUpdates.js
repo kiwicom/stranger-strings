@@ -18,7 +18,7 @@ const database = require("./database")
 const { loader, loaderType } = require("./loaderManager")
 
 const {
-  validateHtml,
+  getHTMLtags,
   determineCharType,
   grammarNazi,
   detectDynamicValues,
@@ -26,8 +26,9 @@ const {
   getLangsWithDiffFirstCharCasing,
   writeGoodCheck,
   updateDictsExpansion,
+  hasMissingEntities
 } = require("./utils")
-// TODO: configurable
+
 const {
   DEFAULT_SPELLCHECKING_DICT_SUPPORT,
   DEFAULT_WRITE_GOOD_SETTINGS,
@@ -38,6 +39,7 @@ const {
 
 function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig) {
   const mappedTranslations = {}
+  const allowedTags = ["br", "a", "strong", "em", "span", "i"] // TODO: do configurable by admin
   _.forEach(val, (_val, _key) => {
     let trimmed
 
@@ -55,7 +57,8 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
       _placeholders: trimmed.match(RegExp(placeholderRegex, "g")) || [],
       _firstCharType: determineCharType(sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] })[0]),
       _lastCharType: determineCharType(sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] })[interpolated.length - 1]),
-      _tags: validateHtml(_val),
+      _tags: getHTMLtags(_val),
+      _disallowedTags: getHTMLtags(_val).filter(tag => !allowedTags.includes(tag.match(/(?<=<|<\/)\w+/gm) && tag.match(/(?<=<|<\/)\w+/gm)[0])),
       _dynamic: detectDynamicValues(_val),
       _writeGood: writeGoodCheck(_val, _key, writeGoodSettings),
       _insensitiveness: _key.toString() === "en-GB" ?
@@ -74,8 +77,7 @@ function computeInconsistenciesOfKey(mappedTranslations, fbKey) {
   && mappedTranslations[fbKey]["en-GB"]
   && mappedTranslations[fbKey]["en-GB"]._lastCharType === "question mark" ? ["th-TH", "ja-JP"] : "th-TH"
 
-  val._inconsistencies_placeholders = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
-    && _.uniqWith(_.map(mappedTranslations[fbKey], x => x._placeholders.sort()), _.isEqual).length !== 1
+  val._inconsistencies_placeholders = hasMissingEntities(mappedTranslations[fbKey], "_placeholders")
   val._inconsistencies_firstCharType = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.uniq(_.map(mappedTranslations[fbKey], x => x._firstCharType))
       .filter(x => x !== "digit").length > 1
@@ -84,8 +86,8 @@ function computeInconsistenciesOfKey(mappedTranslations, fbKey) {
     && _.uniq(_.map(_.omit(mappedTranslations[fbKey], lastCharTypeExceptions), x => x._lastCharType))
       .filter(x => !["uncategorized", "digit"].includes(x)).length > 1
   // UNCATEGORIZED and DIGIT excluded due to syntax differences between languages
-  val._inconsistencies_tags = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
-    && _.includes(_.map(mappedTranslations[fbKey], x => x._tags), "NOT_ALLOWED")
+  val._inconsistencies_tags = mappedTranslations[fbKey]
+    && (Object.values(mappedTranslations[fbKey]).some(o => o._disallowedTags.length > 0) || hasMissingEntities(mappedTranslations[fbKey], "_tags"))
   val._inconsistencies_length = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && hasInconsistentLength(mappedTranslations[fbKey], mappedTranslations[fbKey]["en-GB"] ? mappedTranslations[fbKey]["en-GB"].content.length : 0)
   val._inconsistencies_typos = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
