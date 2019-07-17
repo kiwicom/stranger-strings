@@ -122,18 +122,6 @@ function determineCharType(char) {
   }
 }
 
-function validateHtml(html) {
-  const htmlSanitizedEverythingAllowed = sanitizeHtml(html, {
-    allowedTags: false, // allow all tags
-    allowedAttributes: false, // allow all attributes
-  })
-  const htmlSanitizedWhitelistedAllowed = sanitizeHtml(html, {
-    allowedTags: ["br", "a", "strong", "em", "span", "i"], // found and blacklisted: ul, li, ol, div, b, p
-    allowedAttributes: false, // allow all attributes
-  })
-  return htmlSanitizedEverythingAllowed === htmlSanitizedWhitelistedAllowed ? "" : "NOT_ALLOWED"
-}
-
 function loadDicts(dictsExpansion, activatedDicts) {
   // eslint-disable-next-line global-require
   const custom = dictsExpansion || {}
@@ -258,13 +246,22 @@ function updateDictsExpansion(dictsExpansion, dicts) {
   }, {})
 }
 
+function getHTMLtags(str) {
+  return str.match(/<[^>]+>/gm) || []
+}
+
+function hasMissingEntities(translations, entity) {
+  return translations && _.uniqWith(_.map(translations, x => x[entity].sort()), _.isEqual).length !== 1
+}
+
 module.exports = {
   determineCharType,
-  validateHtml,
   grammarNazi,
   detectDynamicValues,
   hasInconsistentLength,
   getLangsWithDiffFirstCharCasing,
   writeGoodCheck,
   updateDictsExpansion,
+  getHTMLtags,
+  hasMissingEntities,
 }

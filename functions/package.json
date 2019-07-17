@@ -57,7 +57,7 @@
     "moment": "^2.22.2",
     "node-fetch": "^2.2.0",
     "nspell": "^2.1.0",
-    "sanitize-html": "^1.18.5",
+    "sanitize-html": "^1.20.1",
     "schreib-gut": "^0.0.1",
     "superagent": "^5.1.0",
     "write-good": "^0.13.1",
