@@ -259,7 +259,7 @@ export default {
           regex = new RegExp(`${_.escapeRegExp(highlight)}(?=[^\\w]|$)`, "g")
           break
         default:
-          regex = new RegExp(highlight, "gm")
+          regex = new RegExp(_.escapeRegExp(highlight), "gm")
           break
         }
 
@@ -325,8 +325,11 @@ export default {
 </script>
 
 <style scoped>
+  .active-token {
+    border-bottom: rgba(0, 0, 0, 0) solid 1px;
+  }
   .active-token:hover {
-    font-weight: bolder;
+    border-bottom: solid 1px;
   }
   .error-highlight {
     background-color: rgba(255, 0, 0, 0.24);
