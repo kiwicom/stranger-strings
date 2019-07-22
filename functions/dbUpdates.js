@@ -26,7 +26,7 @@ const {
   getLangsWithDiffFirstCharCasing,
   writeGoodCheck,
   updateDictsExpansion,
-  hasMissingEntities
+  hasMissingEntities,
 } = require("./utils")
 
 const {

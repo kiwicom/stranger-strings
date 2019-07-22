@@ -15,6 +15,8 @@
           token.type && /^_entity_/g.test(token.type) ? token.type : getCheckData(token.type).level + '-highlight',
           token.first ? 'first-char-' + getCheckData('_inconsistencies_firstCharType').level : '',
           token.last ? 'last-char-' + getCheckData('_inconsistencies_lastCharType').level : '',
+          token.type && 'active-token',
+          token.type === '_inconsistencies_tags' && '_entity_tags',
           ]"
         :last-char="token.content.slice(-1)"
         :first-char="token.content.slice(0,1)"
@@ -47,6 +49,12 @@
               class="popover-content"
             >
               {{ getInsensitivenessReason(token.content) }}
+            </div>
+            <div
+              v-if="token.type === '_inconsistencies_tags'"
+              class="popover-content"
+            >
+              Disallowed HTML tag
             </div>
             <div
               v-if="token.type === '_inconsistencies_typos'"
@@ -109,7 +117,7 @@ export default {
     locale: { type: String },
     placeholders: { type: Array },
     tags: { type: Array },
-    restrictedTags: { type: Array },
+    disallowedTags: { type: Array },
     dynamics: { type: Array },
     typos: { type: Array },
     firstCharType: { type: Array }, // [actual, expected]
@@ -174,6 +182,12 @@ export default {
       }
       if (this.insensitiveness) {
         parsedContent = this.parseTokens(parsedContent, this.insensitivenessHighLights, "_inconsistencies_insensitiveness")
+      }
+      if (this.disallowedTags) {
+        parsedContent = this.parseTokens(parsedContent, this.disallowedTags, "_inconsistencies_tags")
+      }
+      if (this.tags) {
+        parsedContent = this.parseTokens(parsedContent, this.tags, "_entity_tags")
       }
       if (this.placeholders) {
         parsedContent = this.parseTokens(parsedContent, this.placeholders, "_entity_placeholders")
@@ -248,13 +262,19 @@ export default {
           regex = new RegExp(highlight, "gm")
           break
         }
-        parsedContent.filter(token => regex.test(token.content) && !token.type)
+
+        const nesting = []
+        if (type === "_entity_placeholders") { // allow nesting placeholders inside tags
+          nesting.push("_entity_tags")
+        }
+
+        parsedContent.filter(token => regex.test(token.content) && (!token.type || nesting.includes(token.type)))
           .forEach((token) => {
             parsedContent.push({
               order: `${token.order}a`,
               typelessOrder: null,
               content: token.content.slice(0, token.content.search(regex)),
-              type: null,
+              type: token.type,
               first: false,
               last: false,
             })
@@ -270,7 +290,7 @@ export default {
               order: `${token.order}c`,
               typelessOrder: null,
               content: token.content.slice(token.content.search(regex) + highlight.length),
-              type: null,
+              type: token.type,
               first: false,
               last: false,
             })
@@ -294,7 +314,7 @@ export default {
       switch (type) {
       case "_entity_placeholders":
         return "Placeholder"
-      case "_entity_tag":
+      case "_entity_tags":
         return "HTML tag"
       default:
         return ""
@@ -305,6 +325,9 @@ export default {
 </script>
 
 <style scoped>
+  .active-token:hover {
+    font-weight: bolder;
+  }
   .error-highlight {
     background-color: rgba(255, 0, 0, 0.24);
   }
@@ -316,6 +339,9 @@ export default {
   }
   ._entity_placeholders {
     color: #26539B;
+  }
+  ._entity_tags {
+    color: #107f9b;
   }
   .first-char-error::before {
     color: red;

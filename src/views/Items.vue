@@ -121,8 +121,8 @@
           <td class="translationProgress">
             <TranslationProgress
               :get-maximum-translations="getLocalesCount"
-              :important-loc="getImportantLocales.filter(l => !val.translated.includes(l))"
-              :translated="val.translated"
+              :important-loc="getImportantLocales.filter(l => !(val.translated || []).includes(l))"
+              :translated="val.translated || []"
             />
           </td>
 

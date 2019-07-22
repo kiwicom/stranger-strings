@@ -49,6 +49,8 @@
               :typos="activeTranslations[locale]._typos !== 'unsupported language' && isActive('_inconsistencies_writeGood') ?
                       activeTranslations[locale]._typos : null"
               :placeholders="activeTranslations[locale]._placeholders"
+              :tags="activeTranslations[locale]._tags"
+              :disallowedTags="isActive('_inconsistencies_tags') && activeTranslations[locale]._disallowedTags"
               :dynamics="isActive('_inconsistencies_dynamic') && activeTranslations[locale]._dynamic"
               :insensitiveness="isActive('_inconsistencies_insensitiveness') && activeTranslations[locale]._insensitiveness"
               :firstCharType="isActive('_inconsistencies_firstCharType')
@@ -56,8 +58,6 @@
               :lastCharType="isActive('_inconsistencies_lastCharType')
                 && [activeTranslations[locale]._lastCharType, getExpectedLastCharType(activeTranslations)]"
             />
-            <!--<div v-if="!showTagsChecked" style="display: inline-block;" v-html="highlightContent(activeTranslations[locale])"></div>-->
-            <!--<div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>-->
           </td>
           <td class="errors-col">
             <div
