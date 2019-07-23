@@ -57,6 +57,12 @@
               Disallowed HTML tag
             </div>
             <div
+              v-if="token.type === '_inconsistencies_dynamic'"
+              class="popover-content"
+            >
+              Value <strong>{{ token.content }}</strong> might change overtime. Consider using placeholder.
+            </div>
+            <div
               v-if="token.type === '_inconsistencies_typos'"
               class="popover-content"
             >
@@ -159,9 +165,6 @@ export default {
     getInsensitivenessReason(word) {
       return this.insensitiveness.find(ins => new RegExp(word, "m").test(word))
     },
-    removeDuplicates(array) {
-      return [...new Set(array)]
-    },
     escape(content) {
       return _.escape(content)
     },
@@ -191,6 +194,9 @@ export default {
       }
       if (this.placeholders) {
         parsedContent = this.parseTokens(parsedContent, this.placeholders, "_entity_placeholders")
+      }
+      if (this.dynamics) {
+        parsedContent = this.parseTokens(parsedContent, this.dynamics.sort((a, b) => b.length - a.length), "_inconsistencies_dynamic")
       }
       parsedContent.filter(t => !t.type && t.content.split(" ").length > 1).forEach((token) => {
         // chop remaining typeless tokens to smaller blocks to avoid messing UI

@@ -28,8 +28,8 @@
       <table v-if="item" class="table table-sm b-table table-striped key-detail-table">
         <thead>
         <th colspan="2" class="key-detail-header">Locale</th>
+        <th class="key-detail-header"></th>
         <th class="key-detail-header">Translation</th>
-        <th class="key-detail-header">Errors</th>
         <th class="key-detail-header"></th>
         </thead>
 
@@ -40,6 +40,15 @@
           </td>
           <td class="locale-id">
             {{ locale }}
+          </td>
+          <td>
+            <CheckAlerts
+              :missingPlaceholders="getMissingEntities(locale, activeTranslations, '_placeholders')"
+              :missingTags="getMissingEntities(locale, activeTranslations, '_tags')
+                .filter(t => !activeTranslations[locale]._disallowedTags.includes(t))"
+              :lenght="hasInconsistentLength(locale, activeTranslations[locale])"
+              onlyActive
+            />
           </td>
           <td class="translation">
             <Highlighting
@@ -58,110 +67,6 @@
               :lastCharType="isActive('_inconsistencies_lastCharType')
                 && [activeTranslations[locale]._lastCharType, getExpectedLastCharType(activeTranslations)]"
             />
-          </td>
-          <td class="errors-col">
-            <div
-              v-if="activeTranslations[locale]._writeGood && isActive('_inconsistencies_writeGood')"
-              class="inline-warning"
-              v-b-popover.hover="getWriteGoodReasons(activeTranslations[locale]._writeGood)"
-              title="write good"
-            >
-              <component :is="getIcon('_inconsistencies_writeGood')" />
-            </div>
-            <div
-              v-if="activeTranslations[locale]._insensitiveness && isActive('_inconsistencies_insensitiveness')"
-              class="inline-warning"
-              v-b-popover.hover="activeTranslations[locale]._insensitiveness.join(',\n')"
-              title="insensitiveness"
-            >
-              <component :is="getIcon('_inconsistencies_insensitiveness')" />
-            </div>
-            <div
-              v-if="hasInconsistentLength(locale, activeTranslations) && isActive('_inconsistencies_length')"
-              class="inline-warning"
-              v-b-popover.hover="'suspiciously long translation'"
-              title="length"
-            >
-              <component :is="getIcon('_inconsistencies_length')" />
-            </div>
-            <div
-              v-if="getMissingPlaceholders(locale, activeTranslations).length && isActive('_inconsistencies_placeholders')"
-              class="inline-error"
-              v-b-popover.hover="getMissingPlaceholders(locale, activeTranslations).join('\n')"
-              title="Missing placeholders"
-            >
-              <component :is="getIcon('_inconsistencies_placeholders')" fill-color="#ef0000"/>
-            </div>
-            <div
-              :id="`typosIndicator_${locale}`"
-              v-if="activeTranslations[locale]._typos
-                && activeTranslations[locale]._typos !== 'unsupported language'
-                && isActive('_inconsistencies_typos')"
-              class="inline-error clickable"
-            >
-              <component :is="getIcon('_inconsistencies_typos')" fill-color="#ef0000"/>
-              <b-popover
-                :target="`typosIndicator_${locale}`"
-                title="Typos"
-                triggers="click blur"
-              >
-                <div v-for="typo in removeDuplicates(activeTranslations[locale]._typos)" :key="typo">
-                  <strong :class="dictsExpansionData[locale].includes(typo) ? 'strikethrough' : ''">{{ typo }}  </strong>
-                  <b-button
-                    @click="addWordToDict(typo, locale)"
-                    :disabled="dictsExpansionData[locale].includes(typo)"
-                    variant="outline-success"
-                    size="sm">
-                    add to {{ locale }} dictionary
-                  </b-button>
-                </div>
-                <div class="note">note: please take in mind that changes in dictionaries will be visible after next spellchecking (&lt;1 min)</div>
-              </b-popover>
-            </div>
-            <div
-              v-if="activeTranslations[locale]._dynamic && isActive('_inconsistencies_dynamic')"
-              class="inline-error-dynamic"
-              v-b-popover.hover="removeDuplicates(activeTranslations[locale]._dynamic).join('\n')"
-              title="Dynamic values"
-            >
-              <component :is="getIcon('_inconsistencies_dynamic')" fill-color="#800080" />
-            </div>
-            <div
-              :id="`firstIndicator_${locale}`"
-              v-if="isActive('_inconsistencies_firstCharType')
-                && activeTranslations[locale]._firstCharType !== getExpectedFirstCharType(activeTranslations)"
-              class="inline-warning"
-            >
-              <component :is="getIcon('_inconsistencies_firstCharType')" />
-              <b-popover
-                :target="`firstIndicator_${locale}`"
-                title="First character inconsistency"
-                triggers="hover"
-              >
-                First character is
-                <strong> {{ activeTranslations[locale]._firstCharType }} </strong>
-                but expected
-                <strong> {{  getExpectedFirstCharType(activeTranslations) }} </strong>
-              </b-popover>
-            </div>
-            <div
-              :id="`lastIndicator_${locale}`"
-              v-if="isActive('_inconsistencies_lastCharType')
-                && activeTranslations[locale]._lastCharType !== getExpectedLastCharType(activeTranslations)"
-              class="inline-warning"
-            >
-              <component :is="getIcon('_inconsistencies_lastCharType')" />
-              <b-popover
-                :target="`lastIndicator_${locale}`"
-                title="Last character inconsistency"
-                triggers="hover"
-              >
-                Last character is
-                <strong> {{ activeTranslations[locale]._lastCharType }} </strong>
-                but expected
-                <strong> {{  getExpectedLastCharType(activeTranslations) }} </strong>
-              </b-popover>
-            </div>
           </td>
           <td>
             <b-button
@@ -209,12 +114,11 @@ import NProgress from "nprogress"
 import _ from "lodash"
 import { mapGetters } from "vuex"
 import { FbDb } from "../modules/firebase"
-import * as helpers from "../services/helpers"
-import * as gcFunctions from "../modules/functionsApi"
 import maxExpansionRatio from "../../common/maxExpansionRatio"
 import Reporting from "./Reporting"
 import TranslationProgress from "../components/TranslationProgress"
 import Highlighting from "../components/Highlighting"
+import CheckAlerts from "../components/CheckAlerts"
 
 
 export default {
@@ -230,15 +134,13 @@ export default {
     CountryFlag,
     ReportIcon,
     Highlighting,
+    CheckAlerts,
   },
   data() {
     return {
       modalKeyDetail: false,
 
-      dictsExpansionData: {},
       activeTranslations: null,
-
-      showTagsChecked: false,
 
       // Reporting
       showReporting: false,
@@ -258,15 +160,10 @@ export default {
       "getLocalesCount",
       "getImportantLocales",
       "isImportant",
-      "getCheckData",
     ]),
   },
   created() {
     NProgress.start()
-    this.activeTranslations = {}
-    FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
-      this.dictsExpansionData = dictsData.val()
-    })
     FbDb.ref("reportingConf").once("value", (snapshot) => {
       if (snapshot.val()) {
         this.reportConfig = snapshot.val()
@@ -290,76 +187,6 @@ export default {
     closeReportModal() {
       this.showReporting = false
     },
-    getItemInconsistencies(key) {
-      return helpers.getItemInconsistencies(key)
-    },
-    getTranslationContent(translation) {
-      if (!translation) {
-        return null
-      }
-      const { content } = translation
-      return this.showTagsChecked ? content : this.stripHtml(content)
-    },
-    highlightContent(translation) {
-      let content = this.getTranslationContent(translation)
-      if (!content) {
-        return "» not translated «"
-      }
-      if (this.isActive("_inconsistencies_writeGood")) {
-        const highlightedParts = []
-        if (Array.isArray(translation._writeGood)) {
-          translation._writeGood.forEach((suggestion) => {
-            highlightedParts.push(suggestion.reason.match(/".+(?=")/m) && suggestion.reason.match(/".+(?=")/m)[0].slice(1))
-          })
-        }
-        highlightedParts.forEach((part) => {
-          content = content.replace(
-            new RegExp(`${part}(?=[^\\w]|$)`, "g"),
-            match => `<span class="inline-highlight-wg">${match}</span>`,
-          )
-        })
-      }
-      if (this.isActive("_inconsistencies_dynamic")) {
-        if (Array.isArray(translation._dynamic)) {
-          const dynamics = JSON.parse(JSON.stringify(translation._dynamic))
-          dynamics.sort((a, b) => b.length - a.length) // sort by string length to highlight all numbers
-          dynamics.forEach((dynamic) => {
-            content = content.replace(
-              new RegExp(dynamic, "gm"),
-              match => `<span class="inline-highlight-dynamic">${match}</span>`,
-            )
-          })
-        }
-      }
-      if (this.isActive("_inconsistencies_typos")) {
-        if (Array.isArray(translation._typos)) {
-          translation._typos.forEach((typo) => {
-            content = content.replace(
-              new RegExp(`${_.escapeRegExp(typo)}(?=[^\\w]|$)`, "g"),
-              match => `<span class="inline-highlight-typos">${match}</span>`,
-            )
-          })
-        }
-      }
-      return content
-    },
-    getWriteGoodReasons(writeGood) {
-      return this.removeDuplicates(writeGood.map(lint => lint.reason)).join(",\n")
-    },
-    removeDuplicates(array) {
-      return [...new Set(array)]
-    },
-    addWordToDict(word, locale) {
-      FbDb.ref(`dictsExpansion/${locale}`).once("value", (snapshot) => {
-        if (!snapshot.val().includes(word)) {
-          FbDb.ref(`dictsExpansion/${locale}/${snapshot.val().length}`).set(word)
-          gcFunctions.inconsistenciesUpdate()
-          FbDb.ref("dictsExpansion/").once("value", (updatedData) => {
-            this.dictsExpansionData = updatedData.val()
-          })
-        }
-      })
-    },
     getExpectedFirstCharType(activeTranslations) {
       const firstChars = Object.values(activeTranslations).map(t => t._firstCharType)
       return firstChars.sort((a, b) => firstChars.filter(v => v === a).length - firstChars.filter(v => v === b).length).pop()
@@ -368,7 +195,7 @@ export default {
       const lastChars = Object.values(activeTranslations).map(t => t._lastCharType)
       return lastChars.sort((a, b) => lastChars.filter(v => v === a).length - lastChars.filter(v => v === b).length).pop()
     },
-    getMissingPlaceholders(lang, translations) {
+    getMissingEntities(lang, translations, type) {
       /*
       e.g. for placeholder
       en -> ph1, ph1, ph1, ph,2
@@ -377,25 +204,25 @@ export default {
 
       allPlaceholders -> ph1, ph1. ph1, ph2, ph3
        */
-      const allPlaceholders = _.reduce(translations, (acc, translation) => {
-        (translation._placeholders || []).forEach((placeholder) => {
-          const placeholderAppearance = translation._placeholders.filter(i => i === placeholder).length
-          if (acc.filter(i => i === placeholder).length < placeholderAppearance) {
+      const allEntities = _.reduce(translations, (acc, translation) => {
+        (translation[type] || []).forEach((entity) => {
+          const entityAppearance = translation[type].filter(e => e === entity).length
+          if (acc.filter(e => e === entity).length < entityAppearance) {
             // eslint-disable-next-line no-param-reassign
-            acc = _.without(acc, placeholder).concat(_.fill(Array(placeholderAppearance), placeholder))
+            acc = _.without(acc, entity).concat(_.fill(Array(entityAppearance), entity))
           }
         })
         return acc
       }, [])
 
-      return allPlaceholders.reduce((acc, placeholder) => {
-        const totalPlaceholderAppearance = allPlaceholders.filter(i => i === placeholder).length
-        const translationPlaceholderAppearance = (
-          translations[lang] && translations[lang]._placeholders
-          && translations[lang]._placeholders.filter(i => i === placeholder).length
+      return allEntities.reduce((acc, entity) => {
+        const totalEntityAppearance = allEntities.filter(e => e === entity).length
+        const translationEntityAppearance = (
+          translations[lang] && translations[lang][type]
+          && translations[lang][type].filter(e => e === entity).length
         ) || 0
-        return _.without(acc, placeholder).concat(_.fill(Array(totalPlaceholderAppearance - translationPlaceholderAppearance), placeholder))
-      }, allPlaceholders)
+        return _.without(acc, entity).concat(_.fill(Array(totalEntityAppearance - translationEntityAppearance), entity))
+      }, allEntities)
     },
     hasInconsistentLength(lang, translations) {
       if (translations[lang] && translations["en-GB"] && translations["en-GB"].content.length > 0) {
@@ -403,20 +230,6 @@ export default {
         return (translations[lang].content.length / baseLength) > maxExpansionRatio(baseLength)
       }
       return false
-    },
-    stripHtml(text) {
-      const tmpHTML = document.createElement("div")
-      tmpHTML.innerHTML = text
-      return tmpHTML.textContent || tmpHTML.innerText || ""
-    },
-    getPlaceholders(translation) {
-      if (!translation._placeholders) {
-        return null
-      }
-      return helpers.getPlaceholders(translation._placeholders)
-    },
-    getIcon(checkKey) {
-      return `${checkKey.replace(/.*_/g, "")}Icon`
     },
   },
 }
@@ -439,47 +252,6 @@ export default {
     vertical-align: middle;
     padding: 5px;
   }
-  .note {
-    font-size: 8px;
-    color: gray;
-  }
-  .clickable {
-    cursor: pointer;
-  }
-  .clickable:hover {
-    color: #f9fafc;
-    background-color: #D5011B;
-  }
-  .inline-warning {
-    color: orange;
-    font-size: 12px;
-    border-radius: 25px;
-    padding-left: 3px;
-    padding-right: 3px;
-    border: solid 1px orange;
-    display: inline-block;
-    margin-left: 5px;
-  }
-  .inline-error {
-    color: #ef0000;
-    font-size: 12px;
-    border-radius: 25px;
-    padding-left: 3px;
-    padding-right: 3px;
-    border: solid 1px #ef0000;
-    display: inline-block;
-    margin-left: 5px;
-  }
-  .inline-error-dynamic {
-    color: purple;
-    font-size: 12px;
-    border-radius: 25px;
-    padding-left: 3px;
-    padding-right: 3px;
-    border: solid 1px purple;
-    display: inline-block;
-    margin-left: 5px;
-  }
   .translationsForm {
     margin-bottom: 16px;
   }
@@ -494,9 +266,6 @@ export default {
   }
   .translation {
     max-width: 900px;
-    border: none !important;
-  }
-  .errors-col {
     border: none !important;
   }
   .flag-icon {
