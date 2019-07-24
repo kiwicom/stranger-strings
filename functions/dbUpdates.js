@@ -52,11 +52,12 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
     }
 
     const interpolated = trimmed.replace(RegExp(placeholderRegex, "g"), "XXX")
+    const sanitized = sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] }) || ""
     _.set(mappedTranslations, [fbKey, _key], {
       content: _val,
       _placeholders: trimmed.match(RegExp(placeholderRegex, "g")) || [],
-      _firstCharType: determineCharType(sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] })[0]),
-      _lastCharType: determineCharType(sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] })[interpolated.length - 1]),
+      _firstCharType: determineCharType(sanitized[0]),
+      _lastCharType: determineCharType(sanitized[sanitized.length - 1]),
       _tags: getHTMLtags(_val),
       _disallowedTags: getHTMLtags(_val).filter(tag => !allowedTags.includes(tag.match(/(?<=<|<\/)\w+/gm) && tag.match(/(?<=<|<\/)\w+/gm)[0])),
       _dynamic: detectDynamicValues(_val),

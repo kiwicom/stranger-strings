@@ -27,26 +27,26 @@
 
       <table v-if="item" class="table table-sm b-table table-striped key-detail-table">
         <thead>
-        <th colspan="2" class="key-detail-header">Locale</th>
-        <th class="key-detail-header"></th>
-        <th class="key-detail-header">Translation</th>
-        <th class="key-detail-header"></th>
+          <th colspan="2" class="key-detail-header">Locale</th>
+          <th class="key-detail-header"></th>
+          <th class="key-detail-header">Translation</th>
+          <th class="key-detail-header"></th>
         </thead>
 
         <tbody>
-        <tr :key="locale" v-for="locale in getLocales" v-if="activeTranslations[locale]">
+        <tr :key="locale" v-for="locale in getLocales" v-if="activeTranslations && activeTranslations[locale]">
           <td class="flag-id">
             <div class="flag-icon"><CountryFlag :country="locale.slice(3, 5).toLowerCase()" size="small"></CountryFlag></div>
           </td>
           <td class="locale-id">
             {{ locale }}
           </td>
-          <td>
+          <td class="alerts">
             <CheckAlerts
               :missingPlaceholders="getMissingEntities(locale, activeTranslations, '_placeholders')"
               :missingTags="getMissingEntities(locale, activeTranslations, '_tags')
-                .filter(t => !activeTranslations[locale]._disallowedTags.includes(t))"
-              :lenght="hasInconsistentLength(locale, activeTranslations[locale])"
+                .filter(t => !(activeTranslations[locale]._disallowedTags || []).includes(t))"
+              :length="hasInconsistentLength(locale, activeTranslations)"
               onlyActive
             />
           </td>
@@ -68,7 +68,7 @@
                 && [activeTranslations[locale]._lastCharType, getExpectedLastCharType(activeTranslations)]"
             />
           </td>
-          <td>
+          <td class="actions">
             <b-button
               v-b-tooltip.hover
               :disabled="!reportConfig.active"
@@ -85,10 +85,10 @@
           <td class="flag-id">
             <div class="flag-icon transparent"><CountryFlag :country="locale.slice(3, 5).toLowerCase()" size="small"></CountryFlag></div>
           </td>
-          <td :class="isImportant(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'" scope="row">
+          <td colspan="2" :class="isImportant(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'" scope="row">
             {{ locale }}
           </td>
-          <td colspan="3" :class="isImportant(locale) ?'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">
+          <td colspan="2" :class="isImportant(locale) ?'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">
             Not translated
           </td>
         </tr>
@@ -193,12 +193,13 @@ export default {
     },
     getExpectedLastCharType(activeTranslations) {
       const lastChars = Object.values(activeTranslations).map(t => t._lastCharType)
+      console.log(lastChars.sort((a, b) => lastChars.filter(v => v === a).length - lastChars.filter(v => v === b).length).pop())
       return lastChars.sort((a, b) => lastChars.filter(v => v === a).length - lastChars.filter(v => v === b).length).pop()
     },
     getMissingEntities(lang, translations, type) {
       /*
-      e.g. for placeholder
-      en -> ph1, ph1, ph1, ph,2
+      e.g. for placeholders
+      en -> ph1, ph1, ph1, ph2
       de -> ph1, ph1, ph2
       cz -> ph1, ph1, ph3
 
@@ -257,16 +258,22 @@ export default {
   }
   .locale-id {
     font-weight: bolder;
-    width: max-content;
+    width: 100px;
     border: none !important;
   }
   .flag-id {
     width: 30px;
     border: none !important;
   }
+  .alerts {
+    width: 85px;
+  }
   .translation {
     max-width: 900px;
     border: none !important;
+  }
+  .actions {
+    width: 50px;
   }
   .flag-icon {
     width: 30px;

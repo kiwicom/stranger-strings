@@ -26,18 +26,7 @@
       <template slot="popover">
         <div>
           <div v-if="token.type">
-            <div
-              :class="['popover-header' , getCheckData(token.type).level]"
-            >
-              <div class="check-icon">
-                <component
-                  :is="getIcon(token.type)"
-                />
-              </div>
-              <div class="check-title">
-                {{ getCheckData(token.type).title }} {{ getCheckData(token.type).level || getEntity(token.type) }}
-              </div>
-            </div>
+            <CheckPopoverHeader :check="token.type" />
             <div
               v-if="token.type === '_inconsistencies_writeGood'"
               class="popover-content"
@@ -81,20 +70,7 @@
           <div
             v-if="token.first || token.last"
           >
-            <div
-              :class="['popover-header' , getCheckData(token.first ? '_inconsistencies_firstCharType' : '_inconsistencies_lastCharType').level]"
-            >
-              <div class="check-icon">
-                <component
-                  :is="getIcon(token.first ? '_inconsistencies_firstCharType' : '_inconsistencies_lastCharType')"
-                />
-              </div>
-              <div class="check-title">
-                {{ token.first ? 'First' : 'Last' }}
-                character
-                {{ getCheckData(token.first ? '_inconsistencies_firstCharType' : '_inconsistencies_lastCharType').level }}
-              </div>
-            </div>
+            <CheckPopoverHeader :check="token.first ? '_inconsistencies_firstCharType' : '_inconsistencies_lastCharType'" />
             <div
               class="popover-content"
             >
@@ -115,9 +91,11 @@ import _ from "lodash"
 import { mapGetters } from "vuex"
 import { FbDb } from "../modules/firebase"
 import * as gcFunctions from "../modules/functionsApi"
+import CheckPopoverHeader from "./CheckPopoverHeader"
 
 export default {
   name: "Highlighting",
+  components: { CheckPopoverHeader },
   props: {
     content: { type: String },
     locale: { type: String },
@@ -305,9 +283,6 @@ export default {
       })
       return parsedContent
     },
-    getIcon(checkKey) {
-      return `${checkKey.replace(/.*_/g, "")}Icon`
-    },
     addWordToDict(word) {
       FbDb.ref(`dictsExpansion/${this.locale}`).once("value", (snapshot) => {
         if (!snapshot.val().includes(word)) {
@@ -399,21 +374,6 @@ export default {
     text-align: center;
     width: fit-content;
   }
-  .error {
-    background-color: rgba(239, 0, 0, 0.32);
-  }
-  .warning {
-    background-color: rgba(255, 180, 9, 0.62);
-  }
-  .suggestion {
-    background-color: rgba(0, 123, 255, 0.16);
-  }
-  .popover-header {
-    padding-top: 0px;
-    padding-left: 0px;
-    border-right: 5px;
-    height: 40px;
-  }
   .popover-content {
     display: inline-block;
     width: 300px;
@@ -421,25 +381,6 @@ export default {
     text-align: center;
     font-size: 15px;
     z-index: 5;
-  }
-  .check-icon {
-    margin-right: 15px;
-    display: inline-block;
-    border-radius: 5px 0px 0px;
-    width: 40px;
-    height: 40px;
-    background-color: #2E5496;
-    text-align: center;
-  }
-  .check-icon .material-design-icon {
-    color: white;
-    font-size: 30px;
-  }
-  .check-title {
-    display: inline-block;
-    font-size: larger;
-    vertical-align: text-bottom;
-    color: #1f3a68;
   }
   .note {
     font-size: 9px;
