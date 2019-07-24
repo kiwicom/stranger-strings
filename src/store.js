@@ -37,7 +37,7 @@ export default new Vuex.Store({
         exampleImage: null,
       },
       _inconsistencies_tags: {
-        title: "HTML",
+        title: "HTML tags",
         description: "Detect invalid HTML and prohibited HTML tags",
         level: "error",
         active: true,
