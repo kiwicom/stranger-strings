@@ -193,7 +193,6 @@ export default {
     },
     getExpectedLastCharType(activeTranslations) {
       const lastChars = Object.values(activeTranslations).map(t => t._lastCharType)
-      console.log(lastChars.sort((a, b) => lastChars.filter(v => v === a).length - lastChars.filter(v => v === b).length).pop())
       return lastChars.sort((a, b) => lastChars.filter(v => v === a).length - lastChars.filter(v => v === b).length).pop()
     },
     getMissingEntities(lang, translations, type) {

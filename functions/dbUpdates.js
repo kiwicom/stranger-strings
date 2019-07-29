@@ -60,7 +60,7 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
       _lastCharType: determineCharType(sanitized[sanitized.length - 1]),
       _tags: getHTMLtags(_val),
       _disallowedTags: getHTMLtags(_val).filter(tag => !allowedTags.includes(tag.match(/(?<=<|<\/)\w+/gm) && tag.match(/(?<=<|<\/)\w+/gm)[0])),
-      _dynamic: detectDynamicValues(_val),
+      _dynamic: detectDynamicValues(sanitized),
       _writeGood: writeGoodCheck(_val, _key, writeGoodSettings),
       _insensitiveness: _key.toString() === "en-GB" ?
         alex.text(sanitizeHtml(_val, { allowedTags: [], allowedAttributes: [] }), insensitivenessConfig).messages.map(out => out.message) : {},
