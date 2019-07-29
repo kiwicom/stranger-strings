@@ -243,7 +243,7 @@ export default {
           regex = new RegExp(`${_.escapeRegExp(highlight)}(?=[^\\w]|$)`, "g")
           break
         default:
-          regex = new RegExp(_.escapeRegExp(highlight), "gm")
+          regex = new RegExp(_.escapeRegExp(highlight), "m")
           break
         }
 
