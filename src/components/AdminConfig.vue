@@ -18,19 +18,11 @@
             :key="option"
             :checked="value"
             @change="toggleWriteGoodSetting(lang, option)"
+            switch
             style="display: block"
           >
             <strong>{{ option }}</strong> ({{ optionsDescription[option] }})
           </b-form-checkbox>
-        </div>
-        <div class="regexInput">
-          <label for="regFormIn">Regex:</label>
-          <b-form-input
-            if="regFormIn"
-            v-model="placeholderRegex"
-            type="text"
-            :placeholder="'e.g. ({{\\w+}})'"
-          ></b-form-input>
         </div>
       </div>
       <div v-else>Loading...</div>
@@ -39,6 +31,15 @@
     <div class="config">
       <h4>Placeholder</h4>
       <div v-if="placeholderLoaded">
+        <div class="regex-input">
+          <label for="regFormIn">Regex:</label>
+          <b-form-input
+            if="regFormIn"
+            v-model="placeholderRegex"
+            type="text"
+            :placeholder="'e.g. ({{\\w+}})'"
+          ></b-form-input>
+        </div>
         <div class="regexPreview">
           <div class="previewText">
             <label>Preview:</label>
@@ -69,7 +70,7 @@
       <div v-else>Loading...</div>
     </div>
 
-    <div class="config">
+    <div class="config last">
       <h4>Reporting</h4>
       <div v-if="reportingLoaded">
         <div class="mx-auto" style="width: fit-content">
@@ -118,7 +119,7 @@ import * as gcFunctions from "../modules/functionsApi"
 import ADMIN from "../consts/admin"
 
 export default {
-  name: "AdminSettings",
+  name: "AdminConfig",
   props: {
     email: { type: String, required: true },
     notifyUser: { type: Function, required: true },
@@ -206,6 +207,17 @@ export default {
       }
       return "unlikely to be profanity"
     },
+    matchedPlaceholders() {
+      if (this.placeholderRegex === "" || this.placeholderRegex === null) {
+        return []
+      }
+      const text = this.regexPreviewText
+      const matches = text.match(RegExp(this.placeholderRegex, "g"))
+      if (Array.isArray(matches) && matches.length > 10) {
+        return ["...too much matches..."]
+      }
+      return matches || []
+    },
   },
   methods: {
     updateAdminConfig() {
@@ -242,16 +254,6 @@ export default {
     getReportingOptions() {
       return reporting.options
     },
-    matchedPlaceholders() {
-      if (this.placeholderRegex === "" || this.placeholderRegex === null) {
-        return []
-      }
-      const matches = this.regexPreviewText.match(RegExp(this.placeholderRegex, "g"))
-      if (Array.isArray(matches) && matches.length > 10) {
-        return ["...too much matches..."]
-      }
-      return matches || []
-    },
   },
 }
 </script>
@@ -260,9 +262,13 @@ export default {
   .setDefault {
     display: inline-block;
   }
+  .regex-input label {
+    padding-top: 5px;
+    font-weight: bolder;
+  }
   .regexPreview label {
-    font-size: larger;
-    padding-left: 5px;
+    padding-top: 20px;
+    font-weight: bolder;
   }
   .previewText {
     display: inline-block;
@@ -278,12 +284,18 @@ export default {
     margin-top: 10px;
   }
   .config {
-    margin-bottom: 40px;
+    margin-bottom: 30px;
     width: 100%;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #bcbcbc;
+  }
+  .last {
+    border-bottom: none;
   }
   h4 {
     vertical-align: bottom;
     width: fit-content;
     display: inline-block;
+    font-size: 30px;
   }
 </style>
