@@ -47,6 +47,10 @@
     "insensitivenessConfig": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+    "tags": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }

@@ -7,6 +7,7 @@
     @ok="updateAdminConfig"
     @hide="$emit('close')"
   >
+    <div v-if="!isAdmin" class="not-admin">You don't have permission to modify this configuration.</div>
     <div class="config">
       <h4>Write Good</h4>
       <div class="setDefault" v-if="writeGoodLoaded"><b-button variant="link" @click="setDefaultWriteGoodConfig">Set default config</b-button></div>
@@ -63,11 +64,24 @@
     <div class="config">
       <h4>Insensitiveness</h4>
       <div v-if="insensitivenessLoaded">
-        <label for="range-1">Profanity sureness level: {{ insensitivenessConfig.profanitySureness }}</label>
+        <label for="range-1">Profanity sureness level:</label> {{ insensitivenessConfig.profanitySureness }}
         <b-form-input number id="range-1" v-model="insensitivenessConfig.profanitySureness" type="range" min="0" max="2"></b-form-input>
         <div class="mt-2">Detecting words that are <strong>{{ getProfanitySureness }}</strong></div>
       </div>
       <div v-else>Loading...</div>
+    </div>
+
+    <div class="config">
+      <h4>HTML tags</h4>
+      <FirebaseListManager
+        db-path="tags"
+        :allow-changes="isAdmin"
+        item-name="tag"
+        list-name="allowed tags"
+        item-prefix="<"
+        item-suffix=">"
+        placeholder-item="a"
+      />
     </div>
 
     <div class="config last">
@@ -117,12 +131,16 @@ import * as reporting from "../services/reporting"
 import * as defaults from "../../common/config"
 import * as gcFunctions from "../modules/functionsApi"
 import ADMIN from "../consts/admin"
+import FirebaseListManager from "./FirebaseListManager"
 
 export default {
   name: "AdminConfig",
   props: {
     email: { type: String, required: true },
     notifyUser: { type: Function, required: true },
+  },
+  components: {
+    FirebaseListManager,
   },
   data() {
     return {
@@ -218,12 +236,13 @@ export default {
       }
       return matches || []
     },
+    isAdmin() {
+      return ADMIN.includes(this.email)
+    },
   },
   methods: {
     updateAdminConfig() {
-      console.log(ADMIN)
-      console.log(this.email)
-      if (ADMIN.includes(this.email)) {
+      if (this.isAdmin) {
         if (this.writeGoodLoaded) {
           FbDb.ref("writeGood").update(this.writeGoodConfig)
         }
@@ -262,12 +281,8 @@ export default {
   .setDefault {
     display: inline-block;
   }
-  .regex-input label {
-    padding-top: 5px;
-    font-weight: bolder;
-  }
   .regexPreview label {
-    padding-top: 20px;
+    padding-top: 15px;
     font-weight: bolder;
   }
   .previewText {
@@ -297,5 +312,14 @@ export default {
     width: fit-content;
     display: inline-block;
     font-size: 30px;
+  }
+  label {
+    padding-top: 5px;
+    font-weight: bolder;
+  }
+  .not-admin {
+    text-align: center;
+    margin: 10px;
+    color: rgba(255, 0, 0, 0.85);
   }
 </style>
