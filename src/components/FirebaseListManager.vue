@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper">
+  <div class="wrapper" v-if="items">
     <div class="adding">
       <b-input-group>
         <b-input-group-prepend>
@@ -125,7 +125,4 @@ export default {
   font-weight: bolder;
   font-size: 1rem;
 }
-  .list-name:first-letter {
-    text-transform: capitalize;
-  }
 </style>

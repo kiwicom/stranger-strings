@@ -286,7 +286,7 @@ export default {
     addWordToDict(word) {
       FbDb.ref(`dictsExpansion/${this.locale}`).once("value", (snapshot) => {
         if (!snapshot.val().includes(word)) {
-          FbDb.ref(`dictsExpansion/${this.locale}/${snapshot.val().length}`).set(word)
+          FbDb.ref(`dictsExpansion/${this.locale}`).push(word)
           gcFunctions.inconsistenciesUpdate()
         }
       })
