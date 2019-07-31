@@ -1,42 +1,11 @@
 // eslint-disable-next-line import/first
 import {
-  getAvailableTags,
   sortTranslationKeys,
   strictSearch,
   getPlaceholders,
 } from "./helpers"
 
 describe("helpers", () => {
-  test("getAvailableTags", () => {
-    const translations = {
-      "common-cancel": {
-        count: 33,
-        created_at: "2017-10-02T14:12:04Z",
-        "en-GB": "cancel",
-        key: "common.cancel",
-        tags: ["tag1", "tag2"],
-        updated_at: "2017-10-02T14:12:04Z",
-        _inconsistencies_firstCharType: false,
-        _inconsistencies_lastCharType: true,
-        _inconsistencies_placeholders: false,
-        _inconsistencies_tags: false,
-      },
-      "common-ok": {
-        count: 33,
-        created_at: "2017-10-02T14:12:04Z",
-        "en-GB": "Ok",
-        key: "common.ok",
-        tags: ["tag2", "tag3"],
-        updated_at: "2017-10-02T14:12:04Z",
-        _inconsistencies_firstCharType: false,
-        _inconsistencies_lastCharType: true,
-        _inconsistencies_placeholders: false,
-        _inconsistencies_tags: false,
-      },
-    }
-    expect(getAvailableTags(translations)).toEqual(["tag1", "tag2", "tag3"])
-  })
-
   test("sortTranslationKeys", () => {
     const translations = {
       "zeta-zeta": {

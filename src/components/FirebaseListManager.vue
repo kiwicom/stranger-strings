@@ -98,7 +98,7 @@ export default {
     },
     getItemName() {
       return this.itemName || "item"
-    }
+    },
   },
   methods: {
     addItemToList(item) {

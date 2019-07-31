@@ -51,7 +51,12 @@ export default {
   created() {
     FbDb.ref("dictsExpansion/").once("value", (snapshot) => {
       if (snapshot.val()) {
-        this.dicts = Object.keys(snapshot.val()).sort((a, b) => (a === "global" ? -1 : b === "global" ? 1 : 0))
+        this.dicts = Object.keys(snapshot.val()).sort((a, b) => {
+          if (a === "global") {
+            return -1
+          }
+          return b === "global" ? 1 : 0
+        })
       }
       this.loaded = true
     })
