@@ -28,11 +28,10 @@
           <b-dropdown-item-button
             @click="showAdminConfig = true"
           >
-            <!-- TODO: icon  -->
-            admin config
+            <AdminIcon/>&nbsp; admin config
           </b-dropdown-item-button>
           <b-dropdown-item-button
-            @click="showDictsExpansion"
+            @click="showDictExpansion = true"
           >
             <octicon name="repo"></octicon>&nbsp; spellcheck dict
           </b-dropdown-item-button>
@@ -145,30 +144,12 @@
       </tbody>
     </table>
 
-    <!-- DICT EXPANSION MODIFIER -->
-    <b-modal
-      id="dictsExpansionModal"
-      v-model="modalDictsExpansion"
-      :title="'Custom spellchecking dictionary expansion'"
-      size="lg"
-      ok-title="Save"
-      @ok="updateDictsExpansion"
-      lazy
-      no-fade
-    >
-      <div v-for="(dict, lang) in dictsExpansionData" :key="lang">
-        <h5 class="mb-1" style="padding: 5px">{{ lang }}</h5>
-        <textarea
-          style="font-size: 12px; line-height: 14px;"
-          v-model.lazy="dictsExpansionData[lang]"
-          :rows=" typeof dictsExpansionData[lang] === 'string' ? dictsExpansionData[lang].split(/\r\n|\r|\n/).length : 1"
-          class="form-control"
-        >
-        </textarea>
-      </div>
-    </b-modal>
+    <DictionaryExpansion
+      :show="showDictExpansion"
+      @close="showDictExpansion = false"
+      :notifyUser="notifyUser"
+    />
 
-    <!-- MODAL: USER CONFIG -->
     <UserConfig
       :show="showUserConfig"
       @close="showUserConfig = false"
@@ -176,7 +157,7 @@
     />
 
     <AdminConfig
-      v-if="showAdminConfig"
+      :show="showAdminConfig"
       :email="user.email"
       :notifyUser="notifyUser"
       @close="showAdminConfig = false"
@@ -195,6 +176,7 @@
 <script type="text/javascript">
 import NProgress from "nprogress"
 import "vue-octicon/icons"
+import AdminIcon from "vue-material-design-icons/CloudBraces"
 import _ from "lodash"
 import Fuse from "fuse.js"
 import { mapMutations, mapGetters, mapState } from "vuex"
@@ -209,17 +191,20 @@ import KeyDetail from "../components/KeyDetail"
 import TranslationProgress from "../components/TranslationProgress"
 import UserConfig from "../components/UserConfig"
 import AdminConfig from "../components/AdminConfig"
+import DictionaryExpansion from "../components/DictionaryExpansion"
 
 export default {
   props: {
     user: { type: Object, required: true },
   },
   components: {
+    DictionaryExpansion,
     TranslationProgress,
     Check,
     KeyDetail,
     UserConfig,
     AdminConfig,
+    AdminIcon,
   },
   data() {
     return {
@@ -238,14 +223,10 @@ export default {
       activeKey: this.$route.params.all ? this.$route.params.all : null,
       activeTranslations: null,
 
-      // TODO: Check what could be refactored
-
       // Configs
       showUserConfig: false,
       showAdminConfig: false,
-
-      // Custom dict expansion
-      dictsExpansionData: {},
+      showDictExpansion: false,
 
       // Modals
       modalKeyDetail: !!this.$route.params.all,
@@ -285,9 +266,6 @@ export default {
       this.search()
     }
     this.errors = this.countErrors()
-    FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
-      this.dictsExpansionData = dictsData.val()
-    })
   },
   computed: {
     ...mapGetters([
@@ -330,24 +308,6 @@ export default {
       this.activeKey = key
       this.$router.push({ name: "items", params: { all: key } })
       NProgress.start()
-    },
-    showDictsExpansion() {
-      FbDb.ref("dictsExpansion").once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.dictsExpansionData = snapshot.val() // if this line is removed dicts expansion cannot be modified
-          _.forEach(snapshot.val(), (arr, key) => {
-            this.dictsExpansionData[key] = Array.isArray(arr) ? arr.join("\n") : arr
-          })
-        }
-        this.modalDictsExpansion = true
-      })
-    },
-    updateDictsExpansion() {
-      _.forEach(this.dictsExpansionData, (str, key) => {
-        this.dictsExpansionData[key] = str.split("\n")
-      })
-      FbDb.ref("dictsExpansion").update(this.dictsExpansionData)
-      gcFunctions.inconsistenciesUpdate()
     },
     triggerUpdate() {
       gcFunctions.update()

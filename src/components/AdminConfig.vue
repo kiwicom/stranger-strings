@@ -1,6 +1,6 @@
 <template>
   <b-modal
-    v-model="modalAdminConfig"
+    v-model="show"
     :title="'Admin Configuration'"
     size="lg"
     ok-title="Save"
@@ -136,6 +136,7 @@ import FirebaseListManager from "./FirebaseListManager"
 export default {
   name: "AdminConfig",
   props: {
+    show: { type: Boolean, required: true },
     email: { type: String, required: true },
     notifyUser: { type: Function, required: true },
   },
@@ -144,8 +145,6 @@ export default {
   },
   data() {
     return {
-      modalAdminConfig: false,
-
       // loading
       writeGoodLoaded: false,
       reportingLoaded: false,
@@ -212,7 +211,6 @@ export default {
       }
       this.placeholderLoaded = true
     })
-    this.modalAdminConfig = true
   },
   computed: {
     getProfanitySureness() {

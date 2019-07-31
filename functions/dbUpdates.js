@@ -34,12 +34,12 @@ const {
   DEFAULT_WRITE_GOOD_SETTINGS,
   DEFAULT_PLACEHOLDER_REGEX,
   DEFAULT_INSENSITIVENESS_CONFIG,
+  DEFAULT_ALLOWED_TAGS,
 } = require("../common/config")
 
 
-function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig) {
+function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig, allowedTags) {
   const mappedTranslations = {}
-  const allowedTags = ["br", "a", "strong", "em", "span", "i"] // TODO: do configurable by admin
   _.forEach(val, (_val, _key) => {
     let trimmed
 
@@ -175,13 +175,15 @@ async function originToFirebase() {
       || DEFAULT_PLACEHOLDER_REGEX
     const insensitivenessConfig = (await database.ref("/insensitivenessConfig").once("value")).val()
       || DEFAULT_INSENSITIVENESS_CONFIG
+    let allowedTags = (await database.ref("/tags").once("value")).val()
+    allowedTags = allowedTags ? Object.values(allowedTags) : DEFAULT_ALLOWED_TAGS
 
     _.forEach(translations, (val, key) => {
       const fbKey = key.includes(".") ? key.split(".").join("-") : key
 
       mappedTranslations = {
         ...mappedTranslations,
-        ...computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig),
+        ...computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig, allowedTags),
       }
     })
 
@@ -247,12 +249,14 @@ async function updateInconsistencies() {
       || DEFAULT_PLACEHOLDER_REGEX
     const insensitivenessConfig = (await database.ref("/insensitivenessConfig").once("value")).val()
       || DEFAULT_INSENSITIVENESS_CONFIG
+    let allowedTags = (await database.ref("/tags").once("value")).val()
+    allowedTags = allowedTags ? Object.values(allowedTags) : DEFAULT_ALLOWED_TAGS
 
     _.forEach(translations, (val, key) => {
       _.forEach(val, (x, locKey) => { val[locKey] = x.content }) // strip locale of everything except translation content
       translations = {
         ...translations,
-        ...computeInconsistenciesOfTranslations(val, key, writeGoodSettings, placeholderRegex, insensitivenessConfig),
+        ...computeInconsistenciesOfTranslations(val, key, writeGoodSettings, placeholderRegex, insensitivenessConfig, allowedTags),
       }
     })
 
