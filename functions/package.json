@@ -59,7 +59,7 @@
     "nspell": "^2.1.0",
     "sanitize-html": "^1.20.1",
     "schreib-gut": "^0.0.1",
-    "superagent": "^5.1.0",
+    "superagent": "^3.8.3",
     "write-good": "^0.13.1",
     "xregexp": "^4.2.0"
   },

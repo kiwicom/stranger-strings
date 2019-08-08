@@ -146,6 +146,19 @@ function prepareTranslationsForExport(translations) {
   }, {})
 }
 
+async function uploadDataToFirebase(path, data) { // split to chunks for big data uploads
+  let uploads = _.chunk(Object.keys(data), 100).map(chunk =>
+    chunk.reduce((acc, key) => {
+      acc[key] = data[key]
+      return acc
+    }, {}))
+  // if (path === "/items") {
+  //   uploads = uploads.slice(0, 30) // restrict number of keys to 3000
+  // }
+
+  return Promise.all(uploads.map(upload => database.ref(path).update(upload)))
+}
+
 async function originToFirebase() {
   if (!(await dbMutex.tryLock(`downloading recent translations from ${loaderType}`))) {
     console.log("Update already in progress, stopping!")
@@ -215,9 +228,9 @@ async function originToFirebase() {
     await database.ref("/collections").remove()
     await database.ref("/locales").remove()
     console.log("uploading new keys")
-    await database.ref("/items").set(finalItems)
-    await database.ref("/translations").set(finalTranslations)
-    await database.ref("/collections").set(collections)
+    await uploadDataToFirebase("/items", finalItems)
+    await uploadDataToFirebase("/translations", finalTranslations)
+    await uploadDataToFirebase("/collections", collections)
 
     await database.ref("/locales").set({
       list: [...new Set(_.reduce(translations, (acc, translation) => acc.concat(Object.keys(translation)), []))],
@@ -278,8 +291,8 @@ async function updateInconsistencies() {
     await database.ref("/items").remove()
     await database.ref("/translations").remove()
     console.log("uploading new keys")
-    await database.ref("/items").set(items)
-    await database.ref("/translations").set(translations)
+    await uploadDataToFirebase("/items", items)
+    await uploadDataToFirebase("/translations", translations)
 
     console.log("SUCCESS: updated all inconsistencies")
     // eslint-disable-next-line consistent-return
@@ -304,7 +317,7 @@ async function updateCollections() {
     console.log("removing old data")
     await database.ref("/collections").remove()
     console.log("uploading new collections")
-    await database.ref("/collections").set(collections)
+    await uploadDataToFirebase("/collections", collections)
 
     console.log("SUCCESS: updated all collections")
     // eslint-disable-next-line consistent-return

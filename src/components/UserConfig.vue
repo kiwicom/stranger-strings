@@ -25,14 +25,23 @@
     <div class="config-group">
       <h4>Locales</h4>
       <ResetDefaults :cb="setDefaultLocaleImportance"/>
-
-      <b-form-group v-for="(data, loc) in locales" :key="loc" style="margin-bottom: 5px;">
-        <b-form-radio-group v-model="data.important" style="display: flex">
-          <strong class="loc-label" style="margin-right: 10px; display: inline-block; min-width: 100px">{{ loc }}</strong>
-          <b-form-radio :value="true">Primary</b-form-radio>
-          <b-form-radio :value="false">Secondary</b-form-radio>
-        </b-form-radio-group>
-      </b-form-group>
+      <div class="description">
+        Select languages that are important for you (missing translations in important languages will be indicated by red color in progress bar).
+      </div>
+      <div
+        class="lang"
+        v-for="(data, loc) in locales"
+        :key="loc"
+      >
+        <div class="star" @click="setLocaleImportance({ locale: loc, important: !data.important })">
+          <StarIcon v-if="data.important" class="starred"/>
+          <StarOutlineIcon v-else class="unstarred"/>
+        </div>
+        <div class="flag-icon">
+          <CountryFlag :country="loc.slice(3, 5).toLowerCase()" size="normal"/>
+        </div>
+        <strong class="loc-label">{{ loc }}</strong>
+      </div>
       <div v-if="locales.length === 0">
         Loading…
       </div>
@@ -54,6 +63,9 @@
 <script>
 
 import { mapMutations, mapGetters, mapState } from "vuex"
+import StarIcon from "vue-material-design-icons/Star"
+import StarOutlineIcon from "vue-material-design-icons/StarOutline"
+import CountryFlag from "vue-country-flag"
 
 import Check from "./Check"
 import ResetDefaults from "./ResetDefaults"
@@ -68,6 +80,9 @@ export default {
   components: {
     ResetDefaults,
     Check,
+    StarIcon,
+    StarOutlineIcon,
+    CountryFlag,
   },
   computed: {
     ...mapGetters([
@@ -82,6 +97,7 @@ export default {
     ...mapMutations([
       "setDefaultCheckActiveness",
       "setDefaultLocaleImportance",
+      "setLocaleImportance",
       "setDefaultHardWrap",
       "toggleHardWrap",
     ]),
@@ -104,5 +120,41 @@ export default {
     vertical-align: bottom;
     width: fit-content;
     display: inline-block;
+  }
+
+  .description {
+    margin: 10px 0 30px 0;
+  }
+
+  .lang {
+    display: inline-block;
+    width: 200px;
+    margin: 0 30px 0 30px;
+  }
+  .lang strong {
+    padding: 10px;
+  }
+
+  .star {
+    display: inline-block;
+    text-align: center;
+    font-size: 20px;
+    width: 60px;
+  }
+
+  .flag-icon {
+    text-align: center;
+    font-size: 20px;
+    width: 40px;
+    vertical-align: middle;
+    display: inline-block;
+  }
+
+  .starred {
+    color: #d5d500;
+    font-size: 25px;
+  }
+  .unstarred {
+    color: rgba(32, 32, 0, 0.48);
   }
 </style>
