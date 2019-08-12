@@ -31,10 +31,32 @@
     <div class="body">
       <p>{{ getCheckData(checkKey).description }}</p>
       <div class="example">
-        <div class="line" v-for="(translation, loc) in examples" :key="loc">
-          <div class="loc">{{ loc }}</div>
-          <div class="flag-icon"></div>
-          <div class="translation">{{ translation.text }}</div>
+        <div class="line" v-for="(example, loc) in examples" :key="loc">
+          <div class="flag-icon" v-b-tooltip.hover :title="loc">
+            <CountryFlag :country="loc.slice(3, 5).toLowerCase()" size="small"/>
+          </div>
+          <div class="alerts-icons">
+            <CheckAlerts
+              :missingPlaceholders="checkKey === '_inconsistencies_placeholders' && example.missingPlaceholders"
+              :missingTags="checkKey === '_inconsistencies_tags' && example.missingTags"
+              :length="checkKey === '_inconsistencies_length' && example.length"
+            />
+          </div>
+          <div class="translation">
+            <Highlighting
+              :content="example.text"
+              :locale="loc"
+              :placeholders="checkKey === '_inconsistencies_placeholders' && example.placeholders"
+              :tags="checkKey === '_inconsistencies_tags' && example.tags"
+              :disallowedTags="checkKey === '_inconsistencies_tags' && example.disallowedTags"
+              :dynamics="checkKey === '_inconsistencies_dynamic' && example.dynamic"
+              :typos="checkKey === '_inconsistencies_typos' && example.typos"
+              :firstCharType="checkKey === '_inconsistencies_firstCharType' && example.firstCharType"
+              :lastCharType="checkKey === '_inconsistencies_lastCharType' && example.lastCharType"
+              :writeGood="checkKey === '_inconsistencies_writeGood' && example.writeGood"
+              :insensitiveness="checkKey === '_inconsistencies_insensitiveness' && example.insensitiveness"
+            />
+          </div>
         </div>
       </div>
       <div class="levels">
@@ -64,9 +86,13 @@
 
 <script>
 import { mapMutations, mapGetters } from "vuex"
+import CountryFlag from "vue-country-flag"
+import Highlighting from "./Highlighting"
+import CheckAlerts from "./CheckAlerts"
 
 export default {
   name: "Check",
+  components: { Highlighting, CountryFlag, CheckAlerts },
   inheritAttrs: false,
   props: {
     checkKey: { type: String, required: true },
@@ -80,11 +106,12 @@ export default {
           lastCharType: ["dot", "dot"],
           firstCharType: ["letter", "letter"],
           placeholders: ["__availableOfficers__"],
+          length: true,
           tags: ["<b>", "</b>"],
         },
         "en-GB": {
           text: "We are able to to secure yuor event with <b>__availableOfficers__</b> policemen.",
-          style: [{ index: 15, offset: 2, reason: "\"to\" is repeated" }],
+          writeGood: [{ index: 15, offset: 2, reason: "\"to\" is repeated" }],
           insensitiveness: ["`policemen` may be insensitive, use `officers`, `police officers` instead"],
           typos: ["yuor"],
           lastCharType: ["dot", "dot"],
@@ -96,13 +123,17 @@ export default {
           text: "- Nous sommes en mesure de sécuriser votre événement avec <u>4</u> policiers",
           lastCharType: ["letter", "dot"],
           firstCharType: ["dash", "letter"],
+          dynamic: ["4"],
           disallowedTags: ["<u>", "</u>"],
+          missingPlaceholders: ["__availableOfficers__"],
+          missingTags: ["<b>", "</b>"],
         },
         "zh-CN": {
           text: "我们能够通过__availableOfficers__名警察确保您的活动安全。",
           lastCharType: ["dot", "dot"],
           firstCharType: ["letter", "letter"],
           placeholders: ["__availableOfficers__"],
+          missingTags: ["<b>", "</b>"],
         },
       },
     }
@@ -194,7 +225,7 @@ export default {
   }
 
   .body .example {
-    padding: 10px;
+    padding: 0 0 0 8px;
     border: 1px solid lightgray;
     border-radius: 5px;
   }
@@ -220,5 +251,22 @@ export default {
   }
   .levels .custom-control {
     padding-left: 1.85rem
+  }
+  .line {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 50px;
+  }
+  .flag-icon {
+    padding: 0 5px 0 0;
+    height: 65.04px;
+  }
+  .alerts-icons {
+    width: 15px;
+    padding: 0 20px 0 0;
+  }
+  .translation {
+    font-size: 10px;
   }
 </style>

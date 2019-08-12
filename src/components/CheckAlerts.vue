@@ -1,7 +1,7 @@
 <template>
     <div class="container">
       <v-popover
-        v-for="(alerts, type) in { 'suggestion': suggestions, 'warning': warnings, 'error': errors }"
+        v-for="(alerts, type) in alertTypes"
         :key="type"
         v-if="alerts.length"
         trigger="hover"
@@ -55,43 +55,45 @@ export default {
     length: { type: Boolean },
     onlyActive: { type: Boolean },
   },
-  data() {
-    return {
-      errors: [],
-      warnings: [],
-      suggestions: [],
-    }
-  },
   computed: {
     ...mapGetters([
       "isActive",
       "getCheckData",
     ]),
-  },
-  created() {
-    const inconsistencies = []
-    if (this.missingPlaceholders && this.missingPlaceholders.length) {
-      inconsistencies.push("_inconsistencies_placeholders")
-    }
-    if (this.missingTags && this.missingTags.length) {
-      inconsistencies.push("_inconsistencies_tags")
-    }
-    if (this.length) {
-      inconsistencies.push("_inconsistencies_length")
-    }
-    inconsistencies.forEach((i) => {
-      if (!this.onlyActive || this.isActive(i)) {
-        if (this.getCheckData(i).level === "error") {
-          this.errors.push(i)
-        }
-        if (this.getCheckData(i).level === "warning") {
-          this.warnings.push(i)
-        }
-        if (this.getCheckData(i).level === "suggestion") {
-          this.suggestions.push(i)
-        }
+    inconsistencies() {
+      const inconsistencies = []
+      if (this.missingPlaceholders && this.missingPlaceholders.length) {
+        inconsistencies.push("_inconsistencies_placeholders")
       }
-    })
+      if (this.missingTags && this.missingTags.length) {
+        inconsistencies.push("_inconsistencies_tags")
+      }
+      if (this.length) {
+        inconsistencies.push("_inconsistencies_length")
+      }
+      return inconsistencies
+    },
+    alertTypes() {
+      const alerts = {
+        errors: [],
+        warnings: [],
+        suggestions: [],
+      }
+      this.inconsistencies.forEach((i) => {
+        if (!this.onlyActive || this.isActive(i)) {
+          if (this.getCheckData(i).level === "error") {
+            alerts.errors.push(i)
+          }
+          if (this.getCheckData(i).level === "warning") {
+            alerts.warnings.push(i)
+          }
+          if (this.getCheckData(i).level === "suggestion") {
+            alerts.suggestions.push(i)
+          }
+        }
+      })
+      return alerts
+    },
   },
   methods: {
     getIcon(checkKey) {
@@ -106,13 +108,13 @@ export default {
     width: fit-content;
     padding: 0px;
   }
-  .suggestion {
+  .suggestions {
     color: dodgerblue;
   }
-  .warning {
+  .warnings {
     color: orange;
   }
-  .error {
+  .errors {
     color: red;
   }
   .popover-content {
