@@ -8,7 +8,7 @@ import * as defaults from "../common/config"
 Vue.use(Vuex)
 
 const vuexPersist = new VuexPersist({
-  key: "Stranger-Strings",
+  key: `Stranger-Strings-${process.env.GITHUB_REPO || process.env.PHRASEAPP_PROJECT_ID}`,
   storage: localStorage,
 })
 

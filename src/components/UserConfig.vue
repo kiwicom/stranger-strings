@@ -15,8 +15,7 @@
       <b-row>
         <Check
           v-for="(checkKey) in Object.keys(checks)" :key="checkKey"
-          class="col-4"
-          style="margin-bottom: 10px"
+          class="col-4 check"
           :checkKey="checkKey"
         />
       </b-row>
@@ -133,6 +132,10 @@ export default {
   }
   .lang strong {
     padding: 10px;
+  }
+
+  .check {
+    margin: 20px 0 10px 0;
   }
 
   .star {

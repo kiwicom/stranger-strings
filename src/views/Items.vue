@@ -94,6 +94,8 @@
               <template slot="popover">
                 <Check
                   :checkKey="checkKey"
+                  :toggleCheckFilter="toggleCheckFilter"
+                  :activeFilter="checkFilter === checkKey"
                   class="p-3"
                 />
               </template>

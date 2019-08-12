@@ -17,6 +17,10 @@
           />
           <small v-if="isActive(checkKey)">Check enabled</small>
           <small v-else>Check disabled</small>
+          <div class="filter" @click="toggleCheckFilter(checkKey)" v-if="toggleCheckFilter && activeFilter !== null">
+            <ActiveFilterIcon v-if="activeFilter" class="active"/>
+            <DisabledFilterIcon v-else class="disabled"/>
+          </div>
 
           <!-- TODO -->
           <!--
@@ -37,24 +41,24 @@
           </div>
           <div class="alerts-icons">
             <CheckAlerts
-              :missingPlaceholders="checkKey === '_inconsistencies_placeholders' && example.missingPlaceholders"
-              :missingTags="checkKey === '_inconsistencies_tags' && example.missingTags"
-              :length="checkKey === '_inconsistencies_length' && example.length"
+              :missingPlaceholders="checkKey === '_inconsistencies_placeholders' ? example.missingPlaceholders : null"
+              :missingTags="checkKey === '_inconsistencies_tags' ? example.missingTags : null"
+              :length="checkKey === '_inconsistencies_length' ? example.length : null"
             />
           </div>
           <div class="translation">
             <Highlighting
               :content="example.text"
               :locale="loc"
-              :placeholders="checkKey === '_inconsistencies_placeholders' && example.placeholders"
-              :tags="checkKey === '_inconsistencies_tags' && example.tags"
-              :disallowedTags="checkKey === '_inconsistencies_tags' && example.disallowedTags"
-              :dynamics="checkKey === '_inconsistencies_dynamic' && example.dynamic"
-              :typos="checkKey === '_inconsistencies_typos' && example.typos"
-              :firstCharType="checkKey === '_inconsistencies_firstCharType' && example.firstCharType"
-              :lastCharType="checkKey === '_inconsistencies_lastCharType' && example.lastCharType"
-              :writeGood="checkKey === '_inconsistencies_writeGood' && example.writeGood"
-              :insensitiveness="checkKey === '_inconsistencies_insensitiveness' && example.insensitiveness"
+              :placeholders="checkKey === '_inconsistencies_placeholders' ? example.placeholders : null"
+              :tags="checkKey === '_inconsistencies_tags' ? example.tags : null"
+              :disallowedTags="checkKey === '_inconsistencies_tags' ? example.disallowedTags : null"
+              :dynamics="checkKey === '_inconsistencies_dynamic' ? example.dynamic : null"
+              :typos="checkKey === '_inconsistencies_typos' ? example.typos : null"
+              :firstCharType="checkKey === '_inconsistencies_firstCharType' ? example.firstCharType : null"
+              :lastCharType="checkKey === '_inconsistencies_lastCharType' ? example.lastCharType : null"
+              :writeGood="checkKey === '_inconsistencies_writeGood' ? example.writeGood : null"
+              :insensitiveness="checkKey === '_inconsistencies_insensitiveness' ? example.insensitiveness : null"
             />
           </div>
         </div>
@@ -86,29 +90,26 @@
 
 <script>
 import { mapMutations, mapGetters } from "vuex"
+import ActiveFilterIcon from "vue-material-design-icons/Filter"
+import DisabledFilterIcon from "vue-material-design-icons/FilterOutline"
 import CountryFlag from "vue-country-flag"
 import Highlighting from "./Highlighting"
 import CheckAlerts from "./CheckAlerts"
 
 export default {
   name: "Check",
-  components: { Highlighting, CountryFlag, CheckAlerts },
+  components: {
+    Highlighting, CountryFlag, CheckAlerts, ActiveFilterIcon, DisabledFilterIcon,
+  },
   inheritAttrs: false,
   props: {
     checkKey: { type: String, required: true },
+    toggleCheckFilter: { type: Function },
+    activeFilter: { type: Boolean },
   },
   data() {
     return {
       examples: {
-        "es-ES": {
-          text: "Podemos proporcionar <b>__availableOfficers__</b> oficiales para asegurar su evento. " +
-                "También cubriremos todos los daños causados por ladrones durante su evento.",
-          lastCharType: ["dot", "dot"],
-          firstCharType: ["letter", "letter"],
-          placeholders: ["__availableOfficers__"],
-          length: true,
-          tags: ["<b>", "</b>"],
-        },
         "en-GB": {
           text: "We are able to to secure yuor event with <b>__availableOfficers__</b> policemen.",
           writeGood: [{ index: 15, offset: 2, reason: "\"to\" is repeated" }],
@@ -117,6 +118,15 @@ export default {
           lastCharType: ["dot", "dot"],
           firstCharType: ["letter", "letter"],
           placeholders: ["__availableOfficers__"],
+          tags: ["<b>", "</b>"],
+        },
+        "es-ES": {
+          text: "Podemos proporcionar <b>__availableOfficers__</b> oficiales para asegurar su evento. " +
+            "También cubriremos todos los daños causados por ladrones durante su evento.",
+          lastCharType: ["dot", "dot"],
+          firstCharType: ["letter", "letter"],
+          placeholders: ["__availableOfficers__"],
+          length: true,
           tags: ["<b>", "</b>"],
         },
         "fr-FR": {
@@ -218,10 +228,13 @@ export default {
 
   .body {
     clear: both;
-    margin-top: 10px;
+    margin-top: 5px;
     width: 400px;
     color: hsl(0, 0%, 30%);
     font-size: 80%;
+  }
+  .body p {
+    margin-bottom: 5px;
   }
 
   .body .example {
@@ -234,6 +247,7 @@ export default {
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    margin-top: 5px;
   }
   .levels .label {
     vertical-align: center;
@@ -256,7 +270,7 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: center;
-    height: 50px;
+    height: 45px;
   }
   .flag-icon {
     padding: 0 5px 0 0;
@@ -268,5 +282,19 @@ export default {
   }
   .translation {
     font-size: 10px;
+  }
+
+  .filter {
+    float: right;
+    font-size: 30px;
+    margin-top: -23px;
+    cursor: pointer;
+  }
+  .filter .active {
+    color: #26539B;
+  }
+
+  .filter .disabled {
+    color: #b1b1b1;
   }
 </style>
