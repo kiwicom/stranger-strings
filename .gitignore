@@ -3,6 +3,7 @@ node_modules
 dist
 .cache
 .firebase
+*.env
 
 # local env files
 .env.local
