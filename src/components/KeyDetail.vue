@@ -52,7 +52,7 @@
           </td>
           <td class="translation">
             <Highlighting
-              :content="activeTranslations[locale].content"
+              :content="JSON.stringify(activeTranslations[locale].content).slice(1, -1)"
               :locale="locale"
               :writeGood="isActive('_inconsistencies_writeGood') && activeTranslations[locale]._writeGood"
               :typos="activeTranslations[locale]._typos !== 'unsupported language' && isActive('_inconsistencies_writeGood') ?

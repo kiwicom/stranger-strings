@@ -140,7 +140,7 @@
           </td>
 
           <td v-bind:class="{ 'locale-hard-wrap': hardWrap, 'locale': !hardWrap }">
-            {{ getTranslation(val, "en-GB") || '» not translated «' }}
+            {{ getTranslation(val, "en-GB") }}
           </td>
         </tr>
       </tbody>
@@ -347,11 +347,11 @@ export default {
       saveJSON(Object.keys(this.items).map(k => this.items[k].key), "export.json")
     },
     getTranslation(key, locale) {
-      const translation = _.get(key, [locale], null)
+      const translation = JSON.stringify(_.get(key, [locale], "» not translated «"))
       if (translation && translation.length >= 2000) {
-        return `${translation.substring(0, 1997)}...`
+        return `${translation.substring(1, 1997)}...`
       }
-      return translation
+      return translation.substr(1, translation.length - 2)
     },
     hideKeyDetail() {
       this.activeKey = null
