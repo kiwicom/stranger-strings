@@ -9,7 +9,7 @@
   >
     <div v-if="!isAdmin" class="not-admin">You don't have permission to modify this configuration.</div>
     <div class="config">
-      <h4>Write Good</h4>
+      <h4>{{ getCheckData('_inconsistencies_writeGood').title }}</h4>
       <div class="setDefault" v-if="writeGoodLoaded"><b-button variant="link" @click="setDefaultWriteGoodConfig">Set default config</b-button></div>
       <div v-if="writeGoodLoaded">
         <div v-for="(settings, lang) in writeGoodConfig" :key="lang">
@@ -30,7 +30,7 @@
     </div>
 
     <div class="config">
-      <h4>Placeholder</h4>
+      <h4>{{ getCheckData('_inconsistencies_placeholders').title }}</h4>
       <div v-if="placeholderLoaded">
         <div class="regex-input">
           <label for="regFormIn">Regex:</label>
@@ -62,7 +62,7 @@
     </div>
 
     <div class="config">
-      <h4>Insensitiveness</h4>
+      <h4>{{ getCheckData('_inconsistencies_insensitiveness').title }}</h4>
       <div v-if="insensitivenessLoaded">
         <label for="range-1">Profanity sureness level:</label> {{ insensitivenessConfig.profanitySureness }}
         <b-form-input number id="range-1" v-model="insensitivenessConfig.profanitySureness" type="range" min="0" max="2"></b-form-input>
@@ -72,7 +72,7 @@
     </div>
 
     <div class="config">
-      <h4>HTML tags</h4>
+      <h4>{{ getCheckData('_inconsistencies_tags').title }}</h4>
       <FirebaseListManager
         db-path="tags"
         :allow-changes="isAdmin"
@@ -126,6 +126,7 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex"
 import { FbDb } from "../modules/firebase"
 import * as reporting from "../services/reporting"
 import * as defaults from "../../common/config"
@@ -213,6 +214,9 @@ export default {
     })
   },
   computed: {
+    ...mapGetters([
+      "getCheckData",
+    ]),
     getProfanitySureness() {
       const level = this.insensitivenessConfig.profanitySureness
       if (level === 2) {

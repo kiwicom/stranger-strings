@@ -46,7 +46,7 @@
       </div>
     </div>
 
-    <div class="config-group">
+    <div class="config-group no-line">
       <h4>View</h4>
       <ResetDefaults :cb="setDefaultHardWrap"/>
 
@@ -113,6 +113,10 @@ export default {
 <style scoped>
   .config-group {
     margin-top: 20px;
+    border-bottom: 1px solid #bcbcbc;
+  }
+  .no-line {
+    border-bottom: none;
   }
 
   h4 {
