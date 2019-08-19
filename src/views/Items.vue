@@ -374,7 +374,7 @@ export default {
     },
   },
   watch: {
-    $route(to, from) {
+    $route(to) {
       if (to.path === "/items") {
         this.activeKey = null
         this.activeTranslations = null

@@ -141,7 +141,7 @@ export default {
       return this.writeGood.find(wg => new RegExp(`"${word}(?=")`, "m").test(wg.reason)).reason
     },
     getInsensitivenessReason(word) {
-      return this.insensitiveness.find(ins => new RegExp(word, "m").test(word))
+      return this.insensitiveness.find(ins => new RegExp(word, "m").test(ins))
     },
     escape(content) {
       return _.escape(content)

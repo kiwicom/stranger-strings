@@ -149,7 +149,7 @@ function prepareTranslationsForExport(translations) {
 }
 
 async function uploadDataToFirebase(path, data) { // split to chunks for big data uploads
-  let uploads = _.chunk(Object.keys(data), 100).map(chunk =>
+  const uploads = _.chunk(Object.keys(data), 100).map(chunk =>
     chunk.reduce((acc, key) => {
       acc[key] = data[key]
       return acc
