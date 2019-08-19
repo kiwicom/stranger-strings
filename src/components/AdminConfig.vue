@@ -13,7 +13,7 @@
       <div class="setDefault" v-if="writeGoodLoaded"><b-button variant="link" @click="setDefaultWriteGoodConfig">Set default config</b-button></div>
       <div v-if="writeGoodLoaded">
         <div v-for="(settings, lang) in writeGoodConfig" :key="lang">
-          <div class="wgLangHeader">{{ lang }}:</div>
+          <div class="wgLangHeader">{{ lang.substring(0,2) }}-XX:</div>
           <b-form-checkbox
             v-for="(value, option) in settings"
             :key="option"

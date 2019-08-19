@@ -45,7 +45,7 @@
             <CheckAlerts
               :missingPlaceholders="getMissingEntities(locale, activeTranslations, '_placeholders')"
               :missingTags="getMissingEntities(locale, activeTranslations, '_tags')
-                .filter(t => !(activeTranslations[locale]._disallowedTags || []).includes(t))"
+                .filter(t => !(getMissingEntities(locale, activeTranslations, '_disallowedTags') || []).includes(t))"
               :length="hasInconsistentLength(locale, activeTranslations)"
               onlyActive
             />
@@ -72,7 +72,7 @@
             <b-button
               v-b-tooltip.hover
               :disabled="!reportConfig.active"
-              :title="`report ${locale}`"
+              :title="`report issue in ${locale}`"
               size="sm"
               variant="outline-secondary"
               @click="showReportModal(locale)"
@@ -88,8 +88,20 @@
           <td colspan="2" :class="isImportant(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'" scope="row">
             {{ locale }}
           </td>
-          <td colspan="2" :class="isImportant(locale) ?'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">
+          <td :class="isImportant(locale) ?'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">
             Not translated
+          </td>
+          <td class="actions">
+            <b-button
+              v-b-tooltip.hover
+              :disabled="!reportConfig.active"
+              :title="`report missing translation for ${locale}`"
+              size="sm"
+              variant="outline-secondary"
+              @click="showReportModal(locale)"
+            >
+              <ReportIcon/>
+            </b-button>
           </td>
         </tr>
         </tbody>
@@ -100,6 +112,8 @@
       :locale="reportedLocale"
       :translationKey="item.key"
       :email="user.email"
+      :notTranslated="notTranslated"
+      :errorType="notTranslated.includes(reportedLocale) ? 'missing translations' : null"
       :notifyUser="notifyUser"
       @close="closeReportModal"
     />
@@ -161,6 +175,9 @@ export default {
       "getImportantLocales",
       "isImportant",
     ]),
+    notTranslated() {
+      return this.getLocales.filter(l => this.activeTranslations && !this.activeTranslations[l])
+    },
   },
   created() {
     NProgress.start()
@@ -169,7 +186,7 @@ export default {
         this.reportConfig = snapshot.val()
       }
     })
-    const fbKey = this.item.key.includes(".") ? this.item.key.split(".").join("-") : this.item.key
+    const fbKey = this.item.key.replace(/[.#$/[\]]/gmi, "-")
     FbDb.ref(`translations/${fbKey}`).once("value", (snapshot) => {
       if (snapshot.val()) {
         this.activeTranslations = snapshot.val()

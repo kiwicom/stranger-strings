@@ -3,7 +3,7 @@ export const options = ["Slack"]
 
 // reportForm: {
 //   key: "common.content.some-key",
-//   locale: "en-GB",
+//   locales: ["en-GB"],
 //   errorType: "Grammar",
 //   additionalInfo: "Should be they're not their.",
 //   author: "name@gmail.com",
@@ -12,10 +12,10 @@ export const options = ["Slack"]
 // },
 export function reportOnSlack(hookURL, channelName, reportForm, callback) {
   const key = `*Key:* \`${reportForm.key}\`\n`
-  const locale = `*Locale:* _${reportForm.locale}_\n`
+  const locale = `*Locale${reportForm.locales.length > 1 ? "s" : ""}:* _${reportForm.locales.join(", ")}_\n`
   const type = `*Type of error:* _${reportForm.errorType}_\n`
   const description = `*Description:*\n>${reportForm.additionalInfo}\n`
-  const author = reportForm.slackName ? `${reportForm.slackName} (${reportForm.author})` : reportForm.author
+  const author = reportForm.slackName ? `<@${reportForm.slackName}> (${reportForm.author})` : reportForm.author
   fetch(hookURL, {
     method: "POST",
     mode: "no-cors",
@@ -50,7 +50,7 @@ export function reportOnSlack(hookURL, channelName, reportForm, callback) {
           elements: [
             {
               type: "mrkdwn",
-              text: `_Report submitted by @${author} via *Stranger Strings*_`,
+              text: `_Report submitted by ${author} via *Stranger Strings*_`,
             },
           ],
         },

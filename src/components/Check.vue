@@ -33,7 +33,7 @@
       </div>
     </div>
     <div class="body">
-      <p>{{ getCheckData(checkKey).description }}</p>
+      <p v-html="getCheckData(checkKey).description"/>
       <div class="example">
         <div class="line" v-for="(example, loc) in examples" :key="loc">
           <div class="flag-icon" v-b-tooltip.hover :title="loc">

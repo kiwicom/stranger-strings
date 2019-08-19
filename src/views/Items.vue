@@ -229,11 +229,6 @@ export default {
       showUserConfig: false,
       showAdminConfig: false,
       showDictExpansion: false,
-
-      // Modals
-      modalKeyDetail: !!this.$route.params.all,
-      modalDictsExpansion: false,
-      modalChecksConfig: false,
     }
   },
   firebase() {
@@ -376,6 +371,17 @@ export default {
     },
     getIcon(checkKey) {
       return `${checkKey.replace(/.*_/g, "")}Icon`
+    },
+  },
+  watch: {
+    $route(to, from) {
+      if (to.path === "/items") {
+        this.activeKey = null
+        this.activeTranslations = null
+        this.showUserConfig = false
+        this.showAdminConfig = false
+        this.showDictExpansion = false
+      }
     },
   },
 }

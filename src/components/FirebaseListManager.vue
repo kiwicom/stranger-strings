@@ -10,7 +10,7 @@
           type="text"
           :disabled="!allowChanges"
           :state="!isdDplicate && newItem !== ''"
-          :placeholder="placeholderItem"
+          :placeholder="'e.g. ' + placeholderItem"
           aria-describedby="input-live-feedback"
           v-model="newItem"
         />

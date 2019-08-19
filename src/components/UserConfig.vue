@@ -131,8 +131,8 @@ export default {
 
   .lang {
     display: inline-block;
-    width: 200px;
-    margin: 0 30px 0 30px;
+    width: 220px;
+    margin: 0 25px 0 25px;
   }
   .lang strong {
     padding: 10px;

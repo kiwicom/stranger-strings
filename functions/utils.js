@@ -180,10 +180,10 @@ function grammarNazi(locales, dictsExpansion, activatedDicts, placeholderRegex) 
 }
 
 function writeGoodCheck(content, lang, writeGoodSettings) {
-  if (lang === "en-GB") {
+  if (lang.substring(0, 2) === "en") {
     return writeGood(sanitizeHtml(content, { allowedTags: [], allowedAttributes: [] }), writeGoodSettings[lang])
   }
-  if (lang === "de-DE") {
+  if (lang.substring(0, 2) === "de") {
     return writeGood(sanitizeHtml(content, { allowedTags: [], allowedAttributes: [] }), { ...writeGoodSettings[lang], ...{ checks: schreibGut } })
   }
   return {}

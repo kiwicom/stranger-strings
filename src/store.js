@@ -8,7 +8,7 @@ import * as defaults from "../common/config"
 Vue.use(Vuex)
 
 const vuexPersist = new VuexPersist({
-  key: `Stranger-Strings-${process.env.GITHUB_REPO || process.env.PHRASEAPP_PROJECT_ID}`,
+  key: `Stranger-Strings-${process.env.VUE_APP_GITHUB_REPO || process.env.VUE_APP_PHRASEAPP_PROJECT_ID}`,
   storage: localStorage,
 })
 
@@ -17,73 +17,59 @@ export default new Vuex.Store({
     checks: {
       _inconsistencies_placeholders: {
         title: "Placeholders",
-        description: "Detect missing/excess/inconsistent placeholders",
+        description: "Detects missing/excess/inconsistent placeholders",
         level: "error",
         active: true,
-        exampleImage: null,
       },
       _inconsistencies_firstCharType: {
         title: "First character",
-        description: "Detect inconsistencies of first character",
+        description: "Detects inconsistencies of first character",
         level: "warning",
         active: true,
-        exampleImage: null,
       },
       _inconsistencies_lastCharType: {
         title: "Last character",
-        description: "Detect inconsistencies of last character",
+        description: "Detects inconsistencies of last character",
         level: "warning",
         active: true,
-        exampleImage: null,
       },
       _inconsistencies_tags: {
         title: "HTML tags",
-        description: "Detect invalid HTML and prohibited HTML tags",
+        description: "Detects invalid HTML and prohibited HTML tags",
         level: "error",
         active: true,
-        exampleImage: null,
       },
       _inconsistencies_length: {
         title: "Length",
         description: "Detects suspicious variations in length",
         level: "warning",
         active: true,
-        exampleImage: null,
       },
       _inconsistencies_typos: {
         title: "Spelling",
-        description: "Detect spelling mistakes",
+        description: "Detects spelling mistakes",
         level: "warning",
         active: true,
-        exampleImage: null,
       },
       _inconsistencies_writeGood: {
         title: "Style",
-        description: "Detect stylistic issues – passive voice, weasel words, overuse of adverbs, cliches and similar",
+        description: "Detects stylistic issues – passive voice, weasel words, overuse of adverbs, cliches and " +
+          "similar (available only for english and german translations, uses <a href='https://github.com/btford/write-good'>write-good library</a>)",
         level: "suggestion",
         active: true,
-        exampleImage: null,
       },
       _inconsistencies_insensitiveness: {
         title: "Insensitiveness",
-        description: "Detect gender favouring, polarising, race related, religion inconsiderate, or other unequal phrasing",
+        description: "Detects gender favouring, polarising, race related, religion inconsiderate, or other unequal " +
+          "phrasing (available only for english translations, uses <a href='https://github.com/get-alex/alex'>Alex library</a>)",
         level: "suggestion",
         active: true,
-        exampleImage: null,
       },
       _inconsistencies_dynamic: {
         title: "Values",
         description: "Detects values, that should/could be replaced by placeholders to make text more customizable",
         level: "suggestion",
         active: true,
-        exampleImage: null,
-      },
-      _inconsistencies_noEnglish: {
-        title: "Missing default translation",
-        description: "Detect missing translation for default locale",
-        level: "error",
-        active: true,
-        exampleImage: null,
       },
     },
     locales: {

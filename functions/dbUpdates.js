@@ -62,7 +62,7 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
       _disallowedTags: getHTMLtags(_val).filter(tag => !allowedTags.includes(tag.match(/(?<=<|<\/)\w+/gm) && tag.match(/(?<=<|<\/)\w+/gm)[0])),
       _dynamic: detectDynamicValues(sanitized),
       _writeGood: writeGoodCheck(_val, _key, writeGoodSettings),
-      _insensitiveness: _key.toString() === "en-GB" ?
+      _insensitiveness: _key.toString().substring(0, 2) === "en" ?
         alex.text(sanitizeHtml(_val, { allowedTags: [], allowedAttributes: [] }), insensitivenessConfig).messages.map(out => out.message) : {},
     })
   })
@@ -141,6 +141,8 @@ function prepareTranslationsForExport(translations) {
   return _.reduce(translations, (acc, val, key) => {
     if (!key.includes("\n")) {
       acc[key] = val
+    } else {
+      console.error(`invalid key with unsupported characters (omitting): ${key}`)
     }
     return acc
   }, {})
@@ -153,7 +155,7 @@ async function uploadDataToFirebase(path, data) { // split to chunks for big dat
       return acc
     }, {}))
   // if (path === "/items") {
-  //   uploads = uploads.slice(0, 30) // restrict number of keys to 3000
+  //   uploads = uploads.slice(0, 5) // restrict number of keys to 500
   // }
 
   return Promise.all(uploads.map(upload => database.ref(path).update(upload)))
@@ -168,7 +170,7 @@ async function originToFirebase() {
     const { version, translations } = await loader.fetch()
 
     const items = _.reduce(translations, (acc, val, key) => {
-      const _key = key.includes(".") ? key.split(".").join("-") : key
+      const _key = key.replace(/[.#$/[\]]/gmi, "-")
 
       if (!acc[_key]) {
         acc[_key] = {}
@@ -192,7 +194,7 @@ async function originToFirebase() {
     allowedTags = allowedTags ? Object.values(allowedTags) : DEFAULT_ALLOWED_TAGS
 
     _.forEach(translations, (val, key) => {
-      const fbKey = key.includes(".") ? key.split(".").join("-") : key
+      const fbKey = key.replace(/[.#$/[\]]/gmi, "-")
 
       mappedTranslations = {
         ...mappedTranslations,
@@ -208,7 +210,7 @@ async function originToFirebase() {
     mappedTranslations = grammarNazi(mappedTranslations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT, placeholderRegex)
 
     _.forEach(items, (val, key) => {
-      const fbKey = key.includes(".") ? key.split(".").join("-") : key
+      const fbKey = key.replace(/[.#$/[\]]/gmi, "-")
 
       items[key] = { ...val, ...computeInconsistenciesOfKey(mappedTranslations, fbKey) }
     })
