@@ -70,9 +70,21 @@
           </td>
           <td class="actions">
             <b-button
+              class="action-b"
               v-b-tooltip.hover
               :disabled="!reportConfig.active"
-              :title="`report issue in ${locale}`"
+              :title="`Copy ${locale} translation to clipboard`"
+              size="sm"
+              variant="outline-secondary"
+              v-clipboard:copy="JSON.stringify(activeTranslations[locale].content).slice(1, -1)"
+            >
+              <CopyIcon/>
+            </b-button>
+            <b-button
+              class="action-b"
+              v-b-tooltip.hover
+              :disabled="!reportConfig.active"
+              :title="`report issue in ${locale} translation`"
               size="sm"
               variant="outline-secondary"
               @click="showReportModal(locale)"
@@ -122,6 +134,7 @@
 
 <script>
 import ReportIcon from "vue-material-design-icons/AlertOctagon"
+import CopyIcon from "vue-material-design-icons/ContentCopy"
 import CountryFlag from "vue-country-flag"
 
 import NProgress from "nprogress"
@@ -149,6 +162,7 @@ export default {
     ReportIcon,
     Highlighting,
     CheckAlerts,
+    CopyIcon,
   },
   data() {
     return {
@@ -248,6 +262,10 @@ export default {
       }
       return false
     },
+    copyToClipboard(locale) {
+      const content = JSON.stringify(this.activeTranslations[locale].content).slice(1, -1)
+      this.$copyText(content).then(() => this.notifyUser("Copied!", `Translation of ${locale} copied to your clipboard.`, "success"))
+    },
   },
 }
 </script>
@@ -285,11 +303,15 @@ export default {
     width: 85px;
   }
   .translation {
-    max-width: 900px;
+    max-width: 80%;
     border: none !important;
   }
   .actions {
-    width: 50px;
+    width: 90px;
+    text-align: center;
+  }
+  .action-b {
+    margin: 2px;
   }
   .flag-icon {
     width: 30px;

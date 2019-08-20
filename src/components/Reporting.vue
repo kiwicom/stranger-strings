@@ -122,7 +122,7 @@
         <td>{{ report.additionalInfo }}</td>
       </tr>
       <tr v-if="!Object.keys(reportLogs).length" class="no-reports">
-        <td colspan="5">No reports</td>
+        <td colspan="5">No reports for this specific key</td>
       </tr>
       </tbody>
     </table>
