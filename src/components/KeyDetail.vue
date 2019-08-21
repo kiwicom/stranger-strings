@@ -50,7 +50,7 @@
               onlyActive
             />
           </td>
-          <td class="translation">
+          <td :class="['translation', isRtlLang(locale) ? 'rtl' : null]">
             <Highlighting
               :content="JSON.stringify(activeTranslations[locale].content).slice(1, -1)"
               :locale="locale"
@@ -141,6 +141,7 @@ import NProgress from "nprogress"
 import _ from "lodash"
 import { mapGetters } from "vuex"
 import { FbDb } from "../modules/firebase"
+import rtlDetect from "rtl-detect"
 import maxExpansionRatio from "../../common/maxExpansionRatio"
 import Reporting from "./Reporting"
 import TranslationProgress from "../components/TranslationProgress"
@@ -262,9 +263,8 @@ export default {
       }
       return false
     },
-    copyToClipboard(locale) {
-      const content = JSON.stringify(this.activeTranslations[locale].content).slice(1, -1)
-      this.$copyText(content).then(() => this.notifyUser("Copied!", `Translation of ${locale} copied to your clipboard.`, "success"))
+    isRtlLang(locale) {
+      return rtlDetect.isRtlLang(locale)
     },
   },
 }
@@ -304,7 +304,11 @@ export default {
   }
   .translation {
     max-width: 80%;
+    width: 80%;
     border: none !important;
+  }
+  .rtl {
+    direction: rtl;
   }
   .actions {
     width: 90px;

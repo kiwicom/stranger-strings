@@ -42,22 +42,28 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
   const mappedTranslations = {}
   _.forEach(val, (_val, _key) => {
     let trimmed
+    let untrimmed
 
     if (!_val) {
       trimmed = ""
+      untrimmed = ""
     } else if (typeof _val !== "string") { // pluralized object
       trimmed = String(Object.values(_val))
+      untrimmed = String(Object.values(_val))
     } else {
       trimmed = _val.trim()
+      untrimmed = _val
     }
 
     const interpolated = trimmed.replace(RegExp(placeholderRegex, "g"), "XXX")
+    const interUntrimmed = untrimmed.replace(RegExp(placeholderRegex, "g"), "XXX")
     const sanitized = sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] }) || ""
+    const saniUntrimmed = sanitizeHtml(interUntrimmed, { allowedTags: [], allowedAttributes: [] }) || ""
     _.set(mappedTranslations, [fbKey, _key], {
       content: _val,
       _placeholders: trimmed.match(RegExp(placeholderRegex, "g")) || [],
-      _firstCharType: determineCharType(sanitized[0]),
-      _lastCharType: determineCharType(sanitized[sanitized.length - 1]),
+      _firstCharType: determineCharType(saniUntrimmed[0]),
+      _lastCharType: determineCharType(saniUntrimmed[saniUntrimmed.length - 1]),
       _tags: getHTMLtags(_val),
       _disallowedTags: getHTMLtags(_val).filter(tag => !allowedTags.includes(tag.match(/(?<=<|<\/)\w+/gm) && tag.match(/(?<=<|<\/)\w+/gm)[0])),
       _dynamic: detectDynamicValues(sanitized),
@@ -81,12 +87,12 @@ function computeInconsistenciesOfKey(mappedTranslations, fbKey) {
   val._inconsistencies_placeholders = hasMissingEntities(mappedTranslations[fbKey], "_placeholders")
   val._inconsistencies_firstCharType = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.uniq(_.map(mappedTranslations[fbKey], x => x._firstCharType))
-      .filter(x => x !== "digit").length > 1
-  // DIGIT excluded due to syntax differences between languages
+      .filter(x => !["uncategorized", "digit", "bracket"].includes(x)).length > 1
+  // uncategorized, digit and bracket excluded due to syntax differences between languages
   val._inconsistencies_lastCharType = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.uniq(_.map(_.omit(mappedTranslations[fbKey], lastCharTypeExceptions), x => x._lastCharType))
-      .filter(x => !["uncategorized", "digit"].includes(x)).length > 1
-  // UNCATEGORIZED and DIGIT excluded due to syntax differences between languages
+      .filter(x => !["uncategorized", "digit", "bracket"].includes(x)).length > 1
+  // uncategorized, digit and bracket excluded due to syntax differences between languages
   val._inconsistencies_tags = mappedTranslations[fbKey]
     && (Object.values(mappedTranslations[fbKey]).some(o => o._disallowedTags.length > 0) || hasMissingEntities(mappedTranslations[fbKey], "_tags"))
   val._inconsistencies_length = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign

@@ -28,6 +28,7 @@
     "nprogress": "^0.2.0",
     "particles.js": "^2.0.0",
     "ramda": "^0.25.0",
+    "rtl-detect": "^1.0.2",
     "v-tooltip": "^2.0.2",
     "vue": "^2.6.10",
     "vue-clipboard2": "^0.3.0",

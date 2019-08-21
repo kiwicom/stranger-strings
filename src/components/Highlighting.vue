@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :dir="isRtlLang(locale) ? 'rtl' : 'ltr'" style="width: fit-content">
     <v-popover
       trigger="hover"
       v-if="token.content !== ''"
@@ -13,13 +13,15 @@
         :class="[
           'text',
           token.type && /^_entity_/g.test(token.type) ? token.type : getCheckData(token.type).level + '-highlight',
-          token.first ? 'first-char-' + getCheckData('_inconsistencies_firstCharType').level : '',
-          token.last ? 'last-char-' + getCheckData('_inconsistencies_lastCharType').level : '',
+          token.first && !isRtlLang(locale) && 'first-char-' + getCheckData('_inconsistencies_firstCharType').level,
+          token.first && isRtlLang(locale) && 'first-char-rtl-' + getCheckData('_inconsistencies_firstCharType').level,
+          token.last && !isRtlLang(locale) && 'last-char-' + getCheckData('_inconsistencies_lastCharType').level,
+          token.last && isRtlLang(locale) && 'last-char-rtl-' + getCheckData('_inconsistencies_lastCharType').level,
           token.type && 'active-token',
           token.type === '_inconsistencies_tags' && '_entity_tags',
           ]"
         :last-char="token.content.slice(-1)"
-        :first-char="token.content.slice(0,1)"
+        :first-char="token.content.slice(0, 1)"
         v-html="escape(token.content.slice(Number(token.first), token.content.length - Number(token.last)))"
       >
      </span>
@@ -89,6 +91,7 @@
 <script>
 import _ from "lodash"
 import { mapGetters } from "vuex"
+import rtlDetect from "rtl-detect"
 import { FbDb } from "../modules/firebase"
 import * as gcFunctions from "../modules/functionsApi"
 import CheckPopoverHeader from "./CheckPopoverHeader"
@@ -227,6 +230,9 @@ export default {
       if (this.lastCharType && this.lastCharType[0] !== this.lastCharType[1]) {
         sorted[sorted.length - 1].last = true // mark last
         sorted[sorted.length - 1].content = sorted[sorted.length - 1].content.replace(/\s$/g, "")
+        if (this.lastCharType[0] === "space") {
+          sorted[sorted.length - 1].content = sorted[sorted.length - 1].content + " "
+        }
       }
       return sorted
     },
@@ -301,6 +307,9 @@ export default {
         return ""
       }
     },
+    isRtlLang(locale) {
+      return rtlDetect.isRtlLang(locale)
+    },
   },
 }
 </script>
@@ -362,6 +371,42 @@ export default {
     border-right: solid dodgerblue 2px;
     padding-right: 2px;
     content: attr(last-char);
+  }
+  .last-char-rtl-error::after {
+    color: red;
+    border-left: solid red 2px;
+    padding-left: 2px;
+    content: attr(last-char);
+  }
+  .first-char-rtl-error::before {
+    color: red;
+    border-right: solid red 2px;
+    padding-right: 2px;
+    content: attr(first-char);
+  }
+  .last-char-rtl-warning::after {
+    color: #ff7800;
+    border-left: solid #ff7800 2px;
+    padding-left: 2px;
+    content: attr(last-char);
+  }
+  .first-char-rtl-warning::before {
+    color: #ff7800;
+    border-right: solid #ff7800 2px;
+    padding-right: 2px;
+    content: attr(first-char);
+  }
+  .last-char-rtl-suggestion::after {
+    color: dodgerblue;
+    border-left: solid dodgerblue 2px;
+    padding-left: 2px;
+    content: attr(last-char);
+  }
+  .first-char-rtl-suggestion::before {
+    color: dodgerblue;
+    border-right: solid dodgerblue 2px;
+    padding-right: 2px;
+    content: attr(first-char);
   }
   .text {
     display: inline-block;

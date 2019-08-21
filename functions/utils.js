@@ -60,6 +60,8 @@ function determineCharType(char) {
     return "comma"
   case "_":
     return "underscore"
+  case "*":
+    return "asterisk"
   case " ":
     return "space"
   case "¿": // spanish beginning of a sentence ending with question/exclamation mark
@@ -108,6 +110,8 @@ function determineCharType(char) {
   case "⧸":
   case "⁄":
     return "slash"
+  case "\\":
+    return "backslash"
   case "+":
     return "plus"
   default:
