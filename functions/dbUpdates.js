@@ -144,7 +144,7 @@ function prepareTranslationsForExport(translations) {
 }
 
 async function originToFirebase() {
-  if (!(await dbMutex.tryLock(`downloading recent translations from ${loaderType}`))) {
+  if (!(await dbMutex.tryLock(`New translations detected in ${loaderType}. Updating may take a few minutes.`))) {
     console.log("Update already in progress, stopping!")
     return
   }

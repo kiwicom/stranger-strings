@@ -9,7 +9,7 @@
     </b-navbar-nav>
 
     <b-toast
-      title="Update in progress"
+      title="Updating"
       variant="primary"
       :visible="updateInProgress.info"
       toaster="b-toaster-top-right"
