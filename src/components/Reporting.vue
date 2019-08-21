@@ -11,6 +11,21 @@
     @hide="$emit('close')"
     lazy
   >
+    <v-popover
+      trigger="hover"
+      v-if="reportConfig.option === 'Slack'"
+      class="slack-example"
+    >
+      <keep-alive>
+        <SlackIcon title="Example of Slack report" :size="48"/>
+      </keep-alive>
+      <template slot="popover">
+        <div class="hint-wrapper">
+          <div class="pseudoheader">Example of report on Slack</div>
+          <div class="slack-example"><img src="../../public/examples/slack_repoprt_example.jpg"></div>
+        </div>
+      </template>
+    </v-popover>
     <b-row class="my-2">
       <b-col sm="4"><label><strong>Author:</strong></label> </b-col>
       <b-col sm="8">{{ reportForm.author }}</b-col>
@@ -21,14 +36,14 @@
           <strong>Your Slack member ID:</strong>&nbsp;
           <v-popover
             trigger="hover"
-            style="display: contents"
+            style="display: contents; color: #26539B"
           >
             <keep-alive>
               <HelpIcon style="float: right"/>
             </keep-alive>
             <template slot="popover">
               <div class="hint-wrapper">
-                <div class="slack-id-explanation">To allow mention of your Slack account name enter your Slack member ID</div>
+                <div class="slack-id pseudoheader">To allow mention of your Slack account name enter your Slack member ID</div>
                 <div class="hint-image"><img src="../../public/examples/slack_ID_hint.jpg"></div>
               </div>
             </template>
@@ -136,13 +151,16 @@ import { mapGetters } from "vuex"
 import HelpIcon from "vue-material-design-icons/HelpCircleOutline"
 import AddIcon from "vue-material-design-icons/PlusCircle"
 import RemoveIcon from "vue-material-design-icons/CloseCircle"
+import SlackIcon from "vue-material-design-icons/Slack"
 import { FbDb } from "../modules/firebase"
 
 import * as reporting from "../services/reporting"
 
 export default {
   name: "Reporting",
-  components: { HelpIcon, AddIcon, RemoveIcon },
+  components: {
+    HelpIcon, AddIcon, RemoveIcon, SlackIcon,
+  },
   props: {
     translationKey: { type: String, required: true },
     locale: { type: String, required: true },
@@ -256,16 +274,33 @@ export default {
     border-top: 0px;
   }
   .hint-wrapper {
-    width: 400px;
-    padding: 10px;
+    width: fit-content;
     text-align: center;
   }
-  .slack-id-explanation {
-    margin: 5px;
+  .pseudoheader {
+    padding: 15px;
+    background-color: #26539B;
+    color: white;
+  }
+  .slack-id {
+    max-width: 370px;
   }
   .hint-image img{
     width: 350px;
     border: solid 1px rgba(191, 191, 191, 0.94);
+    margin: 5px;
+    border-radius: 10px;
+  }
+  .slack-example {
+    text-align: center;
+    color: #26539B;
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+  .slack-example img {
+    width: 500px;
+    border: solid 1px rgba(191, 191, 191, 0.94);
+    margin: 5px;
     border-radius: 10px;
   }
 </style>
