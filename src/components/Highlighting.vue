@@ -70,16 +70,29 @@
             </div>
           </div>
           <div
-            v-if="token.first || token.last"
+            v-if="token.first"
           >
-            <CheckPopoverHeader :check="token.first ? '_inconsistencies_firstCharType' : '_inconsistencies_lastCharType'" />
+            <CheckPopoverHeader check="_inconsistencies_firstCharType" />
             <div
               class="popover-content"
             >
-              {{ token.first ? 'First' : 'Last' }} character is
-              <strong>{{ token.first ? firstCharType[0] : lastCharType[0] }}</strong>
+              First character is
+              <strong>{{ firstCharType[0] }}</strong>
               but expected
-              <strong>{{ token.first ? firstCharType[1] : lastCharType[1] }}</strong>
+              <strong>{{ firstCharType[1] }}</strong>
+            </div>
+          </div>
+          <div
+            v-if="token.last"
+          >
+            <CheckPopoverHeader check="_inconsistencies_lastCharType" />
+            <div
+              class="popover-content"
+            >
+              Last character is
+              <strong>{{ lastCharType[0] }}</strong>
+              but expected
+              <strong>{{ lastCharType[1] }}</strong>
             </div>
           </div>
         </div>
@@ -231,7 +244,7 @@ export default {
         sorted[sorted.length - 1].last = true // mark last
         sorted[sorted.length - 1].content = sorted[sorted.length - 1].content.replace(/\s$/g, "")
         if (this.lastCharType[0] === "space") {
-          sorted[sorted.length - 1].content = sorted[sorted.length - 1].content + " "
+          sorted[sorted.length - 1].content = `${sorted[sorted.length - 1].content} `
         }
       }
       return sorted
