@@ -7,18 +7,18 @@ if (LOCALEXEC) {
 }
 // //////////////////////// //
 
-const superagent = require("superagent")
 const alex = require("alex")
 const _ = require("lodash")
 const moment = require("moment")
 const sanitizeHtml = require("sanitize-html")
 
 const dbMutex = require("./dbMutex")
+const database = require("./database")
 
 const { loader, loaderType } = require("./loaderManager")
 
 const {
-  validateHtml,
+  getHTMLtags,
   determineCharType,
   grammarNazi,
   detectDynamicValues,
@@ -26,39 +26,49 @@ const {
   getLangsWithDiffFirstCharCasing,
   writeGoodCheck,
   updateDictsExpansion,
+  hasMissingEntities,
 } = require("./utils")
-// TODO: configurable
+
 const {
   DEFAULT_SPELLCHECKING_DICT_SUPPORT,
   DEFAULT_WRITE_GOOD_SETTINGS,
   DEFAULT_PLACEHOLDER_REGEX,
   DEFAULT_INSENSITIVENESS_CONFIG,
+  DEFAULT_ALLOWED_TAGS,
 } = require("../common/config")
 
 
-function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig) {
+function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig, allowedTags) {
   const mappedTranslations = {}
   _.forEach(val, (_val, _key) => {
     let trimmed
+    let untrimmed
 
     if (!_val) {
       trimmed = ""
+      untrimmed = ""
     } else if (typeof _val !== "string") { // pluralized object
       trimmed = String(Object.values(_val))
+      untrimmed = String(Object.values(_val))
     } else {
       trimmed = _val.trim()
+      untrimmed = _val
     }
 
     const interpolated = trimmed.replace(RegExp(placeholderRegex, "g"), "XXX")
+    const interUntrimmed = untrimmed.replace(RegExp(placeholderRegex, "g"), "XXX")
+    const sanitized = sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] }) || ""
+    const saniUntrimmed = sanitizeHtml(interUntrimmed, { allowedTags: [], allowedAttributes: [] }) || ""
     _.set(mappedTranslations, [fbKey, _key], {
       content: _val,
       _placeholders: trimmed.match(RegExp(placeholderRegex, "g")) || [],
-      _firstCharType: determineCharType(sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] })[0]),
-      _lastCharType: determineCharType(sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] })[interpolated.length - 1]),
-      _tags: validateHtml(_val),
-      _dynamic: detectDynamicValues(_val),
+      _firstCharType: determineCharType(saniUntrimmed[0]),
+      _lastCharType: determineCharType(saniUntrimmed[saniUntrimmed.length - 1]),
+      _tags: getHTMLtags(_val),
+      _disallowedTags: getHTMLtags(_val).filter(tag => !allowedTags.includes(tag.match(/(?<=<|<\/)\w+/gm) && tag.match(/(?<=<|<\/)\w+/gm)[0])),
+      _dynamic: detectDynamicValues(sanitized),
       _writeGood: writeGoodCheck(_val, _key, writeGoodSettings),
-      _insensitiveness: _key.toString() === "en-GB" ?
+      _insensitiveness: _key.toString().substring(0, 2) === "en" ?
         alex.text(sanitizeHtml(_val, { allowedTags: [], allowedAttributes: [] }), insensitivenessConfig).messages.map(out => out.message) : {},
     })
   })
@@ -74,18 +84,17 @@ function computeInconsistenciesOfKey(mappedTranslations, fbKey) {
   && mappedTranslations[fbKey]["en-GB"]
   && mappedTranslations[fbKey]["en-GB"]._lastCharType === "question mark" ? ["th-TH", "ja-JP"] : "th-TH"
 
-  val._inconsistencies_placeholders = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
-    && _.uniqWith(_.map(mappedTranslations[fbKey], x => x._placeholders.sort()), _.isEqual).length !== 1
+  val._inconsistencies_placeholders = hasMissingEntities(mappedTranslations[fbKey], "_placeholders")
   val._inconsistencies_firstCharType = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.uniq(_.map(mappedTranslations[fbKey], x => x._firstCharType))
-      .filter(x => x !== "digit").length > 1
-  // DIGIT excluded due to syntax differences between languages
+      .filter(x => !["uncategorized", "digit", "bracket"].includes(x)).length > 1
+  // uncategorized, digit and bracket excluded due to syntax differences between languages
   val._inconsistencies_lastCharType = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && _.uniq(_.map(_.omit(mappedTranslations[fbKey], lastCharTypeExceptions), x => x._lastCharType))
-      .filter(x => !["uncategorized", "digit"].includes(x)).length > 1
-  // UNCATEGORIZED and DIGIT excluded due to syntax differences between languages
-  val._inconsistencies_tags = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
-    && _.includes(_.map(mappedTranslations[fbKey], x => x._tags), "NOT_ALLOWED")
+      .filter(x => !["uncategorized", "digit", "bracket"].includes(x)).length > 1
+  // uncategorized, digit and bracket excluded due to syntax differences between languages
+  val._inconsistencies_tags = mappedTranslations[fbKey]
+    && (Object.values(mappedTranslations[fbKey]).some(o => o._disallowedTags.length > 0) || hasMissingEntities(mappedTranslations[fbKey], "_tags"))
   val._inconsistencies_length = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
     && hasInconsistentLength(mappedTranslations[fbKey], mappedTranslations[fbKey]["en-GB"] ? mappedTranslations[fbKey]["en-GB"].content.length : 0)
   val._inconsistencies_typos = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
@@ -138,9 +147,24 @@ function prepareTranslationsForExport(translations) {
   return _.reduce(translations, (acc, val, key) => {
     if (!key.includes("\n")) {
       acc[key] = val
+    } else {
+      console.error(`invalid key with unsupported characters (omitting): ${key}`)
     }
     return acc
   }, {})
+}
+
+async function uploadDataToFirebase(path, data) { // split to chunks for big data uploads
+  const uploads = _.chunk(Object.keys(data), 100).map(chunk =>
+    chunk.reduce((acc, key) => {
+      acc[key] = data[key]
+      return acc
+    }, {}))
+  // if (path === "/items") {
+  //   uploads = uploads.slice(0, 5) // restrict number of keys to 500
+  // }
+
+  return Promise.all(uploads.map(upload => database.ref(path).update(upload)))
 }
 
 async function originToFirebase() {
@@ -152,7 +176,7 @@ async function originToFirebase() {
     const { version, translations } = await loader.fetch()
 
     const items = _.reduce(translations, (acc, val, key) => {
-      const _key = key.includes(".") ? key.split(".").join("-") : key
+      const _key = key.replace(/[.#$/[\]]/gmi, "-")
 
       if (!acc[_key]) {
         acc[_key] = {}
@@ -166,65 +190,64 @@ async function originToFirebase() {
     }, {})
 
     let mappedTranslations = {}
-    const writeGoodSettings = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/writeGood.json`)).body
+    const writeGoodSettings = (await database.ref("/writeGood").once("value")).val()
       || DEFAULT_WRITE_GOOD_SETTINGS
-    const placeholderRegex = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/placeholders/regex.json`)).body
+    const placeholderRegex = (await database.ref("/placeholders/regex").once("value")).val()
       || DEFAULT_PLACEHOLDER_REGEX
-    const insensitivenessConfig = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/insensitivenessConfig.json`)).body
+    const insensitivenessConfig = (await database.ref("/insensitivenessConfig").once("value")).val()
       || DEFAULT_INSENSITIVENESS_CONFIG
+    let allowedTags = (await database.ref("/tags").once("value")).val()
+    allowedTags = allowedTags ? Object.values(allowedTags) : DEFAULT_ALLOWED_TAGS
 
     _.forEach(translations, (val, key) => {
-      const fbKey = key.includes(".") ? key.split(".").join("-") : key
+      const fbKey = key.replace(/[.#$/[\]]/gmi, "-")
 
       mappedTranslations = {
         ...mappedTranslations,
-        ...computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig),
+        ...computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig, allowedTags),
       }
     })
 
     const dictsExpansion = updateDictsExpansion(
-      (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`)).body,
+      (await database.ref("/dictsExpansion").once("value")).val(),
       DEFAULT_SPELLCHECKING_DICT_SUPPORT,
     )
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`).send(dictsExpansion)
+    await database.ref("/dictsExpansion").set(dictsExpansion)
     mappedTranslations = grammarNazi(mappedTranslations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT, placeholderRegex)
 
     _.forEach(items, (val, key) => {
-      const fbKey = key.includes(".") ? key.split(".").join("-") : key
+      const fbKey = key.replace(/[.#$/[\]]/gmi, "-")
 
       items[key] = { ...val, ...computeInconsistenciesOfKey(mappedTranslations, fbKey) }
     })
 
-    let collections = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`)).body
+    let collections = (await database.ref("/collections").once("value")).val()
     collections = assignCollectionKeys(collections, Object.keys(mappedTranslations))
     collections = computeInconsistenciesOfCollection(collections, mappedTranslations)
 
     const finalItems = prepareItemsForExport(items)
     const finalTranslations = prepareTranslationsForExport(mappedTranslations)
 
+
     console.log("removing old data")
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/lastUpdate.json`)
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/items.json`)
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`)
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`)
-
+    await database.ref("/lastUpdate").remove()
+    await database.ref("/items").remove()
+    await database.ref("/translations").remove()
+    await database.ref("/collections").remove()
+    await database.ref("/locales").remove()
     console.log("uploading new keys")
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/items.json`).send(finalItems)
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`).send(finalTranslations)
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`).send(collections)
+    await uploadDataToFirebase("/items", finalItems)
+    await uploadDataToFirebase("/translations", finalTranslations)
+    await uploadDataToFirebase("/collections", collections)
 
-    await superagent
-      .put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/locales.json`)
-      .send({
-        list: [...new Set(_.reduce(translations, (acc, translation) => acc.concat(Object.keys(translation)), []))],
-      })
+    await database.ref("/locales").set({
+      list: [...new Set(_.reduce(translations, (acc, translation) => acc.concat(Object.keys(translation)), []))],
+    })
 
-    await superagent
-      .put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/lastUpdate.json`)
-      .send({
-        updated: moment().format("DD-MM-YYYY HH:mm:ss"),
-        version,
-      })
+    await database.ref("/lastUpdate").set({
+      updated: moment().format("DD-MM-YYYY HH:mm:ss"),
+      version,
+    })
     console.log("SUCCESS: updated all translations")
     // eslint-disable-next-line consistent-return
     return "SUCCESS: updated all translations"
@@ -239,28 +262,30 @@ async function updateInconsistencies() {
     return
   }
   try {
-    let items = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/items.json`)).body
-    let translations = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`)).body
-    const writeGoodSettings = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/writeGood.json`)).body
+    let items = (await database.ref("/items").once("value")).val()
+    let translations = (await database.ref("/translations").once("value")).val()
+    const writeGoodSettings = (await database.ref("/writeGood").once("value")).val()
       || DEFAULT_WRITE_GOOD_SETTINGS
-    const placeholderRegex = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/placeholders/regex.json`)).body
+    const placeholderRegex = (await database.ref("/placeholders/regex").once("value")).val()
       || DEFAULT_PLACEHOLDER_REGEX
-    const insensitivenessConfig = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/insensitivenessConfig.json`)).body
+    const insensitivenessConfig = (await database.ref("/insensitivenessConfig").once("value")).val()
       || DEFAULT_INSENSITIVENESS_CONFIG
+    let allowedTags = (await database.ref("/tags").once("value")).val()
+    allowedTags = allowedTags ? Object.values(allowedTags) : DEFAULT_ALLOWED_TAGS
 
     _.forEach(translations, (val, key) => {
       _.forEach(val, (x, locKey) => { val[locKey] = x.content }) // strip locale of everything except translation content
       translations = {
         ...translations,
-        ...computeInconsistenciesOfTranslations(val, key, writeGoodSettings, placeholderRegex, insensitivenessConfig),
+        ...computeInconsistenciesOfTranslations(val, key, writeGoodSettings, placeholderRegex, insensitivenessConfig, allowedTags),
       }
     })
 
     const dictsExpansion = updateDictsExpansion(
-      (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`)).body,
+      (await database.ref("/dictsExpansion").once("value")).val(),
       DEFAULT_SPELLCHECKING_DICT_SUPPORT,
     )
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/dictsExpansion.json`).send(dictsExpansion)
+    await database.ref("/dictsExpansion").set(dictsExpansion)
     translations = grammarNazi(translations, dictsExpansion, DEFAULT_SPELLCHECKING_DICT_SUPPORT, placeholderRegex)
 
     _.forEach(items, (val, key) => {
@@ -271,12 +296,11 @@ async function updateInconsistencies() {
     translations = prepareTranslationsForExport(translations)
 
     console.log("removing old data")
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/items.json`)
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`)
-
+    await database.ref("/items").remove()
+    await database.ref("/translations").remove()
     console.log("uploading new keys")
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/items.json`).send(items)
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`).send(translations)
+    await uploadDataToFirebase("/items", items)
+    await uploadDataToFirebase("/translations", translations)
 
     console.log("SUCCESS: updated all inconsistencies")
     // eslint-disable-next-line consistent-return
@@ -292,17 +316,16 @@ async function updateCollections() {
     return
   }
   try {
-    const translations = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/translations.json`)).body
-    let collections = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`)).body
+    const translations = (await database.ref("/translations").once("value")).val()
+    let collections = (await database.ref("/collections").once("value")).val()
 
     collections = assignCollectionKeys(collections, Object.keys(translations))
     collections = computeInconsistenciesOfCollection(collections, translations)
 
     console.log("removing old data")
-    await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`)
-
+    await database.ref("/collections").remove()
     console.log("uploading new collections")
-    await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/collections.json`).send(collections)
+    await uploadDataToFirebase("/collections", collections)
 
     console.log("SUCCESS: updated all collections")
     // eslint-disable-next-line consistent-return

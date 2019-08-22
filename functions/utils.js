@@ -60,6 +60,8 @@ function determineCharType(char) {
     return "comma"
   case "_":
     return "underscore"
+  case "*":
+    return "asterisk"
   case " ":
     return "space"
   case "¿": // spanish beginning of a sentence ending with question/exclamation mark
@@ -108,6 +110,8 @@ function determineCharType(char) {
   case "⧸":
   case "⁄":
     return "slash"
+  case "\\":
+    return "backslash"
   case "+":
     return "plus"
   default:
@@ -120,18 +124,6 @@ function determineCharType(char) {
       return "uncategorized"
     }
   }
-}
-
-function validateHtml(html) {
-  const htmlSanitizedEverythingAllowed = sanitizeHtml(html, {
-    allowedTags: false, // allow all tags
-    allowedAttributes: false, // allow all attributes
-  })
-  const htmlSanitizedWhitelistedAllowed = sanitizeHtml(html, {
-    allowedTags: ["br", "a", "strong", "em", "span", "i"], // found and blacklisted: ul, li, ol, div, b, p
-    allowedAttributes: false, // allow all attributes
-  })
-  return htmlSanitizedEverythingAllowed === htmlSanitizedWhitelistedAllowed ? "" : "NOT_ALLOWED"
 }
 
 function loadDicts(dictsExpansion, activatedDicts) {
@@ -192,10 +184,10 @@ function grammarNazi(locales, dictsExpansion, activatedDicts, placeholderRegex) 
 }
 
 function writeGoodCheck(content, lang, writeGoodSettings) {
-  if (lang === "en-GB") {
+  if (lang.substring(0, 2) === "en") {
     return writeGood(sanitizeHtml(content, { allowedTags: [], allowedAttributes: [] }), writeGoodSettings[lang])
   }
-  if (lang === "de-DE") {
+  if (lang.substring(0, 2) === "de") {
     return writeGood(sanitizeHtml(content, { allowedTags: [], allowedAttributes: [] }), { ...writeGoodSettings[lang], ...{ checks: schreibGut } })
   }
   return {}
@@ -258,13 +250,22 @@ function updateDictsExpansion(dictsExpansion, dicts) {
   }, {})
 }
 
+function getHTMLtags(str) {
+  return str.match(/<[^>]+>/gm) || []
+}
+
+function hasMissingEntities(translations, entity) {
+  return translations && _.uniqWith(_.map(translations, x => x[entity].sort()), _.isEqual).length !== 1
+}
+
 module.exports = {
   determineCharType,
-  validateHtml,
   grammarNazi,
   detectDynamicValues,
   hasInconsistentLength,
   getLangsWithDiffFirstCharCasing,
   writeGoodCheck,
   updateDictsExpansion,
+  getHTMLtags,
+  hasMissingEntities,
 }
