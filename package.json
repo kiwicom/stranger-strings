@@ -14,7 +14,6 @@
   "dependencies": {
     "@babel/runtime": "^7.1.2",
     "@vue/cli-plugin-unit-jest": "^3.0.1",
-    "apexcharts": "^3.5.0",
     "bootstrap": "^4.3.1",
     "bootstrap-vue": "^2.0.0-rc.27",
     "dotenv": "^6.0.0",
