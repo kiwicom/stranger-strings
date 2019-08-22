@@ -1,3 +1,4 @@
+/* eslint-disable global-require */
 import fp from "lodash/fp"
 import _ from "lodash"
 import * as R from "ramda"
@@ -5,19 +6,6 @@ import * as R from "ramda"
 const mapWithoutCap = fp.map.convert({
   cap: false,
 })
-
-export const descriptions = {
-  placeholders: "detects missing placeholders in translations",
-  first: "compares types of characters in the beginning of translations",
-  last: "compares types of characters in the end of translations",
-  tags: "checks for prohibited HTML tags",
-  length: "detects suspicious variations in length",
-  typos: "performs spellchecking",
-  "write-good": "detects stylistic issues in text",
-  insensitiveness: "detects gender favouring, polarising, race related, religion inconsiderate, or other unequal phrasing in text",
-  dynamic: "detects dynamic values e.g. numbers",
-  "no english": "looks for missing english translation",
-}
 
 // exact match for en translations
 export function strictSearch(items, query) {
@@ -34,21 +22,6 @@ export function strictSearch(items, query) {
     }
     return acc
   }, matchContent)
-}
-
-// get all tags used across translations
-export function getAvailableTags(translations) {
-  return R.reduce((acc, key) => {
-    if (!translations[key].tags) {
-      return acc
-    }
-    translations[key].tags.forEach((tag) => {
-      if (!acc.includes(tag)) {
-        acc.push(tag)
-      }
-    })
-    return acc
-  }, [], R.keys(translations)).sort()
 }
 
 // sort by property either "asc" or "desc"
@@ -81,36 +54,9 @@ export function getPlaceholders(s) {
 }
 
 export function getItemInconsistencies(key) {
-  const _inconsistencies = Object.keys(key).filter(x => /^_inconsistencies_/.test(x)).filter(x => key[x])
+  const _inconsistencies = Object.keys(key).filter(x => x.indexOf("_inconsistencies_") === 0).filter(x => key[x])
   if (!key["en-GB"] && key !== "items") {
     _inconsistencies.push("_inconsistencies_noEnglish")
   }
   return _inconsistencies
-}
-
-export function userifyInconsistency(inconsistency) {
-  switch (inconsistency) {
-  case "_inconsistencies_placeholders":
-    return "placeholders"
-  case "_inconsistencies_firstCharType":
-    return "first"
-  case "_inconsistencies_lastCharType":
-    return "last"
-  case "_inconsistencies_tags":
-    return "tags"
-  case "_inconsistencies_length":
-    return "length"
-  case "_inconsistencies_typos":
-    return "typos"
-  case "_inconsistencies_writeGood":
-    return "write-good"
-  case "_inconsistencies_dynamic":
-    return "dynamic"
-  case "_inconsistencies_noEnglish":
-    return "no english"
-  case "_inconsistencies_insensitiveness":
-    return "insensitiveness"
-  default:
-    return inconsistency
-  }
 }

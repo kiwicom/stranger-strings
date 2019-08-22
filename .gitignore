@@ -3,6 +3,7 @@ node_modules
 dist
 .cache
 .firebase
+*.env
 
 # local env files
 .env.local
@@ -23,3 +24,4 @@ yarn-error.log*
 *.sw*
 *.lock
 *.log
+functions/package-lock.json
