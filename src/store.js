@@ -107,17 +107,23 @@ export default new Vuex.Store({
         state.checks[c].active = !defaults.DEFAULT_DISABLED_CHECKS.includes(c)
       })
     },
+    setDefaultCheckLevels(state) {
+      Object.keys(state.checks).forEach((c) => {
+        if (defaults.DEFAULT_IMPORTANT_CHECKS.includes(c)) {
+          state.checks[c].level = "error"
+        } else if (defaults.DEFAULT_UNIMPORTANT_CHECKS.includes(c)) {
+          state.checks[c].level = "suggestion"
+        } else {
+          state.checks[c].level = "warning"
+        }
+      })
+    },
     setCheckLevel(state, payload) {
       // payload = {
       //   check,
       //   level,
       // }
       state.checks[payload.check].level = payload.level
-    },
-    setDefaultCheckLevels(state) {
-      Object.keys(state.checks).forEach((c) => {
-        state.checks[c].level = defaults.DEFAULT_IMPORTANT_CHECKS.includes(c) ? "high" : "low"
-      })
     },
     addLocale(state, locale) {
       const newLocale = {}

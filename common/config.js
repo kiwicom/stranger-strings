@@ -51,6 +51,13 @@ const DEFAULT_DISABLED_CHECKS = []
 const DEFAULT_IMPORTANT_CHECKS = [
   "_inconsistencies_placeholders",
   "_inconsistencies_typos",
+  "_inconsistencies_tags",
+]
+
+const DEFAULT_UNIMPORTANT_CHECKS = [
+  "_inconsistencies_writeGood",
+  "_inconsistencies_insensitiveness",
+  "_inconsistencies_dynamic",
 ]
 
 const DEFAULT_WRITE_GOOD_SETTINGS = {
@@ -80,7 +87,7 @@ const DEFAULT_VIEW = {
   hardWrap: false,
 }
 
-const DEFAULT_PLACEHOLDER_REGEX = "({{\\w+}})"
+const DEFAULT_PLACEHOLDER_REGEX = "(__\\w+__)"
 
 const DEFAULT_ALLOWED_TAGS = ["br", "a", "strong", "em", "span", "i"]
 
@@ -93,6 +100,7 @@ module.exports = {
   DEFAULT_INSENSITIVENESS_CONFIG,
   DEFAULT_DISABLED_CHECKS,
   DEFAULT_IMPORTANT_CHECKS,
+  DEFAULT_UNIMPORTANT_CHECKS,
   DEFAULT_VIEW,
   DEFAULT_PLACEHOLDER_REGEX,
   DEFAULT_ALLOWED_TAGS,

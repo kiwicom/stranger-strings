@@ -11,7 +11,7 @@
   >
     <div class="config-group">
       <h4>Checks</h4>
-      <ResetDefaults :cb="setDefaultCheckActiveness"/>
+      <ResetDefaults :cb="setDefaultChecks"/>
       <b-row>
         <Check
           v-for="(checkKey) in Object.keys(checks)" :key="checkKey"
@@ -96,10 +96,15 @@ export default {
     ...mapMutations([
       "setDefaultCheckActiveness",
       "setDefaultLocaleImportance",
+      "setDefaultCheckLevels",
       "setLocaleImportance",
       "setDefaultHardWrap",
       "toggleHardWrap",
     ]),
+    setDefaultChecks() {
+      this.setDefaultCheckLevels()
+      this.setDefaultCheckActiveness()
+    },
   },
 }
 </script>
