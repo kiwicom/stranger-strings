@@ -25,6 +25,7 @@ import NProgress from "nprogress"
 
 import "../styles/bootstrap-overrides.css"
 import "../styles/nprogress.css"
+import "../styles/virtual-scroller.css"
 import Navbar from "./components/Navbar"
 import Welcome from "./components/Welcome"
 import Status from "./components/Status"
@@ -88,4 +89,10 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+  #app {
+    height: 100%;
+  }
+</style>
 

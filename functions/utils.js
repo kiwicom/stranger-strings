@@ -164,15 +164,17 @@ function grammarNazi(locales, dictsExpansion, activatedDicts, placeholderRegex) 
   _.forEach(locales, (loc) => {
     _.forEach(loc, (locData, file) => {
       const lang = file.substr(0, 5)
-      const txt = locData.content
+      const txt = typeof locData.content === "string" && locData.content
         .replace(/<(?:.|\n)*?>/gm, " ")
         .replace(RegExp(placeholderRegex, "g"), "") // replace tags with space and remove placeholders
       let unrecognized
       if (lang in dicts) {
         unrecognized = []
-        spellcheck(dicts[lang], txt).forEach((typo) => {
-          unrecognized.push(typo)
-        })
+        if (txt) {
+          spellcheck(dicts[lang], txt).forEach((typo) => {
+            unrecognized.push(typo)
+          })
+        }
       } else {
         unrecognized = "unsupported language"
       }

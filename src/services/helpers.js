@@ -1,11 +1,6 @@
 /* eslint-disable global-require */
-import fp from "lodash/fp"
 import _ from "lodash"
 import * as R from "ramda"
-
-const mapWithoutCap = fp.map.convert({
-  cap: false,
-})
 
 // exact match for en translations
 export function strictSearch(items, query) {
@@ -26,21 +21,7 @@ export function strictSearch(items, query) {
 
 // sort by property either "asc" or "desc"
 export function sortTranslationKeys(translations, sortProperty, ascOrDesc) {
-  const preserveOriginalKeyFunc = mapWithoutCap((x, key) => Object.assign({}, x, { _key: key }))
-  const orderByFunc = fp.orderBy([sortProperty], [ascOrDesc])
-  const addOriginalKeyFunc = fp.reduce((acc, val) => {
-    const key = val._key
-    acc[key] = fp.omit(["_key"])(val)
-    return acc
-  }, {})
-
-  const orderObjectFunc = fp.compose(
-    addOriginalKeyFunc,
-    orderByFunc,
-    preserveOriginalKeyFunc,
-  )
-
-  return orderObjectFunc(translations)
+  return _.orderBy(translations, sortProperty, ascOrDesc)
 }
 
 export function getPlaceholders(s) {

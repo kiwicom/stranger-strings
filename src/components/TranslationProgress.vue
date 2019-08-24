@@ -1,5 +1,5 @@
 <template>
-    <b-progress class="mt-2" :max="getMaximumTranslations" show-value>
+    <b-progress :max="getMaximumTranslations" show-value>
         <b-progress-bar
           variant="success"
           :value="translated.length"

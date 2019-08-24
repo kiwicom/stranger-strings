@@ -64,12 +64,12 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
       _placeholders: trimmed.match(RegExp(placeholderRegex, "g")) || [],
       _firstCharType: determineCharType(saniUntrimmed[0]),
       _lastCharType: determineCharType(saniUntrimmed[saniUntrimmed.length - 1]),
-      _tags: getHTMLtags(_val),
-      _disallowedTags: getHTMLtags(_val).filter(tag => !allowedTags.includes(tag.match(/(?<=<|<\/)\w+/gm) && tag.match(/(?<=<|<\/)\w+/gm)[0])),
+      _tags: getHTMLtags(untrimmed),
+      _disallowedTags: getHTMLtags(untrimmed).filter(tag => !allowedTags.includes(tag.match(/(?<=<|<\/)\w+/gm) && tag.match(/(?<=<|<\/)\w+/gm)[0])),
       _dynamic: detectDynamicValues(sanitized),
-      _writeGood: writeGoodCheck(_val, _key, writeGoodSettings),
+      _writeGood: writeGoodCheck(untrimmed, _key, writeGoodSettings),
       _insensitiveness: _key.toString().substring(0, 2) === "en" ?
-        alex.text(sanitizeHtml(_val, { allowedTags: [], allowedAttributes: [] }), insensitivenessConfig).messages.map(out => out.message) : {},
+        alex.text(sanitizeHtml(untrimmed, { allowedTags: [], allowedAttributes: [] }), insensitivenessConfig).messages.map(out => out.message) : {},
     })
   })
   return mappedTranslations
