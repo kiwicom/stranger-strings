@@ -132,7 +132,7 @@
             }"
           >
               <div class="table-item key">
-                <b-link @click="showKeyDetail(item['.key'])">
+                <b-link @click="showKeyDetail(item['.key'])" :title="item.key">
                   {{ item.key }}
                 </b-link>
               </div>
@@ -428,6 +428,7 @@ export default {
     font-size: 13px;
     vertical-align: middle;
     border-top: 1px solid #dee2e6;
+    align-items: stretch;
   }
   .table-row:hover {
     background-color: rgba(0, 0, 0, 0.065);
@@ -442,6 +443,13 @@ export default {
     text-overflow: ellipsis;
     white-space: nowrap;
     padding-left: 10px;
+    display: flex;
+    align-items: center;
+  }
+  .key a {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
   }
   .prog-bar {
     width: 80px;
@@ -457,33 +465,39 @@ export default {
   .table-row .prog-bar {
     border-right: 1px solid #ccc;
     padding: 11px 8px 11px 0px;
+    display: flex;
+    align-items: center;
   }
   .table-row .check {
     border-right: 1px solid #ccc;
     padding: 5px;
+    display: flex;
+    justify-content: center;
   }
   .translation {
     padding-left: 10px;
     max-height: 50px;
-    width: 38vw;
-    max-width: 38vw;
+    width: 40vw;
+    max-width: 40vw;
     min-width: 38vw;
     overflow: hidden;
     overflow-x: scroll;
     white-space: nowrap;
     -ms-overflow-style: none;
     overflow: -moz-scrollbars-none;
-    padding-right: 10px;
     flex-grow: 20;
+    display: flex;
+    align-items: center;
   }
   .translation-hard-wrap {
-    padding-left: 10px;
+    padding: 10px 5px 10px 5px;
     max-height: max-content;
     width: 38vw;
     max-width: 38vw;
     min-width: 38vw;
     overflow: hidden;
-    padding-right: 10px;
+    display: flex;
+    align-items: center;
   }
 
   .textInput {
