@@ -392,6 +392,11 @@ export default {
         this.showDictExpansion = false
       }
     },
+    hardWrap() { // to avoid glitches in UI
+      const tmp = _.cloneDeep(this.items)
+      this.items = []
+      this.items = tmp
+    },
   },
 }
 </script>
