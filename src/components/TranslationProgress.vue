@@ -1,5 +1,5 @@
 <template>
-    <b-progress class="mt-2" :max="getMaximumTranslations" show-value>
+    <b-progress :max="getMaximumTranslations" show-value class="progress-wrapper">
         <b-progress-bar
           variant="success"
           :value="translated.length"
@@ -33,5 +33,8 @@ export default {
   }
   .bg-danger {
     background-color: #D5011B !important;
+  }
+  .progress-wrapper {
+    width: 100%;
   }
 </style>

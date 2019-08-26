@@ -1,11 +1,13 @@
 import Vue from "vue"
 import VueFire from "vuefire"
+import VueVirtualScroller from "vue-virtual-scroller"
 import BootstrapVue from "bootstrap-vue"
 import Octicon from "vue-octicon/components/Octicon"
 import CountryFlag from "vue-country-flag"
 import VueClipboard from "vue-clipboard2"
 
 import VTooltip from "v-tooltip"
+import "vue-virtual-scroller/dist/vue-virtual-scroller.css"
 import "../styles/tooltip.css"
 
 import App from "./App"
@@ -17,6 +19,7 @@ VueClipboard.config.autoSetContainer = true
 Vue.use(VueFire)
 Vue.use(BootstrapVue)
 Vue.use(VueClipboard)
+Vue.use(VueVirtualScroller)
 
 Vue.use(VTooltip, {
   defaultArrowSelector: ".tooltiper-arrow, .tooltiper__arrow",

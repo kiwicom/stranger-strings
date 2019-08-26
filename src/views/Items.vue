@@ -49,102 +49,122 @@
       </b-button-group>
     </div>
 
-    <!-- KEYS - MAIN TABLE -->
-    <table class="table table-sm table-striped table-hover table-keys table-fixed">
-      <thead>
-        <tr>
-          <th
-            @click="changeSort('key')"
-            class="sorting table-fixed"
-            :class="{ 'sorting_asc' : sort[0] === 'key' && sort[1] === 'asc', 'sorting_desc' : sort[0] === 'key' && sort[1] === 'desc' }"
-          >
-            Key (showing {{ Object.keys(items).length }} / {{ Object.keys(allItems).length }})
-          </th>
-          <th
-            @click="changeSort('count')"
-            class="sorting"
-            :class="{ 'sorting_asc' : sort[0] === 'count' && sort[1] === 'asc', 'sorting_desc' : sort[0] === 'count' && sort[1] === 'desc' }"
-          >
-            Progress
-          </th>
-          <th
-            v-for="(check, checkKey) in checks" :key="checkKey"
-            :class="{
+    <div class="table-head">
+      <div class="head-item key">
+        <div
+          class="sort-button"
+          @click="changeSort('key')"
+        >
+          Key (showing {{ Object.keys(items).length }} / {{ Object.keys(allItems).length }})
+        </div>
+      </div>
+      <div class="head-item prog-bar">
+        <div
+          class="sort-button"
+          @click="changeSort('count')"
+        >
+          Progress
+        </div>
+      </div>
+      <div
+        class="head-item check"
+        v-for="(check, checkKey) in checks" :key="checkKey"
+        :class="{
               'th-errors': true,
               'disabled': !isActive(checkKey),
             }"
-          >
-            <v-popover
-              trigger="hover"
-              :class="{
+      >
+        <v-popover
+          trigger="hover"
+          :class="{
                 'check-filter': isActive(checkKey) && checkFilter === checkKey,
               }"
-            >
-              <keep-alive>
-                <component
-                  :class="{
+        >
+          <keep-alive>
+            <component
+              :class="{
                     'icon': true,
+                    'sort-button': true,
                     'selected-check': checkFilter === checkKey,
                   }"
-                  @click="isActive(checkKey) && toggleCheckFilter(checkKey)"
-                  :is="getIcon(checkKey)"
-                  style="font-size: 18px;"
-                />
-              </keep-alive>
-              <template slot="popover">
-                <Check
-                  :checkKey="checkKey"
-                  :toggleCheckFilter="toggleCheckFilter"
-                  :activeFilter="checkFilter === checkKey"
-                  class="p-3"
-                />
-              </template>
-            </v-popover>
-          </th>
-          <th
-            @click="changeSort('en-GB')"
-            class="sorting locale"
-            :class="{ 'sorting_asc' : sort[0] === 'en-GB' && sort[1] === 'en-GB', 'sorting_desc' : sort[0] === 'en-GB' && sort[1] === 'desc' }"
-          >
-            English
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- TRANSLATION KEY ROW -->
-        <tr v-for="(val, key) in items" :key="val.key" v-if="val.key">
-          <td class="key" scope="row">
-            <b-link @click="showKeyDetail(key)">
-              {{ val.key }}
-            </b-link>
-          </td>
-
-          <td class="translationProgress">
-            <TranslationProgress
-              :get-maximum-translations="getLocalesCount"
-              :important-loc="getImportantLocales.filter(l => !(val.translated || []).includes(l))"
-              :translated="val.translated || []"
+              @click="isActive(checkKey) && toggleCheckFilter(checkKey)"
+              :is="getIcon(checkKey)"
+              style="font-size: 18px;"
             />
-          </td>
-
-          <td
-            v-for="(check, checkKey) in checks" :key="checkKey"
+          </keep-alive>
+          <template slot="popover">
+            <Check
+              :checkKey="checkKey"
+              :toggleCheckFilter="toggleCheckFilter"
+              :activeFilter="checkFilter === checkKey"
+              class="p-3"
+            />
+          </template>
+        </v-popover>
+      </div>
+      <div class="head-item">
+        <div
+          class="sort-button translation"
+          @click="changeSort('en-GB')"
+        >
+          English
+        </div>
+      </div>
+    </div>
+    <div class="table-body">
+      <DynamicScroller
+        :items="items"
+        key-field="key"
+        :min-item-size="39"
+        class="scroller"
+      >
+        <template v-slot="{ item, index, active }">
+          <DynamicScrollerItem
+            :item="item"
+            :active="active"
+            :size-dependencies="[
+              item['en-GB'],
+            ]"
+            :data-index="index"
             :class="{
-              'indicators': true,
-              'disabled': !isActive(checkKey),
+              'table-row': true,
+              'odd-row': index & 1,
             }"
           >
-            <keep-alive>
-              <component v-if="isActive(checkKey) && val[checkKey]" :is="getIcon(checkKey)" />
-            </keep-alive>
-          </td>
-
-          <td v-bind:class="{ 'locale-hard-wrap': hardWrap, 'locale': !hardWrap }">
-            {{ getTranslation(val, "en-GB") }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+              <div class="table-item key">
+                <b-link @click="showKeyDetail(item['.key'])" :title="item.key">
+                  {{ item.key }}
+                </b-link>
+              </div>
+              <div class="table-item prog-bar">
+                <TranslationProgress
+                  :get-maximum-translations="getLocalesCount"
+                  :important-loc="getImportantLocales.filter(l => !(item.translated || []).includes(l))"
+                  :translated="item.translated || []"
+                />
+              </div>
+              <div
+                v-for="(check, checkKey) in checks" :key="checkKey"
+                :class="{
+                  'table-item': true,
+                  'check': true,
+                  'disabled': !isActive(checkKey),
+                 }"
+              >
+                <keep-alive>
+                  <component v-if="isActive(checkKey) && item[checkKey]" :is="getIcon(checkKey)" />
+                  <div style="opacity: 0;" v-else>-</div>
+                </keep-alive>
+              </div>
+              <div
+                :class="{ 'translation-hard-wrap': hardWrap, 'translation': !hardWrap, 'table-item': true }"
+              >
+                {{ getTranslation(item, "en-GB") }}
+              </div>
+          </DynamicScrollerItem>
+        </template>
+      </DynamicScroller>
+    </div>
 
     <DictionaryExpansion
       :show="showDictExpansion"
@@ -168,7 +188,7 @@
     <KeyDetail
       v-if="activeKey && localesLoaded && itemsLoaded"
       :user="user"
-      :item="items[activeKey]"
+      :item="items.find(i => i['.key'] === activeKey)"
       :notifyUser="notifyUser"
       @close="hideKeyDetail"
     />
@@ -211,7 +231,7 @@ export default {
   data() {
     return {
       // View
-      items: {}, // filtered items with search query
+      items: [], // filtered items with search query
       itemsLoaded: false,
       localesLoaded: false,
 
@@ -223,7 +243,6 @@ export default {
 
       // Active
       activeKey: this.$route.params.all ? this.$route.params.all : null,
-      activeTranslations: null,
 
       // Configs
       showUserConfig: false,
@@ -235,7 +254,6 @@ export default {
     return {
       allItems: {
         source: FbDb.ref("items"),
-        asObject: true,
         readyCallback: () => {
           this.items = this.sortKeys(this.allItems)
           NProgress.done()
@@ -311,12 +329,12 @@ export default {
     },
     search() { // event param if needed
       NProgress.start()
-      this.items = _.reduce(this.allItems, (acc, val, key) => {
+      this.items = _.reduce(this.allItems, (acc, val) => {
         if (this.checkFilter === "all" || this.getItemInconsistencies(val).includes(this.checkFilter)) {
-          acc[key] = val
+          acc.push(val)
         }
         return acc
-      }, {})
+      }, [])
       if (this.searchQuery !== "") { // filter by string query
         const searchOptions = {
           shouldSort: true,
@@ -327,19 +345,14 @@ export default {
           minMatchCharLength: 1,
           keys: ["en-GB", "key"],
         }
-        // need to map to array and then back to object for fuse to work
-        const fuse = new Fuse(Object.values(this.items), searchOptions)
+        const fuse = new Fuse(this.items, searchOptions)
         const result = fuse.search(this.searchQuery)
-        const mappedResult = {}
-        result.forEach((e) => {
-          mappedResult[e.key.includes(".") ? e.key.split(".").join("-") : e.key] = e
-        })
-        this.items = mappedResult
+        this.items = result
       }
       NProgress.done()
     },
     exportKeys() {
-      saveJSON(Object.keys(this.items).map(k => this.items[k].key), "export.json")
+      saveJSON(this.items.map(i => i.key), "export.json")
     },
     getTranslation(key, locale) {
       const translation = JSON.stringify(_.get(key, [locale], "» not translated «"))
@@ -353,9 +366,6 @@ export default {
       this.$router.replace({ name: "items" })
     },
     getItemInconsistencies(key) {
-      if (key === "items") {
-        return [] // because vuefire
-      }
       return helpers.getItemInconsistencies(key)
     },
     toggleCheckFilter(error) {
@@ -377,11 +387,15 @@ export default {
     $route(to) {
       if (to.path === "/items") {
         this.activeKey = null
-        this.activeTranslations = null
         this.showUserConfig = false
         this.showAdminConfig = false
         this.showDictExpansion = false
       }
+    },
+    hardWrap() { // to avoid glitches in UI
+      const tmp = _.cloneDeep(this.items)
+      this.items = []
+      this.items = tmp
     },
   },
 }
@@ -390,121 +404,115 @@ export default {
 <style scoped>
   @import url('https://fonts.googleapis.com/css?family=Megrim');
 
-  .table-fixed {
-    width: 100%;
+  .sort-button {
+    cursor: pointer;
+  }
+  .scroller {
+    height: 100vh;
+    overflow-y: auto;
   }
 
-  .table-fixed thead {
-    top: 0;
-    z-index: 1;
-  }
-
-  .table-fixed thead th {
+  .table-head {
+    display: flex;
+    flex-direction: row;
     top: -1px;
     z-index: 1;
     position: sticky;
     position: -webkit-sticky;
     background-color: #f9fafc;
     font-weight: 500;
-    font-size: 14px;
-  }
-  .sorting {
-    cursor: pointer;
+    font-size: 16px;
+    padding: 7px 0 7px 0;
   }
 
-  th {
+  .check-filter {
+    border-bottom: 2px solid black;
+  }
+
+  .table-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
     font-size: 13px;
-    background-color: white;
-    cursor: pointer;
-    padding: 5px 8px;
-  }
-
-  th.th-errors, td.indicators {
-    width: 1px; /* fit the width of the content */
-    text-align: center;
-    font-size: 18px;
-    vertical-align: bottom;
-  }
-
-  td.indicators {
-    border-right: 1px solid #ccc;
-  }
-
-  th.th-errors.disabled .material-design-icon {
-    opacity: .3;
-  }
-
-  th.th-errors.disabled {
-    padding-left: 3px;
-    padding-right: 3px;
-  }
-
-  td.indicators.disabled {
-    padding-left: 3px;
-    padding-right: 3px;
-    background-image: repeating-linear-gradient(-45deg, #E6E7E9, #cfd8e2 1px, white 2px, white 5px)
-  }
-
-  td {
     vertical-align: middle;
+    border-top: 1px solid #dee2e6;
+    align-items: stretch;
   }
-
-  td.key {
-    width: 30vw;
-    max-width: 30vw;
+  .table-row:hover {
+    background-color: rgba(0, 0, 0, 0.065);
+  }
+  .odd-row {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  .key {
+    width: 32vw;
+    max-width: 32vw;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    padding-left: 10px;
+    display: flex;
+    align-items: center;
   }
-  td.key a {
-    color: #26539B;
+  .key a {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
   }
-  td.translationProgress {
-    width: 50px;
+  .prog-bar {
+    width: 80px;
+  }
+  .check {
+    width: 35px;
+    text-align: center;
+    font-size: 18px;
+  }
+  .table-row .disabled {
+    background-image: repeating-linear-gradient(-45deg, #E6E7E9, #cfd8e2 1px, white 2px, white 5px);
+  }
+  .table-row .prog-bar {
     border-right: 1px solid #ccc;
+    padding: 11px 8px 11px 0px;
+    display: flex;
+    align-items: center;
   }
-
-  td.locale {
+  .table-row .check {
+    border-right: 1px solid #ccc;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+  }
+  .translation {
+    padding-left: 10px;
     max-height: 50px;
-    width: 38vw;
-    max-width: 38vw;
+    width: 40vw;
+    max-width: 40vw;
     min-width: 38vw;
     overflow: hidden;
     overflow-x: scroll;
     white-space: nowrap;
     -ms-overflow-style: none;
     overflow: -moz-scrollbars-none;
-    padding-right: 10px;
+    flex-grow: 20;
+    display: flex;
+    align-items: center;
   }
-  td.locale-hard-wrap {
+  .translation-hard-wrap {
+    padding: 10px 5px 10px 5px;
     max-height: max-content;
     width: 38vw;
     max-width: 38vw;
     min-width: 38vw;
     overflow: hidden;
-    padding-right: 10px;
-  }
-  td.locale::-webkit-scrollbar {
-    display: none;
-  }
-  .row-visited td {
-    background-color: #DFE7F2;
+    display: flex;
+    align-items: center;
   }
 
   .textInput {
     max-width: 100%;
     width: 500px;
     font-size: 14px;
-  }
-
-  .check-filter {
-    border-bottom: solid 1px black;
-  }
-
-  .loc-label {
-    float: left;
-    width: 200px;
-    font-weight: bolder;
   }
 
   .search-input {
@@ -516,12 +524,5 @@ export default {
   .search-input .input-group {
     width: 280px;
     display: inline-flex;
-  }
-
-  .table-keys {
-    font-size: 12px;
-  }
-  .selected-check {
-    font-weight: 900;
   }
 </style>

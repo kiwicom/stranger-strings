@@ -11,11 +11,11 @@ const database = require("./database")
 
 const runtimeConfig = {
   mainUpdate: {
-    timeoutSeconds: 300,
+    timeoutSeconds: 540,
     memory: "2GB",
   },
   secondaryUpdate: {
-    timeoutSeconds: 200,
+    timeoutSeconds: 540,
     memory: "2GB",
   },
 }
