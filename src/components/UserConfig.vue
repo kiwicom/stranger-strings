@@ -1,7 +1,7 @@
 <template>
   <b-modal
     id="writeGoodSettingsModal"
-    v-model="show"
+    :visible="show"
     :title="'User configuration'"
     size="lg"
     hide-footer

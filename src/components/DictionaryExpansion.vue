@@ -1,7 +1,7 @@
 <template>
   <b-modal
     id="dictsExpansionModal"
-    v-model="show"
+    :visible="show"
     :title="'Custom spellchecking dictionary expansion'"
     size="lg"
     ok-title="Update"

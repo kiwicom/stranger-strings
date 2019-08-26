@@ -3,7 +3,7 @@
     <v-popover
       trigger="hover"
       v-if="token.content !== ''"
-      v-for="token in parseContent(content)"
+      v-for="token in tokens"
       :key="token.order + token.typelessOrder"
       :disabled="!token.type && !token.first && !token.last"
       style="display: inline-block"
@@ -132,6 +132,14 @@ export default {
         asObject: true,
       },
     }
+  },
+  data() {
+    return {
+      tokens: [],
+    }
+  },
+  created() {
+    this.tokens = this.parseContent(this.content)
   },
   computed: {
     ...mapGetters([

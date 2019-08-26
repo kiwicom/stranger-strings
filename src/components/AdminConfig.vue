@@ -1,6 +1,6 @@
 <template>
   <b-modal
-    v-model="show"
+    :visible="show"
     :title="'Admin Configuration'"
     size="lg"
     ok-title="Save"
