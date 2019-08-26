@@ -420,6 +420,10 @@ export default {
     padding: 7px 0 7px 0;
   }
 
+  .check-filter {
+    border-bottom: 2px solid black;
+  }
+
   .table-row {
     display: flex;
     flex-direction: row;
