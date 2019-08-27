@@ -48,6 +48,18 @@ const DEFAULT_SPELLCHECKING_DICT_SUPPORT = {
 
 const DEFAULT_DISABLED_CHECKS = []
 
+const DEFAULT_IMPORTANT_CHECKS = [
+  "_inconsistencies_placeholders",
+  "_inconsistencies_typos",
+  "_inconsistencies_tags",
+]
+
+const DEFAULT_UNIMPORTANT_CHECKS = [
+  "_inconsistencies_writeGood",
+  "_inconsistencies_insensitiveness",
+  "_inconsistencies_dynamic",
+]
+
 const DEFAULT_WRITE_GOOD_SETTINGS = {
   "de-DE": {
     tooWordy: true,
@@ -75,7 +87,9 @@ const DEFAULT_VIEW = {
   hardWrap: false,
 }
 
-const DEFAULT_PLACEHOLDER_REGEX = "({{\\w+}})"
+const DEFAULT_PLACEHOLDER_REGEX = "(__\\w+__)"
+
+const DEFAULT_ALLOWED_TAGS = ["br", "a", "strong", "em", "span", "i"]
 
 const baseUrl = `https://us-central1-${process.env.VUE_APP_FIREBASE_PROJECT_ID}.cloudfunctions.net`
 
@@ -85,8 +99,11 @@ module.exports = {
   DEFAULT_WRITE_GOOD_SETTINGS,
   DEFAULT_INSENSITIVENESS_CONFIG,
   DEFAULT_DISABLED_CHECKS,
+  DEFAULT_IMPORTANT_CHECKS,
+  DEFAULT_UNIMPORTANT_CHECKS,
   DEFAULT_VIEW,
   DEFAULT_PLACEHOLDER_REGEX,
+  DEFAULT_ALLOWED_TAGS,
   UPDATE_FUNCTION_ENDPOINT: `${baseUrl}/update`,
   INCONSISTENCIES_UPDATE_FUNCTION_ENDPOINT: `${baseUrl}/inconsistenciesUpdate`,
   COLLECTIONS_UPDATE_FUNCTION_ENDPOINT: `${baseUrl}/collectionsUpdate`,

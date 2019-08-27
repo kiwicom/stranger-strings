@@ -1,56 +1,56 @@
 {
   "rules": {
-    "itemsMetaData": {
-      ".read": "true",
-      ".write": "true"
-    },
     "items": {
-      ".read": "true",
-      ".write": "true"
+      ".read": "auth != null",
+      ".write": "false"
     },
     "translations": {
-      ".read": "true",
-      ".write": "true"
+      ".read": "auth != null",
+      ".write": "false"
     },
     "lastUpdate": {
-      ".read": "true",
-      ".write": "true"
+      ".read": "auth != null",
+      ".write": "false"
     },
     "updateInProgress": {
-      ".read": "true",
-      ".write": "true"
+      ".read": "auth != null",
+      ".write": "false"
     },
     "dictsExpansion": {
-      ".read": "true",
-      ".write": "true"
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "collections": {
-      ".read": "true",
-      ".write": "true"
+      ".read": "auth != null",
+      ".write": "false"
     },
     "writeGood": {
-      ".read": "true",
-      ".write": "true"
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "placeholders": {
-       ".read": "true",
-       ".write": "true"
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "locales": {
-      ".read": "true",
-      ".write": "true"
+      ".read": "auth != null",
+      ".write": "false"
     },
     "reports": {
-      ".read": "true",
-      ".write": "true"
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "reportingConf": {
-      ".read": "true",
-      ".write": "true"
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "insensitivenessConfig": {
-      ".read": "true",
-      ".write": "true"
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "tags": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }

@@ -1,0 +1,114 @@
+.tooltiper {
+  display: block !important;
+  z-index: 10000;
+}
+
+.tooltiper .tooltiper-inner {
+  background: black;
+  color: white;
+  border-radius: 16px;
+  padding: 5px 10px 4px;
+}
+
+.tooltiper .tooltiper-arrow {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  position: absolute;
+  margin: 5px;
+  border-color: black;
+  z-index: 1;
+}
+
+.tooltiper.popoverer .popoverer-inner {
+  padding: 0px !important;
+  width: fit-content !important;
+}
+
+.tooltiper[x-placement^="top"] {
+  margin-bottom: 5px;
+}
+
+.tooltiper[x-placement^="top"] .tooltiper-arrow {
+  border-width: 5px 5px 0 5px;
+  border-left-color: transparent !important;
+  border-right-color: transparent !important;
+  border-bottom-color: transparent !important;
+  bottom: -5px;
+  left: calc(50% - 5px);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.tooltiper[x-placement^="bottom"] {
+  margin-top: 5px;
+}
+
+.tooltiper[x-placement^="bottom"] .tooltiper-arrow {
+  border-width: 0 5px 5px 5px;
+  border-left-color: transparent !important;
+  border-right-color: transparent !important;
+  border-top-color: transparent !important;
+  top: -5px;
+  left: calc(50% - 5px);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.tooltiper[x-placement^="right"] {
+  margin-left: 5px;
+}
+
+.tooltiper[x-placement^="right"] .tooltiper-arrow {
+  border-width: 5px 5px 5px 0;
+  border-left-color: transparent !important;
+  border-top-color: transparent !important;
+  border-bottom-color: transparent !important;
+  left: -5px;
+  top: calc(50% - 5px);
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.tooltiper[x-placement^="left"] {
+  margin-right: 5px;
+}
+
+.tooltiper[x-placement^="left"] .tooltiper-arrow {
+  border-width: 5px 0 5px 5px;
+  border-top-color: transparent !important;
+  border-right-color: transparent !important;
+  border-bottom-color: transparent !important;
+  right: -5px;
+  top: calc(50% - 5px);
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.tooltiper.popoverer .popoverer-inner {
+  width: 400px; /* TODO: Make more general */
+  background: #f9f9f9;
+  color: black;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, .2);
+}
+
+.tooltiper.popoverer .popoverer-arrow {
+  border-color: rgba(249, 249, 249, 0);
+  z-index: 1;
+  padding: 10px 50px;
+}
+
+.tooltiper[aria-hidden='true'] {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity .15s, visibility .15s;
+}
+
+.tooltiper[aria-hidden='false'] {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity .15s;
+}
+
