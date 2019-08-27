@@ -15,11 +15,11 @@ describe("spellcheck", () => {
   test("General spellcheck test for right parsing.", () => {
     expect(spellcheck(
       dict,
-      "Blessed is he :who:, in *the* name of the #charity# and good will, \
-      shepherds the /weak/ through the valley of darkness, for he is truly \
-      his brothers keeper __and__ the finder of lost children. And I will strike \
-      down upon thee with great vengeance and furious anger those who attempt \
-      to poison and {destroy} my brothers. <Pulp/Fiction (1994)>"
+      "Blessed is he :who:, in *the* name of the #charity# and good will, " +
+      "shepherds the /weak/ through the valley of darkness, for he is truly " +
+      "his brothers keeper __and__ the finder of lost children. And I will strike " +
+      "down upon thee with great vengeance and furious anger those who attempt " +
+      "to poison and {destroy} my brothers. <Pulp/Fiction (1994)>",
     )).toEqual([])
   })
   test("General spellcheck test for right typos detection", () => {

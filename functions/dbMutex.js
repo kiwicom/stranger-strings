@@ -1,17 +1,17 @@
-const superagent = require("superagent")
+const database = require("./database")
 
 async function tryLock(status) {
-  const updateInProgress = (await superagent.get(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/updateInProgress.json`)).body
+  const updateInProgress = (await database.ref("/updateInProgress").once("value")).val()
   if (updateInProgress) {
     return false
   }
   console.log(`Setting updateInProgress to state: ${status}`)
-  await superagent.put(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/updateInProgress/info.json`).send({ state: status })
+  await database.ref("/updateInProgress/info").set({ state: status })
   return true
 }
 
 async function unlock() {
-  await superagent.delete(`${process.env.VUE_APP_FIREBASE_DATABASE_URL}/updateInProgress.json`)
+  await database.ref("/updateInProgress").remove()
 }
 
 module.exports = {

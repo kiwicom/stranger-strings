@@ -72,7 +72,6 @@ export default {
       NProgress.done()
       this.loading = false
     })
-
     gcFunctions.update()
   },
   methods: {
@@ -89,4 +88,10 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+  #app {
+    height: 100%;
+  }
+</style>
 
