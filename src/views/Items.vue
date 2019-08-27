@@ -168,8 +168,9 @@
 
     <DictionaryExpansion
       :show="showDictExpansion"
-      @close="showDictExpansion = false"
+      :email="user.email"
       :notifyUser="notifyUser"
+      @close="showDictExpansion = false"
     />
 
     <UserConfig

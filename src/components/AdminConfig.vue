@@ -262,7 +262,6 @@ export default {
         this.notifyUser("Success!", "Configuration successfully updated", "success")
         gcFunctions.inconsistenciesUpdate()
       } else {
-        // eslint-disable-next-line no-alert
         this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
       }
     },

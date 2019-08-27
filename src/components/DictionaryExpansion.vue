@@ -9,6 +9,7 @@
     @ok="updateDictsExpansion"
     @hide="$emit('close')"
   >
+    <div v-if="!isAdmin" class="not-admin">You don't have permission to modify this configuration.</div>
     <div class="description">
       Here you can add/remove words that are not initially part of dictionary used for spellchecking.
     </div>
@@ -21,7 +22,8 @@
         :db-path="`dictsExpansion/${dict}`"
         item-name="word"
         :list-name="`${dict} dictionary`"
-        allow-changes
+        placeholder-item="YOLO"
+        :allow-changes="isAdmin"
       />
     </div>
     <div class="message" v-if="!dicts && !loaded">Loading...</div>
@@ -33,11 +35,14 @@
 import { FbDb } from "../modules/firebase"
 import * as gcFunctions from "../modules/functionsApi"
 import FirebaseListManager from "./FirebaseListManager"
+import ADMIN from "../consts/admin"
 
 export default {
   name: "DictionaryExpansion",
   props: {
     show: { type: Boolean, required: true },
+    email: { type: String, required: true },
+    notifyUser: { type: Function, required: true },
   },
   components: {
     FirebaseListManager,
@@ -61,9 +66,18 @@ export default {
       this.loaded = true
     })
   },
+  computed: {
+    isAdmin() {
+      return ADMIN.includes(this.email)
+    },
+  },
   methods: {
     updateDictsExpansion() {
-      gcFunctions.inconsistenciesUpdate()
+      if (this.isAdmin) {
+        gcFunctions.inconsistenciesUpdate()
+      } else {
+        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
+      }
     },
   },
 }
@@ -88,4 +102,9 @@ export default {
   margin: 30px;
   color: rgb(138, 138, 138);
 }
+  .not-admin {
+    text-align: center;
+    margin: 10px;
+    color: rgba(255, 0, 0, 0.85);
+  }
 </style>
