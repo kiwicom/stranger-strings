@@ -52,7 +52,7 @@
           </td>
           <td :class="['translation', isRtlLang(locale) ? 'rtl' : null]">
             <Highlighting
-              :content="JSON.stringify(activeTranslations[locale].content).slice(1, -1)"
+              :content="escapeContent(activeTranslations[locale].content)"
               :locale="locale"
               :writeGood="isActive('_inconsistencies_writeGood') && activeTranslations[locale]._writeGood"
               :typos="activeTranslations[locale]._typos !== 'unsupported language' && isActive('_inconsistencies_writeGood') ?
@@ -265,6 +265,9 @@ export default {
     },
     isRtlLang(locale) {
       return rtlDetect.isRtlLang(locale)
+    },
+    escapeContent(content) {
+      return JSON.stringify(content).slice(1, -1).replace(/\\"/gm, "\"")
     },
   },
 }

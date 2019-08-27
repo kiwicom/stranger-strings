@@ -355,7 +355,7 @@ export default {
       saveJSON(this.items.map(i => i.key), "export.json")
     },
     getTranslation(key, locale) {
-      const translation = JSON.stringify(_.get(key, [locale], "» not translated «"))
+      const translation = JSON.stringify(_.get(key, [locale], "» not translated «")).replace(/\\"/gm, "\"")
       if (translation && translation.length >= 2000) {
         return `${translation.substring(1, 1997)}...`
       }
@@ -517,7 +517,11 @@ export default {
 
   .search-input {
     position: absolute;
-    left: 455px;
+    left: 0;
+    right: 0;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
     top: 12px;
   }
 
