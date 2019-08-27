@@ -8,7 +8,10 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "prepare": "rm -rf ./dist && webpack && cp ./../.env dist/ && cp -r ./dicts dist/ && cp package.json dist/package.json"
+    "prepare": "rm -rf ./dist && webpack && cp ./../.env dist/ && cp ./../.env ./  && cp -r ./dicts dist/ && cp package.json dist/package.json"
+  },
+  "engines": {
+    "node": "10"
   },
   "engines": {"node": "8"},
   "jest": {
@@ -50,12 +53,12 @@
     "dictionary-vi": "^2.0.0",
     "dotenv": "^6.0.0",
     "firebase-admin": "~6.0.0",
-    "firebase-functions": "^2.3.1",
+    "firebase-functions": "^3.0.2",
     "lodash": "^4.17.10",
     "moment": "^2.22.2",
     "node-fetch": "^2.2.0",
     "nspell": "^2.1.0",
-    "sanitize-html": "^1.18.5",
+    "sanitize-html": "^1.20.1",
     "schreib-gut": "^0.0.1",
     "superagent": "^3.8.3",
     "write-good": "^0.13.1",

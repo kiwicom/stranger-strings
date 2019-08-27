@@ -14,44 +14,26 @@
           >
         </b-input-group>
       </b-input-group>
-    </div>
 
-    <!-- SETTINGS BUTTON -->
-    <div class="settings">
       <b-button-group>
         <b-dropdown down right variant="link" size="lg" no-caret>
           <template slot="button-content">
-            <octicon name="gear"></octicon>
+            <octicon name="gear" style="color: white; vertical-align: initial;"></octicon>
           </template>
           <b-dropdown-item-button
-            @click="showUserConfig"
+            @click="showUserConfig = true"
           >
             <octicon name="settings"></octicon>&nbsp; user config
           </b-dropdown-item-button>
           <b-dropdown-item-button
-            @click="showDictsExpansion"
+            @click="showAdminConfig = true"
+          >
+            <AdminIcon/>&nbsp; admin config
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
+            @click="showDictExpansion = true"
           >
             <octicon name="repo"></octicon>&nbsp; spellcheck dict
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="showPlaceholderConfig"
-          >
-            <octicon name="mention"></octicon>&nbsp; placeholder config
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="showWriteGoodConfig"
-          >
-            <octicon name="checklist"></octicon>&nbsp;write good config
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="showInsensitivenessConfig"
-          >
-            <InsensitivenessIcon></InsensitivenessIcon> insensitiveness config
-          </b-dropdown-item-button>
-          <b-dropdown-item-button
-            @click="showReportingConfig"
-          >
-            <octicon name="megaphone"></octicon>&nbsp;reporting config
           </b-dropdown-item-button>
           <b-dropdown-item-button
             @click="exportKeys"
@@ -67,761 +49,224 @@
       </b-button-group>
     </div>
 
-    <!-- KEYS - MAIN TABLE -->
-    <div class="sticky-header-hack">
-      <div class="ss-name">Stranger Strings</div>
-    </div>
-    <table class="table table-sm table-striped table-hover table-keys table-fixed">
-      <thead>
-        <tr>
-          <th
-            @click="changeSort('key')"
-            class="sorting table-fixed"
-            :class="{ 'sorting_asc' : sort[0] === 'key' && sort[1] === 'asc', 'sorting_desc' : sort[0] === 'key' && sort[1] === 'desc' }"
-          >
-            Key (showing {{ Object.keys(items).length }} / {{ Object.keys(allItems).length }})
-          </th>
-          <th
-            @click="changeSort('count')"
-            class="sorting"
-            :class="{ 'sorting_asc' : sort[0] === 'count' && sort[1] === 'asc', 'sorting_desc' : sort[0] === 'count' && sort[1] === 'desc' }"
-          >
-            Progress
-          </th>
-          <th class="th-errors" v-for="(count, error) in errors" :key="error" v-if="allowedChecks && allowedChecks.includes(error)">
-            <div>
-              <span :class="errorsFilter === error ? 'selected-error' : ''" @click="toggleErrorsFilter(error)">
-                {{ userifyInconsistency(error) }}
-              </span>
-            </div>
-          </th>
-          <th
-            @click="changeSort('en-GB')"
-            class="sorting locale"
-            :class="{ 'sorting_asc' : sort[0] === 'en-GB' && sort[1] === 'en-GB', 'sorting_desc' : sort[0] === 'en-GB' && sort[1] === 'desc' }"
-          >
-            English
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- TRANSLATION KEY ROW -->
-        <tr v-for="(val, key) in items" :key="val.key" v-if="val.key">
-          <td class="key" scope="row">
-            <b-link @click="setActive(key)">
-              {{ val.key }}
-            </b-link>
-          </td>
-
-          <td class="translationProgress">
-            <b-progress class="mt-2" :max="getMaximumTranslations" show-value>
-              <b-progress-bar :value="val.translated.length" variant="success"></b-progress-bar>
-              <b-progress-bar
-                :value="getMaximumTranslations - val.translated.length - imporantLoc.filter(l => !val.translated.includes(l)).length"
-                variant="warning">
-              </b-progress-bar>
-              <b-progress-bar :value="imporantLoc.filter(l => !val.translated.includes(l)).length" variant="danger"></b-progress-bar>
-            </b-progress>
-          </td>
-
-          <td v-for="(c, e) in errors" :key="e" v-if="allowedChecks && allowedChecks.includes(e)" class="indicators">
-            <PlaceholderIcon :size="30" v-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_placeholders'"></PlaceholderIcon>
-            <NoEnglishIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_noEnglish'"></NoEnglishIcon>
-            <LengthIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_length'"></LengthIcon>
-            <FirstIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_firstCharType'"></FirstIcon>
-            <LastIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_lastCharType'"></LastIcon>
-            <DynamicIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_dynamic'"></DynamicIcon>
-            <WriteGoodIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_writeGood'"></WriteGoodIcon>
-            <TyposIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_typos'"></TyposIcon>
-            <TagIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_tags'"></TagIcon>
-            <InsensitivenessIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e) && e === '_inconsistencies_insensitiveness'"></InsensitivenessIcon>
-            <WarningIcon :size="30" v-else-if="getItemInconsistencies(val).includes(e)"></WarningIcon>
-          </td>
-
-          <td v-bind:class="{ 'locale-hard-wrap': hardWrap, 'locale': !hardWrap }">
-            {{ getTranslation(val, "en-GB") || '» not translated «' }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- DICT EXPANSION MODIFIER -->
-    <b-modal
-      id="dictsExpansionModal"
-      v-model="modalDictsExpansion"
-      :title="'Custom spellchecking dictionary expansion'"
-      size="lg"
-      ok-title="Save"
-      @ok="updateDictsExpansion"
-      lazy
-      no-fade
-    >
-      <div v-for="(dict, lang) in dictsExpansionData" :key="lang">
-        <h5 class="mb-1" style="padding: 5px">{{ lang }}</h5>
-        <textarea
-          style="font-size: 12px; line-height: 14px;"
-          v-model.lazy="dictsExpansionData[lang]"
-          :rows=" typeof dictsExpansionData[lang] === 'string' ? dictsExpansionData[lang].split(/\r\n|\r|\n/).length : 1"
-          class="form-control"
+    <div class="table-head">
+      <div class="head-item key">
+        <div
+          class="sort-button"
+          @click="changeSort('key')"
         >
-        </textarea>
-      </div>
-    </b-modal>
-
-    <!-- MODAL: USER CONFIG -->
-    <b-modal
-      id="writeGoodSettingsModal"
-      v-model="modalChecksConfig"
-      :title="'User configuration'"
-      size="lg"
-      @ok="saveUserConfig"
-      ok-only
-      no-fade
-    >
-      <div class="config-group">
-        <h4>Checks</h4>
-        <div class="setDefault"><b-button variant="link" @click="setDefaultChecksConfig">Reset to default</b-button></div>
-        <b-form-checkbox-group v-model="allowedChecks" stacked style="width: fit-content">
-          <b-form-checkbox v-for="error in Object.keys(errors)" :key="error" :value="error">
-            <strong>{{ userifyInconsistency(error) }}</strong> ({{ getDescription(userifyInconsistency(error)) }})
-          </b-form-checkbox>
-        </b-form-checkbox-group>
-      </div>
-      <div class="config-group">
-        <h4>Locales</h4>
-        <div class="setDefault"><b-button variant="link" @click="setDefaultLocalesConfig">Reset to default</b-button></div>
-        <b-form-group v-for="loc in locales" :key="loc" label-cols="4" label-cols-lg="2">
-          <b-form-radio-group v-model="importantLocales[loc]">
-            <div class="loc-label">{{ loc }}</div>
-            <b-form-radio :value="true">Primary</b-form-radio>
-            <b-form-radio :value="false">Secondary</b-form-radio>
-          </b-form-radio-group>
-        </b-form-group>
-      </div>
-      <div class="config-group">
-        <h4>View</h4>
-        <div class="setDefault"><b-button variant="link" @click="setDefaultViewConfig">Reset to default</b-button></div>
-        <div>
-          <b-form-checkbox switch v-model="hardWrap">
-            <strong>hard wrap</strong> (show english preview in main table with line breaks)
-          </b-form-checkbox>
+          Key (showing {{ Object.keys(items).length }} / {{ Object.keys(allItems).length }})
         </div>
       </div>
-    </b-modal>
-
-    <!-- MODAL: WRITE GOOD CONFIG -->
-    <b-modal
-      id="writeGoodSettingsModal"
-      v-model="modalWriteGoodSettings"
-      :title="'Write good intentions settings'"
-      size="lg"
-      ok-title="Save"
-      @ok="updateWriteGoodSettings"
-      no-fade
-    >
-      <div class="setDefault"><b-button variant="link" @click="setDefaultWriteGoodConfig">Set default config</b-button></div>
-      <div v-for="(settings, lang) in writeGoodSettings" :key="lang">
-        <div class="wgLangHeader">{{ lang }}:</div>
-        <b-form-checkbox
-          v-for="(value, option) in settings"
-          :key="option"
-          :checked="value"
-          @change="toggleWriteGoodSetting(lang, option)"
-          style="display: block"
+      <div class="head-item prog-bar">
+        <div
+          class="sort-button"
+          @click="changeSort('count')"
         >
-          <strong>{{ option }}</strong> ({{ optionsDescription[option] }})
-        </b-form-checkbox>
-      </div>
-    </b-modal>
-
-    <!-- MODAL: PLACEHOLDER CONFIG -->
-    <b-modal
-      id="placeholderConfigModal"
-      v-model="modalPlaceholderConfig"
-      title="Placeholder configuration"
-      size="lg"
-      ok-title="Save"
-      no-fade
-      @ok="updatePlaceholderConfig"
-      @shown="loadCurrentPlaceholder"
-    >
-      <div class="regexInput">
-        <label for="regFormIn">Regex:</label>
-        <b-form-input
-          if="regFormIn"
-          v-model="placeholderRegex"
-          type="text"
-          :placeholder="'e.g. ({{\\w+}})'"
-        ></b-form-input>
-      </div>
-      <div class="regexPreview">
-        <div class="previewText">
-          <label>Preview:</label>
-          <b-form-textarea id="textarea1"
-                           v-model="regexPreviewText"
-                           :rows="6"
-                           :max-rows="6">
-          </b-form-textarea>
-        </div>
-        <div class="matched-placeholders">
-          <label>Matched placeholders:</label>
-          <ul>
-            <li v-for="mp in matchedPlaceholders" :key="mp">{{ mp }}</li>
-          </ul>
+          Progress
         </div>
       </div>
-    </b-modal>
-
-    <!-- MODAL: INSENSITIVENESS CONFIG -->
-    <b-modal
-      id="insensitivenessConfigModal"
-      v-model="modalInsensitivenessConfig"
-      title="Insensitiveness configuration"
-      size="lg"
-      ok-title="Save"
-      no-fade
-      @ok="updateInsensitivenessConfig"
-    >
-      <div>
-        <label for="range-1">Profanity sureness level: {{ insensitivenessConfig.profanitySureness }}</label>
-        <b-form-input number id="range-1" v-model="insensitivenessConfig.profanitySureness" type="range" min="0" max="2"></b-form-input>
-        <div class="mt-2">Detecting words that are <strong>{{ getProfanitySureness }}</strong></div>
-      </div>
-    </b-modal>
-
-    <!--  MODAL: REPORTING CONFIG -->
-    <b-modal
-      id="reportingConfigModal"
-      v-model="modalReportingConfig"
-      title="Reporting configuration"
-      size="lg"
-      ok-title="Save"
-      no-fade
-      @ok="updateReportingConfig"
-      @hidden="resetReportConf"
-    >
-      <div class="mx-auto" style="width: fit-content">
-        <b-form-checkbox
-          switch
-          v-model="reportConfig.active"
-        >
-          Enable Reporting
-        </b-form-checkbox>
-      </div>
-      <div v-if="reportConfig.active" class="mt-3">
-        <label for="report-option"><strong>Select reporting option:</strong></label>
-        <b-form-select if="report-option" v-model="reportConfig.option" :options="getReportingOptions()"></b-form-select>
-      </div>
-      <div v-if="reportConfig.active && reportConfig.option === 'Slack'" class="mt-3">
-        <label for="webhook"><strong>Enter your <a href="https://api.slack.com/incoming-webhooks">Slack Incoming Webhook URL</a>:</strong></label>
-        <b-form-input
-          id="webhook"
-          :value="reportConfig.webhook"
-          @change.native="reportConfig.webhook = $event.target.value"
-          placeholder="e.g. https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
-        >
-        </b-form-input>
-        <label for="slack-channel">Channel:</label>
-        <b-input-group prepend="#">
-          <!-- note: V-MODEL avoided due to performance issues -->
-          <b-input
-            id="slack-channel"
-            placeholder="translation-bugs"
-            :value="reportConfig.slackChannel"
-            @change.native="reportConfig.slackChannel = $event.target.value"
-          ></b-input>
-        </b-input-group>
-      </div>
-    </b-modal>
-
-    <!-- MODAL: KEY DETAIL -->
-    <b-modal
-      id="keyDetailModal"
-      v-model="modalKeyDetail"
-      :title="activeKey && items[activeKey] && items[activeKey].key"
-      variant="primary"
-      size="lg"
-      no-fade
-      hide-footer
-      lazy
-      @hidden="hideKeyDetail"
-    >
-      <div class="keyOverview" v-if="items[activeKey]">
-        <div class="errors-overview">
-          <div v-for="inconsistency in getItemInconsistencies(items[activeKey])" :key="inconsistency" class="error">
-            <div v-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_placeholders'">
-              <div class="inline-error"><PlaceholderIcon :size="30"></PlaceholderIcon></div> - missing placeholders
-            </div>
-            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_length'">
-              <div  class="inline-warning"><LengthIcon :size="30"></LengthIcon></div> - big differences in length
-            </div>
-            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_firstCharType'">
-              <div class="inline-warning"><FirstIcon :size="30"></FirstIcon></div> - inconsistent first characters
-            </div>
-            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_lastCharType'">
-              <div class="inline-warning"><LastIcon :size="30"></LastIcon></div> - inconsistent last characters
-            </div>
-            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_dynamic'">
-              <div class="inline-error-dynamic"><DynamicIcon :size="30"></DynamicIcon></div> - contains dynamic values
-            </div>
-            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_writeGood'">
-              <div class="inline-warning">
-                <WriteGoodIcon :size="30"></WriteGoodIcon>
-              </div> - write-good suggestions (in locales: {{ items[activeKey][inconsistency].join(", ") }})
-            </div>
-            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_insensitiveness'">
-              <div class="inline-warning">
-                <InsensitivenessIcon :size="30"></InsensitivenessIcon>
-              </div> - insensitiveness (in locales: {{ items[activeKey][inconsistency].join(", ") }})
-            </div>
-            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_typos'">
-              <div class="inline-error">
-                <TyposIcon :size="30"></TyposIcon>
-              </div> - typos (in locales: {{ items[activeKey][inconsistency].join(", ") }})
-            </div>
-            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency) && inconsistency === '_inconsistencies_tags'">
-              <div class="inline-warning"><TagIcon :size="30"></TagIcon></div> - blacklisted HTML tags
-            </div>
-            <div v-else-if="allowedChecks && allowedChecks.includes(inconsistency)">
-              <div class="inline-warning"><WarningIcon :size="30"></WarningIcon></div> - {{ userifyInconsistency(inconsistency) }}
-            </div>
-          </div>
-        </div>
-        <div class="progress-chart">
-          <LocalizationProgressChart
-            :translated="items[activeKey].translated.length"
-            :missingPrimary="imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
-            :missingSecondary="
-            getMaximumTranslations
-            - items[activeKey].translated.length
-            - imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length"
-          ></LocalizationProgressChart>
-        </div>
-        <div class="progress-legend">
-          <div v-if="imporantLoc.filter(l => !items[activeKey].translated.includes(l)).length > 0">
-            <strong class="missing-important">Missing primary locales: </strong>
-            <strong>{{ imporantLoc.filter(l => !items[activeKey].translated.includes(l)).join(", ") }}</strong>
-          </div>
-          <div v-if="locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).length > 0">
-            <strong class="missing-normal">Missing secondary locales: </strong>
-            {{ locales.filter(l => !items[activeKey].translated.includes(l) && !imporantLoc.includes(l)).join(", ") }}
-          </div>
-        </div>
-      </div>
-
-      <div class="translationsForm">
-        <b-form inline>
-          <b-form-checkbox
-            v-b-tooltip.hover title="If enabled error highlighting in text will be turn off"
-            v-model="showTagsChecked"
-          >
-            Show tags in translations
-          </b-form-checkbox>
-          <b-form-checkbox class="ml-3" v-model="escapeTranslationsChecked">Escape translations</b-form-checkbox>
-          <b-button
-            class="ml-auto p-2"
-            :disabled="!reportConfig.active"
-            variant="outline-secondary"
-            @click="showReportModal('not-specified')"
-          >
-            <ReportIcon/>  Report
-          </b-button>
-        </b-form>
-      </div>
-
-      <table v-if="items[activeKey]" class="table table-sm b-table table-striped key-detail-table">
-        <thead>
-          <th colspan="2" class="key-detail-header">Locale</th>
-          <th class="key-detail-header">Translation</th>
-          <th class="key-detail-header">Errors</th>
-          <th class="key-detail-header"></th>
-        </thead>
-
-        <tbody>
-          <tr :key="locale" v-for="locale in locales" v-if="activeTranslations[locale]">
-            <td class="flag-id">
-              <div class="flag-icon"><CountryFlag :country="locale.slice(3, 5).toLowerCase()" size="small"></CountryFlag></div>
-            </td>
-            <td class="locale-id">
-              {{ locale }}
-            </td>
-            <td class="translation">
-              <div v-if="!showTagsChecked" style="display: inline-block;" v-html="highlightContent(activeTranslations[locale])"></div>
-              <div v-else style="display: inline-block;">{{ getTranslationContent(activeTranslations[locale]) }}</div>
-            </td>
-            <td class="errors-col">
-              <div
-                v-if="activeTranslations[locale]._writeGood && allowedChecks.includes('_inconsistencies_writeGood')"
-                class="inline-warning"
-                v-b-popover.hover="getWriteGoodReasons(activeTranslations[locale]._writeGood)"
-                title="write good"
-              >
-                <WriteGoodIcon></WriteGoodIcon>
-              </div>
-              <div
-                v-if="activeTranslations[locale]._insensitiveness && allowedChecks.includes('_inconsistencies_insensitiveness')"
-                class="inline-warning"
-                v-b-popover.hover="activeTranslations[locale]._insensitiveness.join(',\n')"
-                title="insensitiveness"
-              >
-                <InsensitivenessIcon></InsensitivenessIcon>
-              </div>
-              <div
-                v-if="hasInconsistentLength(locale, activeTranslations) && allowedChecks.includes('_inconsistencies_length')"
-                class="inline-warning"
-                v-b-popover.hover="'suspiciously long translation'"
-                title="length"
-              >
-                <LengthIcon></LengthIcon>
-              </div>
-              <div
-                v-if="getMissingPlaceholders(locale, activeTranslations).length && allowedChecks.includes('_inconsistencies_placeholders')"
-                class="inline-error"
-                v-b-popover.hover="getMissingPlaceholders(locale, activeTranslations).join('\n')"
-                title="Missing placeholders"
-              >
-                <PlaceholderIcon fill-color="#ef0000"></PlaceholderIcon>
-              </div>
-              <div
-                :id="`typosIndicator_${locale}`"
-                v-if="activeTranslations[locale]._typos
-                && activeTranslations[locale]._typos !== 'unsupported language'
-                && allowedChecks.includes('_inconsistencies_typos')"
-                class="inline-error clickable"
-              >
-                <TyposIcon fill-color="#ef0000"></TyposIcon>
-                <b-popover
-                  :target="`typosIndicator_${locale}`"
-                  title="Typos"
-                  triggers="click"
-                >
-                  <div v-for="typo in removeDuplicates(activeTranslations[locale]._typos)" :key="typo">
-                    <strong :class="dictsExpansionData[locale].includes(typo) ? 'strikethrough' : ''">{{ typo }}  </strong>
-                    <b-button
-                      @click="addWordToDict(typo, locale)"
-                      :disabled="dictsExpansionData[locale].includes(typo)"
-                      variant="outline-success"
-                      size="sm">
-                      add to {{ locale }} dictionary
-                    </b-button>
-                  </div>
-                  <div class="note">note: please take in mind that changes in dictionaries will be visible after next spellchecking (&lt;1 min)</div>
-                </b-popover>
-              </div>
-              <div
-                v-if="activeTranslations[locale]._dynamic && allowedChecks.includes('_inconsistencies_dynamic')"
-                class="inline-error-dynamic"
-                v-b-popover.hover="removeDuplicates(activeTranslations[locale]._dynamic).join('\n')"
-                title="Dynamic values"
-              >
-                <DynamicIcon fill-color="#800080"></DynamicIcon>
-              </div>
-              <div
-                :id="`firstIndicator_${locale}`"
-                v-if="allowedChecks.includes('_inconsistencies_firstCharType')
-                && activeTranslations[locale]._firstCharType !== getExpectedFirstCharType(activeTranslations)"
-                class="inline-warning"
-              >
-                <FirstIcon></FirstIcon>
-                <b-popover
-                  :target="`firstIndicator_${locale}`"
-                  title="First character inconsistency"
-                  triggers="hover"
-                >
-                  First character is
-                  <strong> {{ activeTranslations[locale]._firstCharType }} </strong>
-                  but expected
-                  <strong> {{  getExpectedFirstCharType(activeTranslations) }} </strong>
-                </b-popover>
-              </div>
-              <div
-                :id="`lastIndicator_${locale}`"
-                v-if="allowedChecks.includes('_inconsistencies_lastCharType')
-                && activeTranslations[locale]._lastCharType !== getExpectedLastCharType(activeTranslations)"
-                class="inline-warning"
-              >
-                <LastIcon></LastIcon>
-                <b-popover
-                  :target="`lastIndicator_${locale}`"
-                  title="Last character inconsistency"
-                  triggers="hover"
-                >
-                  Last character is
-                  <strong> {{ activeTranslations[locale]._lastCharType }} </strong>
-                  but expected
-                  <strong> {{  getExpectedLastCharType(activeTranslations) }} </strong>
-                </b-popover>
-              </div>
-            </td>
-            <td>
-              <b-button
-                v-b-tooltip.hover
-                :disabled="!reportConfig.active"
-                :title="`report ${locale}`"
-                size="sm"
-                variant="outline-secondary"
-                @click="showReportModal(locale)"
-              >
-                <ReportIcon/>
-              </b-button>
-            </td>
-          </tr>
-          <tr v-else>
-            <td class="flag-id">
-              <div class="flag-icon transparent"><CountryFlag :country="locale.slice(3, 5).toLowerCase()" size="small"></CountryFlag></div>
-            </td>
-            <td :class="imporantLoc.includes(locale) ? 'locale-id not-translated-primary' : 'locale-id not-translated-secondary'" scope="row">
-              {{ locale }}
-            </td>
-            <td colspan="3" :class="imporantLoc.includes(locale) ?'locale-id not-translated-primary' : 'locale-id not-translated-secondary'">
-              Not translated
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </b-modal>
-
-    <!-- MODAL: REPORTING -->
-    <b-modal
-      id="reportModal"
-      title="Report"
-      v-model="modalReport"
-      size="lg"
-      ok-title="Send report"
-      @ok="submitReport"
-      :ok-disabled="reportForm.errorType.length < 1"
-      lazy
-    >
-      <b-row class="my-2">
-        <b-col sm="2"><label><strong>Author:</strong></label> </b-col>
-        <b-col sm="10">{{ reportForm.author }}</b-col>
-      </b-row>
-      <b-row class="my-2" v-if="reportConfig.option === 'Slack'">
-        <b-col sm="2"><label for="slack-id"><strong>Slack name:</strong></label></b-col>
-        <b-col sm="10">
-          <b-input-group prepend="@">
-            <!-- note: V-MODEL avoided due to performance issues -->
-            <b-input
-              id="slack-id"
-              placeholder="name.surname"
-              :value="reportForm.slackName"
-              @change.native="reportForm.slackName = $event.target.value"
-            ></b-input>
-          </b-input-group>
-        </b-col>
-      </b-row>
-      <b-row class="my-2">
-        <b-col sm="2"><label><strong>Key:</strong></label> </b-col>
-        <b-col sm="10">{{ reportForm.key }}</b-col>
-      </b-row>
-      <b-row class="my-2">
-        <b-col sm="2"><label for="locale-select"><strong>Locale:</strong></label></b-col>
-        <b-col sm="10">
-          <b-form-select id="locale-select" :options="locales.concat(['not-specified'])" v-model="reportForm.locale"></b-form-select>
-        </b-col>
-      </b-row>
-      <b-row class="my-2">
-        <b-col sm="2"><label><strong>Error Type:</strong></label></b-col>
-        <b-col sm="10">
-          <b-form-input
-            :state="reportForm.errorType.length > 0"
-            placeholder="e.g. typo"
-            :value="reportForm.errorType"
-            @change.native="reportForm.errorType = $event.target.value"
-          >
-          </b-form-input>
-        </b-col>
-      </b-row>
-      <label class="mt-3"><strong>Additional info:</strong></label>
-      <b-form-textarea
-        :value="reportForm.additionalInfo"
-        @change.native="reportForm.additionalInfo = $event.target.value"
-        rows="3"
-        max-rows="6"
+      <div
+        class="head-item check"
+        v-for="(check, checkKey) in checks" :key="checkKey"
+        :class="{
+              'th-errors': true,
+              'disabled': !isActive(checkKey),
+            }"
       >
-      </b-form-textarea>
-      <h5 class="mt-5">Latest reports</h5>
-      <table v-if="reportLogs" class="table table-sm b-table table-striped key-detail-table">
-        <thead>
-          <th class="key-detail-header">Date</th>
-          <th class="key-detail-header">Author</th>
-          <th class="key-detail-header">Locale</th>
-          <th class="key-detail-header">Type</th>
-          <th class="key-detail-header">Description</th>
-        </thead>
-        <tbody>
-        <tr v-for="report in reportLogs" :key="report.time + report.author">
-          <td>{{ new Date(report.time).toLocaleDateString("en-GB") }}</td>
-          <td>{{ report.author }}</td>
-          <td>{{ report.locale }}</td>
-          <td>{{ report.errorType }}</td>
-          <td>{{ report.additionalInfo }}</td>
-        </tr>
-        </tbody>
-      </table>
-    </b-modal>
+        <v-popover
+          trigger="hover"
+          :class="{
+                'check-filter': isActive(checkKey) && checkFilter === checkKey,
+              }"
+        >
+          <keep-alive>
+            <component
+              :class="{
+                    'icon': true,
+                    'sort-button': true,
+                    'selected-check': checkFilter === checkKey,
+                  }"
+              @click="isActive(checkKey) && toggleCheckFilter(checkKey)"
+              :is="getIcon(checkKey)"
+              style="font-size: 18px;"
+            />
+          </keep-alive>
+          <template slot="popover">
+            <Check
+              :checkKey="checkKey"
+              :toggleCheckFilter="toggleCheckFilter"
+              :activeFilter="checkFilter === checkKey"
+              class="p-3"
+            />
+          </template>
+        </v-popover>
+      </div>
+      <div class="head-item">
+        <div
+          class="sort-button translation"
+          @click="changeSort('en-GB')"
+        >
+          English
+        </div>
+      </div>
+    </div>
+    <div class="table-body">
+      <DynamicScroller
+        :items="items"
+        key-field="key"
+        :min-item-size="39"
+        class="scroller"
+      >
+        <template v-slot="{ item, index, active }">
+          <DynamicScrollerItem
+            :item="item"
+            :active="active"
+            :size-dependencies="[
+              item['en-GB'],
+            ]"
+            :data-index="index"
+            :class="{
+              'table-row': true,
+              'odd-row': index & 1,
+            }"
+          >
+              <div class="table-item key">
+                <b-link @click="showKeyDetail(item['.key'])" :title="item.key">
+                  {{ item.key }}
+                </b-link>
+              </div>
+              <div class="table-item prog-bar">
+                <TranslationProgress
+                  :get-maximum-translations="getLocalesCount"
+                  :important-loc="getImportantLocales.filter(l => !(item.translated || []).includes(l))"
+                  :translated="item.translated || []"
+                />
+              </div>
+              <div
+                v-for="(check, checkKey) in checks" :key="checkKey"
+                :class="{
+                  'table-item': true,
+                  'check': true,
+                  'disabled': !isActive(checkKey),
+                 }"
+              >
+                <keep-alive>
+                  <component v-if="isActive(checkKey) && item[checkKey]" :is="getIcon(checkKey)" />
+                  <div style="opacity: 0;" v-else>-</div>
+                </keep-alive>
+              </div>
+              <div
+                :class="{ 'translation-hard-wrap': hardWrap, 'translation': !hardWrap, 'table-item': true }"
+              >
+                {{ getTranslation(item, "en-GB") }}
+              </div>
+          </DynamicScrollerItem>
+        </template>
+      </DynamicScroller>
+    </div>
+
+    <DictionaryExpansion
+      :show="showDictExpansion"
+      @close="showDictExpansion = false"
+      :notifyUser="notifyUser"
+    />
+
+    <UserConfig
+      :show="showUserConfig"
+      @close="showUserConfig = false"
+      :notifyUser="notifyUser"
+    />
+
+    <AdminConfig
+      :show="showAdminConfig"
+      :email="user.email"
+      :notifyUser="notifyUser"
+      @close="showAdminConfig = false"
+    />
+
+    <KeyDetail
+      v-if="activeKey && localesLoaded && itemsLoaded"
+      :user="user"
+      :item="items.find(i => i['.key'] === activeKey)"
+      :notifyUser="notifyUser"
+      @close="hideKeyDetail"
+    />
   </div>
 </template>
 
 <script type="text/javascript">
 import NProgress from "nprogress"
 import "vue-octicon/icons"
-import WarningIcon from "vue-material-design-icons/AlertOutline"
-import InsensitivenessIcon from "vue-material-design-icons/EmoticonCryOutline"
-import PlaceholderIcon from "vue-material-design-icons/CodeBraces"
-import WriteGoodIcon from "vue-material-design-icons/FileWordBox"
-import TyposIcon from "vue-material-design-icons/Spellcheck"
-import DynamicIcon from "vue-material-design-icons/Resistor"
-import NoEnglishIcon from "vue-material-design-icons/EarthOff"
-import LengthIcon from "vue-material-design-icons/ArrowExpandHorizontal"
-import FirstIcon from "vue-material-design-icons/PageFirst"
-import LastIcon from "vue-material-design-icons/PageLast"
-import TagIcon from "vue-material-design-icons/CodeTags"
-import ReportIcon from "vue-material-design-icons/AlertOctagon"
-import CountryFlag from "vue-country-flag"
-
-
-import Multiselect from "vue-multiselect"
+import AdminIcon from "vue-material-design-icons/CloudBraces"
 import _ from "lodash"
 import Fuse from "fuse.js"
+import { mapMutations, mapGetters, mapState } from "vuex"
 import { FbDb } from "../modules/firebase"
 import saveJSON from "../modules/json"
 
 import * as helpers from "../services/helpers"
 import * as gcFunctions from "../modules/functionsApi"
-import * as reporting from "../services/reporting"
-import maxExpansionRatio from "../../common/maxExpansionRatio"
 
-import * as defaults from "../../common/config"
-import ADMIN from "../consts/admin"
-
-import LocalizationProgressChart from "../components/LocalizationProgressChart"
+import Check from "../components/Check"
+import KeyDetail from "../components/KeyDetail"
+import TranslationProgress from "../components/TranslationProgress"
+import UserConfig from "../components/UserConfig"
+import AdminConfig from "../components/AdminConfig"
+import DictionaryExpansion from "../components/DictionaryExpansion"
 
 export default {
   props: {
     user: { type: Object, required: true },
   },
   components: {
-    Multiselect,
-    WarningIcon,
-    InsensitivenessIcon,
-    PlaceholderIcon,
-    WriteGoodIcon,
-    TyposIcon,
-    DynamicIcon,
-    NoEnglishIcon,
-    LengthIcon,
-    FirstIcon,
-    LastIcon,
-    TagIcon,
-    LocalizationProgressChart,
-    CountryFlag,
-    ReportIcon,
+    DictionaryExpansion,
+    TranslationProgress,
+    Check,
+    KeyDetail,
+    UserConfig,
+    AdminConfig,
+    AdminIcon,
   },
   data() {
     return {
       // View
-      items: {}, // filtered items with search query
+      items: [], // filtered items with search query
       itemsLoaded: false,
-      locales: [],
-
+      localesLoaded: false,
 
       // Searching, sorting, filtering
       searchQuery: "",
       sort: ["key", "asc"], // key/count asc/desc
-      errorsFilter: "all",
+      checkFilter: "all",
       errors: {},
-
-      // Checks configuration
-      allowedChecks: [],
-
-      // Locales configuration
-      importantLocales: {},
-
-      // View configuration
-      hardWrap: false,
 
       // Active
       activeKey: this.$route.params.all ? this.$route.params.all : null,
-      activeTranslations: null,
-      escapeTranslationsChecked: false,
-      showTagsChecked: false,
 
-      // Custom dict expansion
-      dictsExpansionData: {},
-
-      // Placeholder config
-      placeholderRegex: "",
-      regexPreviewText: "Hi {{name}}, have a nice day!",
-
-      // Write good config
-      writeGoodSettings: {},
-      optionsDescription: {
-        passive: "Checks for passive voice.",
-        illusion: "Checks for lexical illusions – cases where a word is repeated.",
-        so: "Checks for \"so\" at the beginning of the sentence.",
-        thereIs: "Checks for \"there is\" or \"there are\" at the beginning of the sentence.",
-        weasel: "Checks for weasel words.",
-        adverb: "Checks for adverbs that can weaken meaning: really, very, extremely, etc.",
-        tooWordy: "Checks for wordy phrases and unnecessary words.",
-        cliches: "Checks for common cliches.",
-        eprime: "Checks for \"to-be\" verbs.",
-      },
-
-      // Insensitiveness config
-      insensitivenessConfig: {
-        profanitySureness: 2,
-        allow: [],
-      },
-
-      // Modals
-      modalKeyDetail: !!this.$route.params.all,
-      modalDictsExpansion: false,
-      modalWriteGoodSettings: false,
-      modalReportingConfig: false,
-      modalChecksConfig: false,
-      modalPlaceholderConfig: false,
-      modalReport: false,
-      modalInsensitivenessConfig: false,
-
-      // Reporting
-      reportForm: {
-        key: "",
-        locale: "",
-        errorType: "not-specified",
-        additionalInfo: "",
-        author: "",
-        slackName: "",
-        url: "",
-      },
-      reportLogs: {},
-      reportConfig: {
-        active: false,
-        option: "",
-        webhook: "",
-        slackChannel: "",
-      },
+      // Configs
+      showUserConfig: false,
+      showAdminConfig: false,
+      showDictExpansion: false,
     }
   },
   firebase() {
     return {
       allItems: {
         source: FbDb.ref("items"),
-        asObject: true,
         readyCallback: () => {
           this.items = this.sortKeys(this.allItems)
-          this.itemsLoaded = true
           NProgress.done()
           this.errors = this.countErrors()
-          this.allowedChecks = this.loadUserChecksConfig()
+          this.itemsLoaded = true
         },
       },
       localeList: {
         source: FbDb.ref("locales"),
         asObject: true,
         readyCallback: () => {
-          this.locales = this.localeList.list
-          this.importantLocales = this.loadUserLocalesConfig()
+          this.localeList.list.forEach(loc => this.addLocale(loc))
+          this.localesLoaded = true
         },
       },
     }
@@ -829,63 +274,29 @@ export default {
   created() {
     NProgress.start()
     this.itemsLoaded = false
-    this.hardWrap = localStorage.getItem("hardWrap") ? JSON.parse(localStorage.getItem("hardWrap")) : false
+    this.localesLoaded = false
     this.items = this.sortKeys(this.allItems) // sort always
     NProgress.start()
-    if (this.searchQuery || this.errorsFilter !== "all") {
+    if (this.searchQuery || this.checkFilter !== "all") {
       this.search()
     }
     this.errors = this.countErrors()
-    if (this.activeKey) {
-      this.setActive(this.activeKey)
-      NProgress.start()
-    }
-    this.allowedChecks = this.loadUserChecksConfig()
-    FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
-      this.dictsExpansionData = dictsData.val()
-    })
-    window.addEventListener("scroll", this.toggleSSNameVisibility)
-    if (this.itemsLoaded) {
-      NProgress.done()
-    }
   },
   computed: {
-    getProfanitySureness() {
-      const level = this.insensitivenessConfig.profanitySureness
-      if (level === 2) {
-        return "likely to be profanity"
-      }
-      if (level === 1) {
-        return "maybe profanity"
-      }
-      return "unlikely to be profanity"
-    },
-    getMaximumTranslations() {
-      return this.locales ? this.locales.length : 0
-    },
-    availableTags() {
-      return helpers.getAvailableTags(this.allItems)
-    },
-    matchedPlaceholders() {
-      if (this.placeholderRegex === "" || this.placeholderRegex === null) {
-        return []
-      }
-      const matches = this.regexPreviewText.match(RegExp(this.placeholderRegex, "g"))
-      if (Array.isArray(matches) && matches.length > 10) {
-        return ["...too much matches..."]
-      }
-      return matches || []
-    },
-    imporantLoc() {
-      return _.reduce(this.importantLocales, (acc, val, key) => {
-        if (val) {
-          acc.push(key)
-        }
-        return acc
-      }, [])
-    },
+    ...mapGetters([
+      "isActive",
+      "getImportantLocales",
+      "getLocalesCount",
+      "hardWrap",
+    ]),
+    ...mapState([
+      "checks",
+    ]),
   },
   methods: {
+    ...mapMutations([
+      "addLocale",
+    ]),
     sortKeys(translations) {
       NProgress.start()
       const res = helpers.sortTranslationKeys(translations, this.sort[0], this.sort[1])
@@ -908,146 +319,22 @@ export default {
       })
       return errs
     },
-    setActive(key) {
-      NProgress.start()
+    showKeyDetail(key) {
       this.activeKey = key
       this.$router.push({ name: "items", params: { all: key } })
-      this.activeTranslations = {}
-      FbDb.ref("dictsExpansion/").once("value", (dictsData) => {
-        this.dictsExpansionData = dictsData.val()
-      })
-      FbDb.ref("reportingConf").once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.reportConfig = snapshot.val()
-        }
-      })
-      FbDb.ref(`translations/${key}`).once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.activeTranslations = snapshot.val()
-          this.modalKeyDetail = true
-          NProgress.done()
-        }
-      })
-    },
-    showDictsExpansion() {
-      FbDb.ref("dictsExpansion").once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.dictsExpansionData = snapshot.val() // if this line is removed dicts expansion cannot be modified
-          _.forEach(snapshot.val(), (arr, key) => {
-            this.dictsExpansionData[key] = Array.isArray(arr) ? arr.join("\n") : arr
-          })
-        }
-        this.modalDictsExpansion = true
-      })
-    },
-    updateDictsExpansion() {
-      _.forEach(this.dictsExpansionData, (str, key) => {
-        this.dictsExpansionData[key] = str.split("\n")
-      })
-      FbDb.ref("dictsExpansion").update(this.dictsExpansionData)
-      gcFunctions.inconsistenciesUpdate()
+      NProgress.start()
     },
     triggerUpdate() {
       gcFunctions.update()
     },
-    showUserConfig() {
-      this.modalChecksConfig = true
-    },
-    showWriteGoodConfig() {
-      FbDb.ref("writeGood").once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.writeGoodSettings = snapshot.val() // if this line is removed dicts expansion cannot be modified
-        } else {
-          this.setDefaultWriteGoodConfig()
-        }
-        this.modalWriteGoodSettings = true
-      })
-    },
-    toggleWriteGoodSetting(lang, option) {
-      this.writeGoodSettings[lang][option] = !this.writeGoodSettings[lang][option]
-    },
-    updateWriteGoodSettings() {
-      if (ADMIN.includes(this.user.email)) {
-        FbDb.ref("writeGood").update(this.writeGoodSettings)
-        gcFunctions.inconsistenciesUpdate()
-      } else {
-        // eslint-disable-next-line no-alert
-        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
-      }
-    },
-    showReportingConfig() {
-      FbDb.ref("reportingConf/").once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.reportConfig = snapshot.val()
-        }
-        this.modalReportingConfig = true
-      })
-    },
-    getReportingOptions() {
-      return reporting.options
-    },
-    resetReportConf() {
-      this.reportConfig = {
-        active: false,
-        option: "",
-        webhook: "",
-        slackChannel: "",
-      }
-    },
-    updateReportingConfig() {
-      if (ADMIN.includes(this.user.email)) {
-        FbDb.ref("reportingConf").update(this.reportConfig)
-      } else {
-        // eslint-disable-next-line no-alert
-        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
-      }
-    },
-    showInsensitivenessConfig() {
-      FbDb.ref("insensitivenessConfig/").once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.insensitivenessConfig = snapshot.val()
-        }
-        this.modalInsensitivenessConfig = true
-      })
-    },
-    updateInsensitivenessConfig() {
-      if (ADMIN.includes(this.user.email)) {
-        FbDb.ref("insensitivenessConfig").update(this.insensitivenessConfig)
-        gcFunctions.inconsistenciesUpdate()
-      } else {
-        // eslint-disable-next-line no-alert
-        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
-      }
-    },
-    showPlaceholderConfig() {
-      this.modalPlaceholderConfig = true
-    },
-    updatePlaceholderConfig() {
-      if (ADMIN.includes(this.user.email)) {
-        FbDb.ref("placeholders").update({
-          regex: this.placeholderRegex,
-        })
-        gcFunctions.inconsistenciesUpdate()
-      } else {
-        // eslint-disable-next-line no-alert
-        this.notifyUser("Action denied", "You don't have permission to modify this setting", "danger")
-      }
-    },
-    loadCurrentPlaceholder() {
-      FbDb.ref("placeholders/regex").once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.placeholderRegex = snapshot.val()
-        }
-      })
-    },
     search() { // event param if needed
       NProgress.start()
-      this.items = _.reduce(this.allItems, (acc, val, key) => {
-        if (this.errorsFilter === "all" || this.getItemInconsistencies(val).includes(this.errorsFilter)) {
-          acc[key] = val
+      this.items = _.reduce(this.allItems, (acc, val) => {
+        if (this.checkFilter === "all" || this.getItemInconsistencies(val).includes(this.checkFilter)) {
+          acc.push(val)
         }
         return acc
-      }, {})
+      }, [])
       if (this.searchQuery !== "") { // filter by string query
         const searchOptions = {
           shouldSort: true,
@@ -1058,247 +345,32 @@ export default {
           minMatchCharLength: 1,
           keys: ["en-GB", "key"],
         }
-        // need to map to array and then back to object for fuse to work
-        const fuse = new Fuse(Object.values(this.items), searchOptions)
+        const fuse = new Fuse(this.items, searchOptions)
         const result = fuse.search(this.searchQuery)
-        const mappedResult = {}
-        result.forEach((e) => {
-          mappedResult[e.key.includes(".") ? e.key.split(".").join("-") : e.key] = e
-        })
-        this.items = mappedResult
+        this.items = result
       }
       NProgress.done()
     },
     exportKeys() {
-      saveJSON(Object.keys(this.items).map(k => this.items[k].key), "export.json")
+      saveJSON(this.items.map(i => i.key), "export.json")
     },
     getTranslation(key, locale) {
-      const translation = _.get(key, [locale], null)
+      const translation = JSON.stringify(_.get(key, [locale], "» not translated «"))
       if (translation && translation.length >= 2000) {
-        return `${translation.substring(0, 1997)}...`
+        return `${translation.substring(1, 1997)}...`
       }
-      return translation
-    },
-    getPlaceholders(translation) {
-      if (!translation._placeholders) {
-        return null
-      }
-      return helpers.getPlaceholders(translation._placeholders)
-    },
-    getTranslationContent(translation) {
-      if (!translation) {
-        return null
-      }
-      const { content } = translation
-      if (this.escapeTranslationsChecked && content) {
-        this.showTagsChecked = true // cause highlighting would be mess
-        return JSON.stringify(content)
-      }
-      return this.showTagsChecked ? content : this.stripHtml(content)
+      return translation.substr(1, translation.length - 2)
     },
     hideKeyDetail() {
       this.activeKey = null
       this.$router.replace({ name: "items" })
     },
-    highlightContent(translation) {
-      let content = this.getTranslationContent(translation)
-      if (!content) {
-        return "» not translated «"
-      }
-      if (this.allowedChecks.includes("_inconsistencies_writeGood")) {
-        const highlightedParts = []
-        if (Array.isArray(translation._writeGood)) {
-          translation._writeGood.forEach((suggestion) => {
-            highlightedParts.push(suggestion.reason.match(/".+(?=")/m) && suggestion.reason.match(/".+(?=")/m)[0].slice(1))
-          })
-        }
-        highlightedParts.forEach((part) => {
-          content = content.replace(
-            new RegExp(`${part}(?=[^\\w]|$)`, "g"),
-            match => `<span class="inline-highlight-wg">${match}</span>`,
-          )
-        })
-      }
-      if (this.allowedChecks.includes("_inconsistencies_dynamic")) {
-        if (Array.isArray(translation._dynamic)) {
-          const dynamics = JSON.parse(JSON.stringify(translation._dynamic))
-          dynamics.sort((a, b) => b.length - a.length) // sort by string length to highlight all numbers
-          dynamics.forEach((dynamic) => {
-            content = content.replace(
-              new RegExp(dynamic, "gm"),
-              match => `<span class="inline-highlight-dynamic">${match}</span>`,
-            )
-          })
-        }
-      }
-      if (this.allowedChecks.includes("_inconsistencies_typos")) {
-        if (Array.isArray(translation._typos)) {
-          translation._typos.forEach((typo) => {
-            content = content.replace(
-              new RegExp(`${_.escapeRegExp(typo)}(?=[^\\w]|$)`, "g"),
-              match => `<span class="inline-highlight-typos">${match}</span>`,
-            )
-          })
-        }
-      }
-      return content
-    },
-    getWriteGoodReasons(writeGood) {
-      return this.removeDuplicates(writeGood.map(lint => lint.reason)).join(",\n")
-    },
-    setDefaultWriteGoodConfig() {
-      this.writeGoodSettings = JSON.parse(JSON.stringify(defaults.DEFAULT_WRITE_GOOD_SETTINGS)) // deep copy to avoid modification of constant
-    },
-    stripHtml(text) {
-      const tmpHTML = document.createElement("div")
-      tmpHTML.innerHTML = text
-      return tmpHTML.textContent || tmpHTML.innerText || ""
-    },
     getItemInconsistencies(key) {
       return helpers.getItemInconsistencies(key)
     },
-    userifyInconsistency(inconsistency) {
-      return helpers.userifyInconsistency(inconsistency)
-    },
-    loadUserChecksConfig() {
-      if (localStorage.getItem("allowedChecks")) {
-        return JSON.parse(localStorage.getItem("allowedChecks"))
-      }
-      return Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
-    },
-    saveUserConfig() {
-      localStorage.setItem("allowedChecks", JSON.stringify(this.allowedChecks))
-      localStorage.setItem("importantLocales", JSON.stringify(this.importantLocales))
-      localStorage.setItem("hardWrap", JSON.stringify(this.hardWrap))
-    },
-    loadUserLocalesConfig() {
-      if (localStorage.getItem("importantLocales")) {
-        return JSON.parse(localStorage.getItem("importantLocales"))
-      }
-      return this.locales.reduce((acc, loc) => {
-        acc[loc] = defaults.IMPORTANT_LOCALES.includes(loc)
-        return acc
-      }, {})
-    },
-    setDefaultChecksConfig() {
-      this.allowedChecks = Object.keys(this.errors).filter(err => !defaults.DEFAULT_DISABLED_CHECKS.includes(err))
-    },
-    setDefaultLocalesConfig() {
-      this.importantLocales = this.locales.reduce((acc, loc) => {
-        acc[loc] = defaults.IMPORTANT_LOCALES.includes(loc)
-        return acc
-      }, {})
-    },
-    setDefaultViewConfig() {
-      this.hardWrap = defaults.DEFAULT_VIEW.hardWrap
-    },
-    hasInconsistentLength(lang, translations) {
-      if (translations[lang] && translations["en-GB"] && translations["en-GB"].content.length > 0) {
-        const baseLength = translations["en-GB"].content.length
-        return (translations[lang].content.length / baseLength) > maxExpansionRatio(baseLength)
-      }
-      return false
-    },
-    getMissingPlaceholders(lang, translations) {
-      /*
-      e.g. for placeholder
-      en -> ph1, ph1, ph1, ph,2
-      de -> ph1, ph1, ph2
-      cz -> ph1, ph1, ph3
-
-      allPlaceholders -> ph1, ph1. ph1, ph2, ph3
-       */
-      const allPlaceholders = _.reduce(translations, (acc, translation) => {
-        (translation._placeholders || []).forEach((placeholder) => {
-          const placeholderAppearance = translation._placeholders.filter(i => i === placeholder).length
-          if (acc.filter(i => i === placeholder).length < placeholderAppearance) {
-            // eslint-disable-next-line no-param-reassign
-            acc = _.without(acc, placeholder).concat(_.fill(Array(placeholderAppearance), placeholder))
-          }
-        })
-        return acc
-      }, [])
-
-      return allPlaceholders.reduce((acc, placeholder) => {
-        const totalPlaceholderAppearance = allPlaceholders.filter(i => i === placeholder).length
-        const translationPlaceholderAppearance = (
-          translations[lang] && translations[lang]._placeholders
-          && translations[lang]._placeholders.filter(i => i === placeholder).length
-        ) || 0
-        return _.without(acc, placeholder).concat(_.fill(Array(totalPlaceholderAppearance - translationPlaceholderAppearance), placeholder))
-      }, allPlaceholders)
-    },
-    getDescription(error) {
-      return helpers.descriptions[error] || ""
-    },
-    toggleSSNameVisibility() {
-      if (window.scrollY > 200) {
-        document.getElementsByClassName("ss-name").item(0).setAttribute("style", "visibility: visible; opacity: 1;")
-      } else {
-        document.getElementsByClassName("ss-name").item(0).setAttribute("style", "visibility: hidden; opacity: 0;")
-      }
-    },
-    getExpectedFirstCharType(activeTranslations) {
-      const firstChars = Object.values(activeTranslations).map(t => t._firstCharType)
-      return firstChars.sort((a, b) => firstChars.filter(v => v === a).length - firstChars.filter(v => v === b).length).pop()
-    },
-    getExpectedLastCharType(activeTranslations) {
-      const lastChars = Object.values(activeTranslations).map(t => t._lastCharType)
-      return lastChars.sort((a, b) => lastChars.filter(v => v === a).length - lastChars.filter(v => v === b).length).pop()
-    },
-    toggleErrorsFilter(error) {
-      this.errorsFilter = this.errorsFilter === error ? "all" : error
+    toggleCheckFilter(error) {
+      this.checkFilter = this.checkFilter === error ? "all" : error
       this.search()
-    },
-    removeDuplicates(array) {
-      return [...new Set(array)]
-    },
-    addWordToDict(word, locale) {
-      FbDb.ref(`dictsExpansion/${locale}`).once("value", (snapshot) => {
-        if (!snapshot.val().includes(word)) {
-          FbDb.ref(`dictsExpansion/${locale}/${snapshot.val().length}`).set(word)
-          gcFunctions.inconsistenciesUpdate()
-          FbDb.ref("dictsExpansion/").once("value", (updatedData) => {
-            this.dictsExpansionData = updatedData.val()
-          })
-        }
-      })
-    },
-    showReportModal(locale) {
-      NProgress.start()
-      this.reportForm.locale = locale
-      this.reportForm.key = this.items[this.activeKey] && this.items[this.activeKey].key
-      this.reportForm.author = this.user.email
-      this.reportForm.additionalInfo = ""
-      this.reportForm.errorType = ""
-      this.reportForm.url = ""
-      this.reportForm.slackName = localStorage.getItem("slackName") ? JSON.parse(localStorage.getItem("slackName")) : ""
-
-      FbDb.ref(`reports/${this.activeKey}`).once("value", (snapshot) => {
-        if (snapshot.val()) {
-          this.reportLogs = snapshot.val()
-        }
-        NProgress.done()
-        this.modalReport = true
-      })
-    },
-    submitReport() {
-      this.reportForm.url = document.location.href
-      localStorage.setItem("slackName", JSON.stringify(this.reportForm.slackName))
-
-      // Slack reporting
-      if (this.reportConfig.option === "Slack") {
-        reporting.reportOnSlack(this.reportConfig.webhook, this.reportConfig.slackChannel, this.reportForm, this.notifyUser)
-      }
-
-      // create log
-      const reportLog = _.cloneDeep(this.reportForm)
-      delete reportLog.key
-      if (this.reportConfig.option !== "Slack") {
-        delete reportLog.slackName
-      }
-      reportLog.time = new Date().toString()
-      FbDb.ref(`reports/${this.activeKey}`).push(reportLog)
     },
     notifyUser(title, text, variant) {
       this.$bvToast.toast(text, {
@@ -1307,9 +379,24 @@ export default {
         solid: true,
       })
     },
+    getIcon(checkKey) {
+      return `${checkKey.replace(/.*_/g, "")}Icon`
+    },
   },
-  destroyed() {
-    window.removeEventListener("scroll", this.toggleSSNameVisibility)
+  watch: {
+    $route(to) {
+      if (to.path === "/items") {
+        this.activeKey = null
+        this.showUserConfig = false
+        this.showAdminConfig = false
+        this.showDictExpansion = false
+      }
+    },
+    hardWrap() { // to avoid glitches in UI
+      const tmp = _.cloneDeep(this.items)
+      this.items = []
+      this.items = tmp
+    },
   },
 }
 </script>
@@ -1317,315 +404,125 @@ export default {
 <style scoped>
   @import url('https://fonts.googleapis.com/css?family=Megrim');
 
-  .table-fixed {
-    width: 100%;
-    margin-top: -25px;
+  .sort-button {
+    cursor: pointer;
+  }
+  .scroller {
+    height: 100vh;
+    overflow-y: auto;
   }
 
-  .table-fixed thead {
-    top: 0;
-    z-index: 1;
-  }
-
-  .table-fixed thead tr {
-    background-color: #f9fafc;
-  }
-
-  .table-fixed thead th {
-    top: 63.5px;
+  .table-head {
+    display: flex;
+    flex-direction: row;
+    top: -1px;
     z-index: 1;
     position: sticky;
     position: -webkit-sticky;
-    background-color: rgb(0,0,0,0);
+    background-color: #f9fafc;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 16px;
+    padding: 7px 0 7px 0;
   }
-td {
-  vertical-align: middle;
-  padding: 5px;
-}
-th {
-  font-size: 13px;
-  background-color: white;
-}
-.th-errors {
-  white-space: nowrap;
-}
-  th.th-errors div {
-    transform:  translate(22px, -5px) rotate(-45deg);
-    z-index: 3;
-    width: 30px;
-    cursor: pointer;
+
+  .check-filter {
+    border-bottom: 2px solid black;
   }
-  th.th-errors span {
-    z-index: 1000;
-    border-bottom: 1px solid #ccc;
-    padding: 5px 10px;
-    cursor: pointer;
+
+  .table-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    font-size: 13px;
+    vertical-align: middle;
+    border-top: 1px solid #dee2e6;
+    align-items: stretch;
   }
-th a {
-  cursor: pointer;
-}
-td.key {
-  width: 30vw;
-  max-width: 30vw;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-td.key a {
-  color: #26539B;
-}
-td.translationProgress {
-  width: 50px;
-  border-right: 1px solid #ccc;
-}
-.locale {
-  padding-left: 30px;
-}
-td.locale {
-  max-height: 50px;
-  width: 38vw;
-  max-width: 38vw;
-  min-width: 38vw;
-  overflow: hidden;
-  overflow-x: scroll;
-  white-space: nowrap;
-  -ms-overflow-style: none;
-  overflow: -moz-scrollbars-none;
-  padding-right: 10px;
-}
-  td.locale-hard-wrap {
+  .table-row:hover {
+    background-color: rgba(0, 0, 0, 0.065);
+  }
+  .odd-row {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  .key {
+    width: 32vw;
+    max-width: 32vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-left: 10px;
+    display: flex;
+    align-items: center;
+  }
+  .key a {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
+  }
+  .prog-bar {
+    width: 80px;
+  }
+  .check {
+    width: 35px;
+    text-align: center;
+    font-size: 18px;
+  }
+  .table-row .disabled {
+    background-image: repeating-linear-gradient(-45deg, #E6E7E9, #cfd8e2 1px, white 2px, white 5px);
+  }
+  .table-row .prog-bar {
+    border-right: 1px solid #ccc;
+    padding: 11px 8px 11px 0px;
+    display: flex;
+    align-items: center;
+  }
+  .table-row .check {
+    border-right: 1px solid #ccc;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+  }
+  .translation {
+    padding-left: 10px;
+    max-height: 50px;
+    width: 40vw;
+    max-width: 40vw;
+    min-width: 38vw;
+    overflow: hidden;
+    overflow-x: scroll;
+    white-space: nowrap;
+    -ms-overflow-style: none;
+    overflow: -moz-scrollbars-none;
+    flex-grow: 20;
+    display: flex;
+    align-items: center;
+  }
+  .translation-hard-wrap {
+    padding: 10px 5px 10px 5px;
     max-height: max-content;
     width: 38vw;
     max-width: 38vw;
     min-width: 38vw;
     overflow: hidden;
-    padding-right: 10px;
+    display: flex;
+    align-items: center;
   }
-  td.locale::-webkit-scrollbar {
-    display: none;
+
+  .textInput {
+    max-width: 100%;
+    width: 500px;
+    font-size: 14px;
   }
-.row-visited td {
-  background-color: #DFE7F2;
-}
-  .locale-id {
-    font-weight: bolder;
-    width: max-content;
-    border: none !important;
-  }
-  .flag-id {
-    width: 30px;
-    border: none !important;
-  }
-  .translation {
-    width: 80%;
-    border: none !important;
-  }
-  .errors-col {
-    border: none !important;
-  }
-  .flag-icon {
-    width: 30px;
-    height: 20px;
-    text-align: center;
-    margin-top: -33px;
-  }
-  .transparent {
-    opacity: 0.3;
-  }
-.not-translated-primary {
-  color: rgba(255, 0, 0, 0.65);
-}
-.not-translated-secondary {
-  color: #FFC107;
-}
-.error {
-  display: list-item;
-  margin: 1px;
-  font-size: 16px;
-  border: 1px;
-  list-style: none;
-  padding-bottom: 10px;
-}
-.textInput {
-  max-width: 100%;
-  width: 500px;
-  font-size: 14px;
-}
-.keyOverview {
-  font-size: 14px;
-  margin-bottom: 15px;
-  margin-top: 15px;
-  width: 100%;
-  display: flex;
-}
-.translationsForm {
-  margin-bottom: 16px;
-}
-.wgLangHeader {
-  font-size: larger;
-  font-weight: bold;
-  margin-top: 10px;
-}
-.setDefault {
-  display: inline-block;
-}
-h4 {
-  vertical-align: bottom;
-  width: fit-content;
-  display: inline-block;
-}
-.inline-warning {
-  color: orange;
-  font-size: 12px;
-  border-radius: 25px;
-  padding-left: 3px;
-  padding-right: 3px;
-  border: solid 1px orange;
-  display: inline-block;
-  margin-left: 5px;
-}
-.inline-error {
-  color: #ef0000;
-  font-size: 12px;
-  border-radius: 25px;
-  padding-left: 3px;
-  padding-right: 3px;
-  border: solid 1px #ef0000;
-  display: inline-block;
-  margin-left: 5px;
-}
-  .inline-error-dynamic {
-    color: purple;
-    font-size: 12px;
-    border-radius: 25px;
-    padding-left: 3px;
-    padding-right: 3px;
-    border: solid 1px purple;
-    display: inline-block;
-    margin-left: 5px;
-  }
-  .regexPreview {
-    margin-top: 50px;
-  }
-  .regexPreview label {
-    font-size: larger;
-    padding-left: 5px;
-  }
-  .previewText {
-    display: inline-block;
-    width: 50%;
-  }
-  .matched-placeholders {
-    width: 50%;
-    display: inline-grid;
-  }
-  .sticky-header-hack {
-    width: 100%;
-    height: 95px;
-    z-index: 1;
-    position: sticky;
-    top: 0;
-    background-image: linear-gradient(rgba(255,255,255,0.95) 30%, #f9fafc 100%);
-  }
-  .ss-name {
-    visibility: hidden;
-    color: darkgrey;
-    font-family: 'Megrim', cursive;
-    font-weight: 900;
-    font-size: 30px;
-    letter-spacing: 1px;
-    padding: 14px;
-    opacity: 0;
-    transition: visibility 0.5s, opacity 0.5s linear;
-  }
-  .indicators {
-    text-align: center;
-    border-right: 1px solid #ccc;
-    font-size: 20px;
-  }
-  .settings {
-    float: right;
-    margin-top: 10px;
-    top: 5px;
-    z-index: 3;
-    width: max-content;
-    margin-right: 3px;
-    position: sticky;
-  }
-  .config-group {
-    margin-top: 20px;
-  }
-  .loc-label {
-    float: left;
-    width: 200px;
-    font-weight: bolder;
-  }
-  .missing-important {
-    color: #D5011B;
-  }
-  .missing-normal {
-    color: #ffb508;
-  }
-  .unimportant {
-    color: gray;
-    display: contents;
-  }
-  .progress-chart {
-    width: 33%;
-    text-align: center;
-  }
-  .progress-legend {
-    font-size: 16px;
-    display: inline-block;
-    width: 33%;
-    float: right;
-  }
-  .errors-overview {
-    width: 33%;
-  }
+
   .search-input {
     position: absolute;
-    left: 475px;
-    width: 300px;
-    top: 15px;
+    left: 455px;
+    top: 12px;
   }
-  .clickable {
-    cursor: pointer;
-  }
-  .note {
-    font-size: 8px;
-    color: gray;
-  }
-  .strikethrough {
-    text-decoration: line-through;
-  }
-  .key-detail-header {
-    padding-top: 10px;
-    padding-bottom: 10px;
-    font-weight: 600;
-    font-size: 16px;
-    border-bottom: 0.5px solid grey;
-    border-top: none;
-    background-color: #f9fafc;
-  }
-  .key-detail-table {
-    font-size: 13px;
-  }
-  .table-keys {
-    font-size: 12px;
-  }
-  .bg-success {
-    background-color: #42B3D5 !important
-  }
-  .bg-warning {
-    background-color: #FFB508 !important;
-  }
-  .bg-danger {
-    background-color: #D5011B !important;
-  }
-  .selected-error {
-    font-weight: 900;
+
+  .search-input .input-group {
+    width: 280px;
+    display: inline-flex;
   }
 </style>
