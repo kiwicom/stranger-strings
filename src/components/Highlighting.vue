@@ -265,6 +265,8 @@ export default {
         case "_inconsistencies_insensitiveness":
         case "_inconsistencies_writeGood":
           regex = new RegExp(`${highlight}(?=[^\\w]|$)`, "g")
+          // look behind is not supported in most browser therefore this regex
+          // also match highlights inside words that aren't highlights (eg. matches 'he' inside 'the')
           break
         case "_inconsistencies_typos":
           regex = new RegExp(`${_.escapeRegExp(highlight)}(?=[^\\w]|$)`, "g")
