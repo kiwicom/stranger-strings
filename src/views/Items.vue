@@ -528,7 +528,7 @@ export default {
     width: fit-content;
     margin-left: auto;
     margin-right: auto;
-    top: 12px;
+    top: 2px;
   }
 
   .search-input .input-group {

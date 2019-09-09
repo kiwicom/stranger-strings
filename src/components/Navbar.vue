@@ -64,7 +64,7 @@ export default {
 
   .navbar-dark {
     background-color: #26539B !important;
-    height: 68px;
+    height: 50px;
   }
 
   .navbar-brand {

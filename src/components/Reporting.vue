@@ -119,6 +119,16 @@
       max-rows="6"
     >
     </b-form-textarea>
+    <b-row class="my-2">
+      <b-col sm="2"><label><strong>Image link:</strong></label></b-col>
+      <b-col sm="10">
+        <b-form-input
+          placeholder="e.g. https://monosnap.com/file/rYd4P1lkKDRJnjQIuQcqyYiesFHP8W"
+          v-model="reportForm.image"
+        >
+        </b-form-input>
+      </b-col>
+    </b-row>
     <h5 class="mt-5">Latest reports</h5>
     <table v-if="reportLogs" class="table table-sm b-table table-striped key-detail-table">
       <thead>
@@ -199,6 +209,7 @@ export default {
     this.reportForm.additionalInfo = ""
     this.reportForm.errorType = this.errorType || ""
     this.reportForm.url = ""
+    this.reportForm.image = ""
     this.reportForm.slackName = localStorage.getItem("slackName") ? JSON.parse(localStorage.getItem("slackName")) : ""
 
     FbDb.ref(`reports/${this.reportingKey}`).once("value", (snapshot) => {
