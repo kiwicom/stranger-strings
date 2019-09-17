@@ -84,29 +84,29 @@ function computeInconsistenciesOfKey(mappedTranslations, fbKey) {
   && mappedTranslations[fbKey]["en-GB"]
   && mappedTranslations[fbKey]["en-GB"]._lastCharType === "question mark" ? ["th-TH", "ja-JP"] : "th-TH"
 
-  val._inconsistencies_placeholders = hasMissingEntities(mappedTranslations[fbKey], "_placeholders")
-  val._inconsistencies_firstCharType = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
+  val._inconsistencies_placeholders = hasMissingEntities(mappedTranslations[fbKey], "_placeholders") || null
+  val._inconsistencies_firstCharType = (mappedTranslations[fbKey] || null) // eslint-disable-line no-param-reassign
     && _.uniq(_.map(mappedTranslations[fbKey], x => x._firstCharType))
       .filter(x => !["uncategorized", "digit", "bracket"].includes(x)).length > 1
   // uncategorized, digit and bracket excluded due to syntax differences between languages
-  val._inconsistencies_lastCharType = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
+  val._inconsistencies_lastCharType = (mappedTranslations[fbKey] || null) // eslint-disable-line no-param-reassign
     && _.uniq(_.map(_.omit(mappedTranslations[fbKey], lastCharTypeExceptions), x => x._lastCharType))
       .filter(x => !["uncategorized", "digit", "bracket"].includes(x)).length > 1
   // uncategorized, digit and bracket excluded due to syntax differences between languages
-  val._inconsistencies_tags = mappedTranslations[fbKey]
+  val._inconsistencies_tags = (mappedTranslations[fbKey] || null)
     && (Object.values(mappedTranslations[fbKey]).some(o => o._disallowedTags.length > 0) || hasMissingEntities(mappedTranslations[fbKey], "_tags"))
-  val._inconsistencies_length = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
+  val._inconsistencies_length = (mappedTranslations[fbKey] || null) // eslint-disable-line no-param-reassign
     && hasInconsistentLength(mappedTranslations[fbKey], mappedTranslations[fbKey]["en-GB"] ? mappedTranslations[fbKey]["en-GB"].content.length : 0)
-  val._inconsistencies_typos = mappedTranslations[fbKey] // eslint-disable-line no-param-reassign
+  val._inconsistencies_typos = (mappedTranslations[fbKey] || null) // eslint-disable-line no-param-reassign
     && Object.keys(mappedTranslations[fbKey])
       .filter(lang => Array.isArray(mappedTranslations[fbKey][lang]._typos) && mappedTranslations[fbKey][lang]._typos.length > 0)
-  val._inconsistencies_writeGood = mappedTranslations[fbKey]
+  val._inconsistencies_writeGood = (mappedTranslations[fbKey] || null)
     && Object.keys(mappedTranslations[fbKey])
       .filter(lang => Array.isArray(mappedTranslations[fbKey][lang]._writeGood) && mappedTranslations[fbKey][lang]._writeGood.length > 0)
-  val._inconsistencies_dynamic = mappedTranslations[fbKey]
+  val._inconsistencies_dynamic = (mappedTranslations[fbKey] || null)
     && Object.values(mappedTranslations[fbKey])
       .some(x => x._dynamic.length > 0)
-  val._inconsistencies_insensitiveness = mappedTranslations[fbKey]
+  val._inconsistencies_insensitiveness = (mappedTranslations[fbKey] || null)
     && Object.keys(mappedTranslations[fbKey])
       .filter(lang => Array.isArray(mappedTranslations[fbKey][lang]._insensitiveness) && mappedTranslations[fbKey][lang]._insensitiveness.length > 0)
   return val
