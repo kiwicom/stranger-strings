@@ -11,9 +11,9 @@
 ### Requirements
 * [Firebase project](https://console.firebase.google.com) with (Flame/Blaze Plan*)
 * Firebase Realtime Database
-* GitHub repository with localizations in JSON format
+* GitHub repository with localizations in flat JSON format **or** Phrase account
 
-*\* Flame and Blaze plans are required for Google Cloud Functions outbound API calls (e.g. GitHub)* 
+*\* Flame and Blaze plans are required for Google Cloud Functions outbound API calls (e.g. GitHub). Stranger Strings is very lightweight application so if you choose Blaze plan you probably won't pay anything at all* 
 
 ### Installation
 **1.** Configure ``.env`` file (e.g.:)
@@ -60,7 +60,7 @@ yarn deploy
 ![authproviderss](https://user-images.githubusercontent.com/26377907/50009509-76153700-ffb7-11e8-9666-224da7c46ca9.gif)
 
 ## Data sources
-**Stranger Strings** supports importing translations from PhraseApp or GitHub.
+**Stranger Strings** supports importing translations from Phrase or GitHub.
 
 ### GitHub repository structure
 ```
