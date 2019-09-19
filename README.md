@@ -13,7 +13,7 @@
 * Firebase Realtime Database
 * GitHub repository with localizations in flat JSON format **or** Phrase account
 
-*\* Flame and Blaze plans are required for Google Cloud Functions outbound API calls (e.g. GitHub). Stranger Strings is very lightweight application so if you choose Blaze plan you probably won't pay anything at all* 
+*\* Flame and Blaze plans are required for Google Cloud Functions outbound API calls (e.g. GitHub). Stranger Strings is a very lightweight application so if you choose Blaze plan you probably won't pay anything at all* 
 
 ### Installation
 **1.** Configure ``.env`` file (e.g.:)
