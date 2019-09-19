@@ -64,6 +64,7 @@ export default {
 
   .navbar-dark {
     background-color: #26539B !important;
+    height: 50px;
   }
 
   .navbar-brand {
@@ -71,6 +72,11 @@ export default {
     font-size: 28px;
     font-weight: 900;
     letter-spacing: 2px;
+  }
+  @media screen and (max-width: 900px) {
+    .navbar-brand {
+      font-size: 3vw;
+    }
   }
 
   .navbar-brand a.last-update {

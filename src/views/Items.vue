@@ -89,7 +89,6 @@
                   }"
               @click="isActive(checkKey) && toggleCheckFilter(checkKey)"
               :is="getIcon(checkKey)"
-              style="font-size: 18px;"
             />
           </keep-alive>
           <template slot="popover">
@@ -407,6 +406,7 @@ export default {
 
   .sort-button {
     cursor: pointer;
+    height: 100%;
   }
   .scroller {
     height: 100vh;
@@ -416,14 +416,18 @@ export default {
   .table-head {
     display: flex;
     flex-direction: row;
+    width: 100%;
     top: -1px;
     z-index: 1;
     position: sticky;
     position: -webkit-sticky;
     background-color: #f9fafc;
     font-weight: 500;
-    font-size: 16px;
+    font-size: 1.2vw;
     padding: 7px 0 7px 0;
+  }
+  .table-head .check {
+    font-size: 1.4vw;
   }
 
   .check-filter {
@@ -433,7 +437,6 @@ export default {
   .table-row {
     display: flex;
     flex-direction: row;
-    align-items: center;
     width: 100%;
     font-size: 13px;
     vertical-align: middle;
@@ -448,11 +451,13 @@ export default {
   }
   .key {
     width: 32vw;
+    min-width: 32vw;
     max-width: 32vw;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     padding-left: 10px;
+    padding-right: 10px;
     display: flex;
     align-items: center;
   }
@@ -462,12 +467,12 @@ export default {
     width: 100%;
   }
   .prog-bar {
-    width: 80px;
+    width: 6vw;
   }
   .check {
-    width: 35px;
+    width: 2.5vw;
     text-align: center;
-    font-size: 18px;
+    font-size: 1.2vw;
   }
   .table-row .disabled {
     background-image: repeating-linear-gradient(-45deg, #E6E7E9, #cfd8e2 1px, white 2px, white 5px);
@@ -487,9 +492,9 @@ export default {
   .translation {
     padding-left: 10px;
     max-height: 50px;
-    width: 40vw;
-    max-width: 40vw;
-    min-width: 38vw;
+    width: 39vw;
+    max-width: 39vw;
+    min-width: 39vw;
     overflow: hidden;
     overflow-x: scroll;
     white-space: nowrap;
@@ -512,7 +517,7 @@ export default {
 
   .textInput {
     max-width: 100%;
-    width: 500px;
+    width: 35vw;
     font-size: 14px;
   }
 
@@ -523,11 +528,19 @@ export default {
     width: fit-content;
     margin-left: auto;
     margin-right: auto;
-    top: 12px;
+    top: 2px;
   }
 
   .search-input .input-group {
-    width: 280px;
+    width: 35vw;
     display: inline-flex;
+  }
+  @media screen and (max-width: 1200px) {
+    .textInput {
+      width: 25vw;
+    }
+    .search-input .input-group {
+      width: 25vw;
+    }
   }
 </style>
