@@ -5,6 +5,9 @@ dist
 .firebase
 *.env
 
+# Firebase SKD
+/SDK/*
+
 # local env files
 .env.local
 .env.*.local

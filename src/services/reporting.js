@@ -21,11 +21,11 @@ export function reportOnSlack(hookURL, channelName, reportForm, callback) {
     type: "image",
     title: {
       type: "plain_text",
-      text: "attachment",
+      text: reportForm.image,
       emoji: true,
     },
     image_url: reportForm.image,
-    alt_text: "attachment",
+    alt_text: reportForm.image,
   } : null
   fetch(hookURL, {
     method: "POST",

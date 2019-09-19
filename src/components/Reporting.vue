@@ -123,7 +123,7 @@
       <b-col sm="2"><label><strong>Image link:</strong></label></b-col>
       <b-col sm="10">
         <b-form-input
-          placeholder="e.g. https://monosnap.com/file/rYd4P1lkKDRJnjQIuQcqyYiesFHP8W"
+          placeholder="e.g. https://api.monosnap.com/file/download?id=qJs0h7H5GpBgkl2TcTjOOSRAPaqf0q"
           v-model="reportForm.image"
         >
         </b-form-input>
