@@ -1,5 +1,6 @@
 const superagent = require("superagent")
 const fetch = require("node-fetch")
+const flatten = require("flat")
 
 function getGithubApi(repo, path) { // just a preventions for incorrect repo path
   // TODO: write tests
@@ -18,7 +19,15 @@ function mapFiles(files) {
   }))
 }
 
-function processTranslations(translations) {
+function processTranslations(rawTranslations) {
+  const translations = rawTranslations.reduce((acc, t) => {
+    acc.push({
+      locale: t.locale,
+      sha: t.sha,
+      data: flatten(t.data),
+    })
+    return acc
+  }, [])
   // take only english translated keys
   const enTranslations = translations.filter(x => x.locale === "en-GB")[0].data // TODO: configurable default locale
   const allTKeys = Object.keys(enTranslations)

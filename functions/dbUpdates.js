@@ -41,35 +41,30 @@ const {
 function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig, allowedTags) {
   const mappedTranslations = {}
   _.forEach(val, (_val, _key) => {
-    let trimmed
-    let untrimmed
+    // eslint-disable-next-line no-nested-ternary
+    const content = _val ?
+      typeof _val !== "string" ?
+        String(Object.values(_val)) : _val
+      : ""
 
-    if (!_val) {
-      trimmed = ""
-      untrimmed = ""
-    } else if (typeof _val !== "string") { // pluralized object
-      trimmed = String(Object.values(_val))
-      untrimmed = String(Object.values(_val))
-    } else {
-      trimmed = _val.trim()
-      untrimmed = _val
-    }
+    const tags = getHTMLtags(content)
 
-    const interpolated = trimmed.replace(RegExp(placeholderRegex, "g"), "XXX")
-    const interUntrimmed = untrimmed.replace(RegExp(placeholderRegex, "g"), "XXX")
-    const sanitized = sanitizeHtml(interpolated, { allowedTags: [], allowedAttributes: [] }) || ""
-    const saniUntrimmed = sanitizeHtml(interUntrimmed, { allowedTags: [], allowedAttributes: [] }) || ""
+    const placeholderless = content.replace(RegExp(placeholderRegex, "g"), "XXX")
+    const sanitized = sanitizeHtml(placeholderless, { allowedTags: [], allowedAttributes: [] }) || ""
     _.set(mappedTranslations, [fbKey, _key], {
       content: _val,
-      _placeholders: trimmed.match(RegExp(placeholderRegex, "g")) || [],
-      _firstCharType: determineCharType(saniUntrimmed[0]),
-      _lastCharType: determineCharType(saniUntrimmed[saniUntrimmed.length - 1]),
-      _tags: getHTMLtags(untrimmed),
-      _disallowedTags: getHTMLtags(untrimmed).filter(tag => !allowedTags.includes(tag.match(/(?<=<|<\/)\w+/gm) && tag.match(/(?<=<|<\/)\w+/gm)[0])),
+      _placeholders: content.match(RegExp(placeholderRegex, "g")) || [],
+      _firstCharType: determineCharType(sanitized[0]),
+      _lastCharType: determineCharType(sanitized[sanitized.length - 1]),
+      _tags: tags,
+      _disallowedTags: tags.filter((tag) => {
+        const matches = tag.match(/(?<=<|<\/)\w+/gm)
+        return !allowedTags.includes(matches && matches[0])
+      }),
       _dynamic: detectDynamicValues(sanitized),
-      _writeGood: writeGoodCheck(untrimmed, _key, writeGoodSettings),
+      _writeGood: writeGoodCheck(sanitized, _key, writeGoodSettings),
       _insensitiveness: _key.toString().substring(0, 2) === "en" ?
-        alex.text(sanitizeHtml(untrimmed, { allowedTags: [], allowedAttributes: [] }), insensitivenessConfig).messages.map(out => out.message) : {},
+        alex.text(sanitizeHtml(content, { allowedTags: [], allowedAttributes: [] }), insensitivenessConfig).messages.map(out => out.message) : {},
     })
   })
   return mappedTranslations
