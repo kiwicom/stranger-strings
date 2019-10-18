@@ -322,6 +322,7 @@ export default {
   .translation {
     max-width: 90vw;
     width: auto;
+    min-width: 50vw;
     border: none !important;
   }
   .rtl {
