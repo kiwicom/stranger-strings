@@ -200,7 +200,8 @@ export default {
       if (this.dynamics) {
         parsedContent = this.parseTokens(parsedContent, this.dynamics.sort((a, b) => b.length - a.length), "_inconsistencies_dynamic")
       }
-      parsedContent.filter(t => !t.type && t.content.split(" ").length > 1).forEach((token) => {
+      console.log(this.locale, "|", parsedContent)
+      parsedContent.filter(t => !t.type).forEach((token) => {
         // chop remaining typeless tokens to smaller blocks to avoid messing UI
         const newTokens = []
         let counter = 0

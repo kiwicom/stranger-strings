@@ -37,37 +37,76 @@ const {
   DEFAULT_ALLOWED_TAGS,
 } = require("../common/config")
 
+function computeTranslationInconsistencies(translation, locale, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig, allowedTags, cache) {
+  // eslint-disable-next-line no-nested-ternary
+  const content = translation ?
+    typeof translation !== "string" ?
+      String(Object.values(translation)) : translation
+    : ""
+  const placeholderless = content.replace(RegExp(placeholderRegex, "g"), "XXX")
+  const sanitized = sanitizeHtml(placeholderless, { allowedTags: [], allowedAttributes: [] }) || ""
+  if (cache && content === cache.content) { // cache contains same content (no new computations needed)
+    return {
+      content: cache.content,
+      _placeholders: cache._placeholders,
+      _firstCharType: cache._firstCharType,
+      _lastCharType: cache._lastCharType,
+      _tags: cache._tags,
+      _disallowedTags: cache._disallowedTags,
+      _dynamic: cache._dynamic,
+      _writeGood: writeGoodCheck(sanitized, locale, writeGoodSettings),
+      _insensitiveness: locale.toString().substring(0, 2) === "en" ? cache._insensitiveness : {},
+    }
+  }
+
+  const tags = getHTMLtags(content)
+
+  return {
+    content: translation,
+    _placeholders: content.match(RegExp(placeholderRegex, "g")) || [],
+    _firstCharType: determineCharType(sanitized[0]),
+    _lastCharType: determineCharType(sanitized[sanitized.length - 1]),
+    _tags: tags,
+    _disallowedTags: tags.filter((tag) => {
+      const matches = tag.match(/(?<=<|<\/)\w+/gm)
+      return !allowedTags.includes(matches && matches[0])
+    }),
+    _dynamic: detectDynamicValues(sanitized),
+    _writeGood: writeGoodCheck(sanitized, locale, writeGoodSettings),
+    _insensitiveness: locale.toString().substring(0, 2) === "en" ?
+      alex.text(sanitizeHtml(content, { allowedTags: [], allowedAttributes: [] }), insensitivenessConfig).messages.map(out => out.message) : {},
+  }
+}
 
 function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig, allowedTags) {
+  // THE HIGHEST PERFORMANCE DEMANDING BLOCK
+  // needs to be optimized therefore no lodash and uses caching for en languages because they are usually repeated in other locales
   const mappedTranslations = {}
-  _.forEach(val, (_val, _key) => {
-    // eslint-disable-next-line no-nested-ternary
-    const content = _val ?
-      typeof _val !== "string" ?
-        String(Object.values(_val)) : _val
-      : ""
-
-    const tags = getHTMLtags(content)
-
-    const placeholderless = content.replace(RegExp(placeholderRegex, "g"), "XXX")
-    const sanitized = sanitizeHtml(placeholderless, { allowedTags: [], allowedAttributes: [] }) || ""
-    _.set(mappedTranslations, [fbKey, _key], {
-      content: _val,
-      _placeholders: content.match(RegExp(placeholderRegex, "g")) || [],
-      _firstCharType: determineCharType(sanitized[0]),
-      _lastCharType: determineCharType(sanitized[sanitized.length - 1]),
-      _tags: tags,
-      _disallowedTags: tags.filter((tag) => {
-        const matches = tag.match(/(?<=<|<\/)\w+/gm)
-        return !allowedTags.includes(matches && matches[0])
-      }),
-      _dynamic: detectDynamicValues(sanitized),
-      _writeGood: writeGoodCheck(sanitized, _key, writeGoodSettings),
-      _insensitiveness: _key.toString().substring(0, 2) === "en" ?
-        alex.text(sanitizeHtml(content, { allowedTags: [], allowedAttributes: [] }), insensitivenessConfig).messages.map(out => out.message) : {},
+  mappedTranslations[fbKey] = {}
+  const mappedEnTranslations = {}
+  mappedEnTranslations[fbKey] = {}
+  const enLoc = Object.keys(val).find(l => l === "en-GB") || Object.keys(val).find(l => l === "en-US")
+  const cache = enLoc
+    ? computeTranslationInconsistencies(val[enLoc], enLoc, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig, allowedTags, null)
+    : null
+  if (cache) {
+    mappedEnTranslations[fbKey][enLoc] = cache
+  }
+  Object.keys(val)
+    .filter(locale => locale !== enLoc)
+    .forEach((_key) => {
+      mappedEnTranslations[fbKey][_key] = computeTranslationInconsistencies(
+        val[_key],
+        _key,
+        fbKey,
+        writeGoodSettings,
+        placeholderRegex,
+        insensitivenessConfig,
+        allowedTags,
+        cache,
+      )
     })
-  })
-  return mappedTranslations
+  return { ...mappedTranslations, ...mappedEnTranslations }
 }
 
 function computeInconsistenciesOfKey(mappedTranslations, fbKey) {

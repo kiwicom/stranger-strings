@@ -17,7 +17,7 @@
           <b-button
             class="ml-auto p-2"
             :disabled="!reportConfig.active"
-            variant="outline-secondary"
+            variant="outline-dark"
             @click="showReportModal('not-specified')"
           >
             <ReportIcon/>  Report
@@ -75,7 +75,7 @@
               :disabled="!reportConfig.active"
               :title="`Copy ${locale} translation to clipboard`"
               size="sm"
-              variant="outline-secondary"
+              variant="outline-dark"
               v-clipboard:copy="JSON.stringify(activeTranslations[locale].content).slice(1, -1)"
             >
               <CopyIcon/>
@@ -86,7 +86,7 @@
               :disabled="!reportConfig.active"
               :title="`report issue in ${locale} translation`"
               size="sm"
-              variant="outline-secondary"
+              variant="outline-dark"
               @click="showReportModal(locale)"
             >
               <ReportIcon/>
@@ -105,11 +105,22 @@
           </td>
           <td class="actions">
             <b-button
+              class="action-b"
+              v-b-tooltip.hover
+              disabled
+              :title="`Copy ${locale} translation to clipboard`"
+              size="sm"
+              variant="outline-secondary"
+            >
+              <CopyIcon/>
+            </b-button>
+            <b-button
+              class="action-b"
               v-b-tooltip.hover
               :disabled="!reportConfig.active"
               :title="`report missing translation for ${locale}`"
               size="sm"
-              variant="outline-secondary"
+              variant="outline-dark"
               @click="showReportModal(locale)"
             >
               <ReportIcon/>
@@ -296,6 +307,8 @@ export default {
   .locale-id {
     font-weight: bolder;
     width: 100px;
+    min-width: 100px;
+    max-width: 100px;
     border: none !important;
   }
   .flag-id {
@@ -304,10 +317,11 @@ export default {
   }
   .alerts {
     width: 85px;
+    max-width: 85px;
   }
   .translation {
-    max-width: 80%;
-    width: 80%;
+    max-width: 90vw;
+    width: auto;
     border: none !important;
   }
   .rtl {
@@ -315,6 +329,8 @@ export default {
   }
   .actions {
     width: 90px;
+    max-width: 90px;
+    min-width: 90px;
     text-align: center;
   }
   .action-b {

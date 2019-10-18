@@ -103,7 +103,8 @@ module.exports = function GithubLoader(repo, user, password) {
             const nodes = res.body.tree.filter(node => node.type === "blob"
               && node.path.includes(".json")
               && node.path !== "package.json"
-              && node.path !== ".releaserc.json")
+              && node.path !== ".releaserc.json"
+              && node.path !== "package-lock.json")
             resolve(nodes)
           }
         })
