@@ -108,6 +108,9 @@ export default {
     width: fit-content;
     padding: 0px;
   }
+  .icon {
+    display: inline-block;
+  }
   .suggestions {
     color: dodgerblue;
   }

@@ -1,6 +1,5 @@
 /* eslint-disable global-require */
 const XRegExp = require("xregexp")
-const sanitizeHtml = require("sanitize-html")
 const fs = require("fs")
 const path = require("path")
 const nspell = require("nspell")
@@ -187,10 +186,10 @@ function grammarNazi(locales, dictsExpansion, activatedDicts, placeholderRegex) 
 
 function writeGoodCheck(content, lang, writeGoodSettings) {
   if (lang.substring(0, 2) === "en") {
-    return writeGood(sanitizeHtml(content, { allowedTags: [], allowedAttributes: [] }), writeGoodSettings[lang])
+    return writeGood(content, writeGoodSettings[lang])
   }
   if (lang.substring(0, 2) === "de") {
-    return writeGood(sanitizeHtml(content, { allowedTags: [], allowedAttributes: [] }), { ...writeGoodSettings[lang], ...{ checks: schreibGut } })
+    return writeGood(content, { ...writeGoodSettings[lang], ...{ checks: schreibGut } })
   }
   return {}
 }
