@@ -17,7 +17,7 @@ export default new Vuex.Store({
     checks: {
       _inconsistencies_placeholders: {
         title: "Placeholders",
-        description: "Detects missing/excess/inconsistent placeholders",
+        description: "Detects missing / excess / inconsistent placeholders",
         level: "error",
         active: true,
       },
@@ -35,7 +35,7 @@ export default new Vuex.Store({
       },
       _inconsistencies_tags: {
         title: "HTML tags",
-        description: "Detects invalid HTML and prohibited HTML tags",
+        description: "Detects invalid / inconsistent / prohibited HTML tags",
         level: "error",
         active: true,
       },
@@ -67,7 +67,7 @@ export default new Vuex.Store({
       },
       _inconsistencies_dynamic: {
         title: "Values",
-        description: "Detects values, that should/could be replaced by placeholders to make text more customizable",
+        description: "Detects values, that should/could be replaced by placeholders, because values are likely to change over time",
         level: "suggestion",
         active: true,
       },
