@@ -6,6 +6,8 @@
 **Stranger Strings** is open-source Firebase web application for analyzing localisation and exploring inconsistencies and
  mistakes in translations. It currently supports Github repos with JSON loc files or Phrase loc projects.
  
+<img width="50%" src="https://user-images.githubusercontent.com/26377907/67780983-245a8b80-fa67-11e9-82de-6bbcfe9bc96d.png"><img width="50%" alt="config_preview2" src="https://user-images.githubusercontent.com/26377907/67783430-836dcf80-fa6a-11e9-8939-747230fe366a.png">
+ 
  ### Checks:
  * **Placeholders** - Detects missing / excess / inconsistent placeholders
  * **HTML tags** - Detects invalid / inconsistent / prohibited HTML tags
