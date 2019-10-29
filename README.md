@@ -5,6 +5,17 @@
 ## Description
 **Stranger Strings** is open-source Firebase web application for analyzing localisation and exploring inconsistencies and
  mistakes in translations. It currently supports Github repos with JSON loc files or Phrase loc projects.
+ 
+ ### Checks:
+ * **Placeholders** - Detects missing / excess / inconsistent placeholders
+ * **HTML tags** - Detects invalid / inconsistent / prohibited HTML tags
+ * **Length** - Detects suspicious variations in length
+ * **Spelling** - Detects spelling mistakes (supported languages can be chosen by enabling dictionaries in config file, uses <a href='https://github.com/wooorm/nspell'>nspell</a>)
+ * **Style** - Detects stylistic issues – passive voice, weasel words, overuse of adverbs, cliches and similar (available only for english and german translations, uses <a href='https://github.com/btford/write-good'>write-good</a>)
+ * **Insensitiveness** - Detects gender favouring, polarising, race related, religion inconsiderate, or other unequal phrasing (available only for english translations, uses <a href='https://github.com/get-alex/alex'>Alex</a>)
+ * **Values** - Detects values, that should/could be replaced by placeholders, because values are likely to change over time
+ * **First character** - Detects inconsistencies of first character
+ * **Last character** - Detects inconsistencies of last character
 
 ## Project setup
 ### Requirements
@@ -71,6 +82,8 @@ yarn deploy
 ```
 ### JSON format
 Supports only basic key-value format where key is translation key and value is translation content.
+
+flat form:
 ```
 {
   ...
@@ -80,7 +93,7 @@ Supports only basic key-value format where key is translation key and value is t
   ...
 }
 ```
-or nested form
+or nested form:
 ```
 {
   ...
