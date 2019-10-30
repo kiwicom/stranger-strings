@@ -60,7 +60,7 @@
               <p>Couldn't find word "{{ token.content }}" in dictionary</p>
               <b-button
                 @click="addWordToDict(token.content)"
-                :disabled="dictsExpansionData[locale] && dictsExpansionData[locale].includes(token.content)"
+                :disabled="dictsExpansionData && dictsExpansionData[locale] && Object.values(dictsExpansionData[locale]).includes(token.content)"
                 variant="outline-success"
                 size="sm"
               >
@@ -314,7 +314,7 @@ export default {
     },
     addWordToDict(word) {
       FbDb.ref(`dictsExpansion/${this.locale}`).once("value", (snapshot) => {
-        if (!snapshot.val().includes(word)) {
+        if (!Object.values(snapshot.val()).includes(word)) {
           FbDb.ref(`dictsExpansion/${this.locale}`).push(word)
           gcFunctions.inconsistenciesUpdate()
         }
