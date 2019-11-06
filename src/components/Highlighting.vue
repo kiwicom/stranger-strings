@@ -22,7 +22,7 @@
           ]"
         :last-char="token.content.slice(-1)"
         :first-char="token.content.slice(0, 1)"
-        v-html="escape(token.content)"
+        v-html="escape(token.content.slice(Number(token.first), token.content.length - Number(token.last)))"
       >
      </span>
       <template slot="popover">
@@ -176,8 +176,8 @@ export default {
         typelessOrder: null,
         content,
         type: null,
-        first: true,
-        last: true,
+        first: Array.isArray(this.firstCharType) && this.firstCharType.length === 2 && this.firstCharType[0] !== this.firstCharType[1],
+        last: Array.isArray(this.lastCharType) && this.lastCharType.length === 2 && this.lastCharType[0] !== this.lastCharType[1],
       }]
       if (this.writeGood) {
         parsedContent = this.parseTokens(parsedContent, this.writeGoodHighlights, "_inconsistencies_writeGood")

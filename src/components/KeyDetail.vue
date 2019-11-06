@@ -340,7 +340,6 @@ export default {
     width: 30px;
     height: 20px;
     text-align: center;
-    margin-top: -33px;
   }
   .transparent {
     opacity: 0.3;

@@ -274,7 +274,6 @@ export default {
   }
   .flag-icon {
     padding: 0 5px 0 0;
-    height: 65.04px;
   }
   .alerts-icons {
     width: 15px;
