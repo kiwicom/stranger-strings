@@ -2,8 +2,17 @@ module.exports = {
   transformIgnorePatterns: [
     "node_modules/(?!(babel-jest|jest-vue-preprocessor)/)",
   ],
-  verbose: false,
-  testEnvironment: "node",
+  moduleFileExtensions: [
+    "js",
+    "vue",
+  ],
+  transform: {
+    "^.+\\.js$": "babel-jest",
+    ".*\\.(vue)$": "vue-jest",
+  },
+  verbose: true,
+  testURL: "http://localhost/",
+  testEnvironment: "jsdom",
   testPathIgnorePatterns: [
     "/node_modules/",
     "/functions/tests/spellcheck", // TODO: solve circleci pipeline failing
@@ -11,3 +20,5 @@ module.exports = {
     "/functions/loaders/PhraseappLoader", // TODO
   ],
 }
+
+process.env = Object.assign(process.env, { VUE_APP_FIREBASE_DATABASE_URL: "https://stranger-strings-showcase.firebaseio.com" })

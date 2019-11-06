@@ -22,7 +22,7 @@
           ]"
         :last-char="token.content.slice(-1)"
         :first-char="token.content.slice(0, 1)"
-        v-html="escape(token.content.slice(Number(token.first), token.content.length - Number(token.last)))"
+        v-html="escape(token.content)"
       >
      </span>
       <template slot="popover">
@@ -176,8 +176,8 @@ export default {
         typelessOrder: null,
         content,
         type: null,
-        first: false,
-        last: false,
+        first: true,
+        last: true,
       }]
       if (this.writeGood) {
         parsedContent = this.parseTokens(parsedContent, this.writeGoodHighlights, "_inconsistencies_writeGood")
@@ -213,22 +213,24 @@ export default {
               typelessOrder: counter,
               content: `${word}`,
               type: null,
-              first: false,
-              last: false,
+              first: counter === 0 ? token.first : false,
+              last: counter === (splitten.length - 1) ? token.last : false,
             })
             counter += 1
           })
         } else {
           counter = 0
-          const splitten = token.content.replace(/\s$/g, "").split(" ")
+          const splitten = token.content.split(" ")
           splitten.forEach((word) => {
+            const isFirst = counter === 0 ? token.first : false
+            const isLast = counter === (splitten.length - 1) ? token.last : false
             newTokens.push({
               order: token.order,
               typelessOrder: counter,
-              content: `${word} `,
+              content: counter === (splitten.length - 1) ? `${word}` : `${word} `,
               type: null,
-              first: false,
-              last: false,
+              first: isFirst,
+              last: isLast,
             })
             counter += 1
           })
@@ -245,16 +247,6 @@ export default {
         }
         return a.typelessOrder - b.typelessOrder
       })
-      if (this.firstCharType && this.firstCharType[0] !== this.firstCharType[1]) {
-        sorted[0].first = true // mark first
-      }
-      if (this.lastCharType && this.lastCharType[0] !== this.lastCharType[1]) {
-        sorted[sorted.length - 1].last = true // mark last
-        sorted[sorted.length - 1].content = sorted[sorted.length - 1].content.replace(/\s$/g, "")
-        if (this.lastCharType[0] === "space") {
-          sorted[sorted.length - 1].content = `${sorted[sorted.length - 1].content} `
-        }
-      }
       return sorted
     },
     parseTokens(chunks, highlights, type) {
@@ -283,30 +275,36 @@ export default {
 
         parsedContent.filter(token => regex.test(token.content) && (!token.type || nesting.includes(token.type)))
           .forEach((token) => {
-            parsedContent.push({
-              order: `${token.order}a`,
-              typelessOrder: null,
-              content: token.content.slice(0, token.content.search(regex)),
-              type: token.type,
-              first: false,
-              last: false,
-            })
+            const beforeContent = token.content.slice(0, token.content.search(regex))
+            const afterContent = token.content.slice(token.content.search(regex) + highlight.length)
+            if (beforeContent !== "") {
+              parsedContent.push({
+                order: `${token.order}a`,
+                typelessOrder: null,
+                content: beforeContent,
+                type: token.type,
+                first: token.first,
+                last: false,
+              })
+            }
             parsedContent.push({
               order: `${token.order}b`,
               typelessOrder: null,
               content: highlight,
               type,
-              first: false,
-              last: false,
+              first: beforeContent === "" ? token.first : false,
+              last: afterContent === "" ? token.last : false,
             })
-            parsedContent.push({
-              order: `${token.order}c`,
-              typelessOrder: null,
-              content: token.content.slice(token.content.search(regex) + highlight.length),
-              type: token.type,
-              first: false,
-              last: false,
-            })
+            if (afterContent !== "") {
+              parsedContent.push({
+                order: `${token.order}c`,
+                typelessOrder: null,
+                content: afterContent,
+                type: token.type,
+                first: false,
+                last: token.last,
+              })
+            }
             parsedContent = parsedContent.filter(tkn => tkn.order !== token.order)
           })
       })

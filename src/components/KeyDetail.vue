@@ -72,7 +72,6 @@
             <b-button
               class="action-b"
               v-b-tooltip.hover
-              :disabled="!reportConfig.active"
               :title="`Copy ${locale} translation to clipboard`"
               size="sm"
               variant="outline-dark"
