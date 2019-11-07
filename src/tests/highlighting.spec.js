@@ -92,7 +92,7 @@ describe("Highlighting.vue", () => {
     })
   })
 
-  it("test basic", async () => {
+  it("[tokenizer] test basic", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: "tralala",
@@ -112,7 +112,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
-  it("test basic (de-DE)", async () => {
+  it("[tokenizer] test basic (de-DE)", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: "• vorbildung",
@@ -132,7 +132,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
-  it("test trimming", async () => {
+  it("[tokenizer] test trimming", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: "test test test tralala",
@@ -153,7 +153,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.last).length).toEqual(1)
   })
 
-  it("test trimming spaces", async () => {
+  it("[tokenizer] test trimming spaces", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: " test test test tralala ",
@@ -174,7 +174,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.last).length).toEqual(1)
   })
 
-  it("test trimming (zh-CN-Hans)", async () => {
+  it("[tokenizer] test trimming (zh-CN-Hans)", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: ":要接收确认电子邮件，请提供以下详细信息",
@@ -195,7 +195,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
-  it("test trimming (ja-JP)", async () => {
+  it("[tokenizer] test trimming (ja-JP)", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: "お支払いありがとうございます。追加荷物のご注文を処理し、完了した時点でメールにてお知らせします。航空会社によっては、この手続きに数時間かかる場合があります。",
@@ -216,7 +216,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
-  it("test inconsistency whole", async () => {
+  it("[tokenizer] test inconsistency whole", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: "tralala",
@@ -237,7 +237,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
-  it("test inconsistency as first token", async () => {
+  it("[tokenizer] test inconsistency as first token", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: "tralala YOLO",
@@ -258,7 +258,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
-  it("test inconsistency as last token", async () => {
+  it("[tokenizer] test inconsistency as last token", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: "-YOLO tralala",
@@ -279,7 +279,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.last).length).toEqual(1)
   })
 
-  it("test inconsistency as last token (de-DE)", async () => {
+  it("[tokenizer] test inconsistency as last token (de-DE)", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: "• vorbildung",
@@ -300,7 +300,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
-  it("test entity as last token", async () => {
+  it("[tokenizer] test entity as last token", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: "<div>Hell yeah</div>",
@@ -322,7 +322,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
-  it("test entity as middle token (zh-CN-Hans)", async () => {
+  it("[tokenizer] test entity as middle token (zh-CN-Hans)", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: "注意，您预订的行程可能重复。继续预订之前，请通过电子邮箱查看另一行程的详情。您是否确认要继续处理此订单？如需帮助，请<a target=\\\"_blank\\\" href=\\\"/content/feedback\\\">联系我们</a>",
@@ -345,7 +345,7 @@ describe("Highlighting.vue", () => {
     expect(tokens.filter(t => t.type === "_entity_tags").length).toEqual(2)
   })
 
-  it("complex test with multiple inconsistencies", async () => {
+  it("[tokenizer] complex test with multiple inconsistencies", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
         content: "Rand text:: to to <u>I</u>> mean that this tpo is __placeholder__ policemen. Aniway 12 <div>Hell yeah</div>!",
