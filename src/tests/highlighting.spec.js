@@ -106,10 +106,10 @@ describe("Highlighting.vue", () => {
     await wrapper.vm.$nextTick()
     const tokens = wrapper.vm.tokens
     expect(tokens.map(t => t.content).join("")).toEqual("tralala")
-    expect(tokens[0].first).toEqual(true)
-    expect(tokens[tokens.length - 1].last).toEqual(true)
-    expect(tokens.filter(t => t.first).length).toEqual(1)
-    expect(tokens.filter(t => t.last).length).toEqual(1)
+    expect(tokens[0].first).toEqual(false)
+    expect(tokens[tokens.length - 1].last).toEqual(false)
+    expect(tokens.filter(t => t.first).length).toEqual(0)
+    expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
   it("test basic (de-DE)", async () => {
@@ -126,10 +126,10 @@ describe("Highlighting.vue", () => {
     await wrapper.vm.$nextTick()
     const tokens = wrapper.vm.tokens
     expect(tokens.map(t => t.content).join("")).toEqual("• vorbildung")
-    expect(tokens[0].first).toEqual(true)
-    expect(tokens[tokens.length - 1].last).toEqual(true)
-    expect(tokens.filter(t => t.first).length).toEqual(1)
-    expect(tokens.filter(t => t.last).length).toEqual(1)
+    expect(tokens[0].first).toEqual(false)
+    expect(tokens[tokens.length - 1].last).toEqual(false)
+    expect(tokens.filter(t => t.first).length).toEqual(0)
+    expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
   it("test trimming", async () => {
@@ -138,7 +138,7 @@ describe("Highlighting.vue", () => {
         content: "test test test tralala",
         locale: "en-GB",
         firstCharType: ["letter", "letter"],
-        lastCharType: ["letter", "letter"],
+        lastCharType: ["letter", "dot"],
       },
       localVue,
       store,
@@ -146,6 +146,28 @@ describe("Highlighting.vue", () => {
     await wrapper.vm.$nextTick()
     const tokens = wrapper.vm.tokens
     expect(tokens.map(t => t.content).join("")).toEqual("test test test tralala")
+    expect(tokens.length > 3).toEqual(true)
+    expect(tokens[0].first).toEqual(false)
+    expect(tokens[tokens.length - 1].last).toEqual(true)
+    expect(tokens.filter(t => t.first).length).toEqual(0)
+    expect(tokens.filter(t => t.last).length).toEqual(1)
+  })
+
+  it("test trimming spaces", async () => {
+    const wrapper = shallowMount(Highlighting, {
+      propsData: {
+        content: " test test test tralala ",
+        locale: "en-GB",
+        firstCharType: ["space", "letter"],
+        lastCharType: ["space", "letter"],
+      },
+      localVue,
+      store,
+    })
+    await wrapper.vm.$nextTick()
+    const tokens = wrapper.vm.tokens
+    expect(tokens.map(t => t.content).join("")).toEqual(" test test test tralala ")
+    expect(tokens.length > 3).toEqual(true)
     expect(tokens[0].first).toEqual(true)
     expect(tokens[tokens.length - 1].last).toEqual(true)
     expect(tokens.filter(t => t.first).length).toEqual(1)
@@ -155,9 +177,9 @@ describe("Highlighting.vue", () => {
   it("test trimming (zh-CN-Hans)", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
-        content: "要接收确认电子邮件，请提供以下详细信息",
+        content: ":要接收确认电子邮件，请提供以下详细信息",
         locale: "zh-CN-Hans",
-        firstCharType: ["letter", "letter"],
+        firstCharType: ["colon", "letter"],
         lastCharType: ["letter", "letter"],
       },
       localVue,
@@ -165,11 +187,33 @@ describe("Highlighting.vue", () => {
     })
     await wrapper.vm.$nextTick()
     const tokens = wrapper.vm.tokens
-    expect(tokens.map(t => t.content).join("")).toEqual("要接收确认电子邮件，请提供以下详细信息")
+    expect(tokens.map(t => t.content).join("")).toEqual(":要接收确认电子邮件，请提供以下详细信息")
+    expect(tokens.length > 1).toEqual(true)
     expect(tokens[0].first).toEqual(true)
-    expect(tokens[tokens.length - 1].last).toEqual(true)
+    expect(tokens[tokens.length - 1].last).toEqual(false)
     expect(tokens.filter(t => t.first).length).toEqual(1)
-    expect(tokens.filter(t => t.last).length).toEqual(1)
+    expect(tokens.filter(t => t.last).length).toEqual(0)
+  })
+
+  it("test trimming (ja-JP)", async () => {
+    const wrapper = shallowMount(Highlighting, {
+      propsData: {
+        content: "お支払いありがとうございます。追加荷物のご注文を処理し、完了した時点でメールにてお知らせします。航空会社によっては、この手続きに数時間かかる場合があります。",
+        locale: "ja-JP",
+        firstCharType: ["letter", "letter"],
+        lastCharType: ["dot", "dot"],
+      },
+      localVue,
+      store,
+    })
+    await wrapper.vm.$nextTick()
+    const tokens = wrapper.vm.tokens
+    expect(tokens.map(t => t.content).join("")).toEqual("お支払いありがとうございます。追加荷物のご注文を処理し、完了した時点でメールにてお知らせします。航空会社によっては、この手続きに数時間かかる場合があります。")
+    expect(tokens.length > 10).toEqual(true)
+    expect(tokens[0].first).toEqual(false)
+    expect(tokens[tokens.length - 1].last).toEqual(false)
+    expect(tokens.filter(t => t.first).length).toEqual(0)
+    expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
   it("test inconsistency whole", async () => {
@@ -187,10 +231,10 @@ describe("Highlighting.vue", () => {
     await wrapper.vm.$nextTick()
     const tokens = wrapper.vm.tokens
     expect(tokens.map(t => t.content).join("")).toEqual("tralala")
-    expect(tokens[0].first).toEqual(true)
-    expect(tokens[tokens.length - 1].last).toEqual(true)
-    expect(tokens.filter(t => t.first).length).toEqual(1)
-    expect(tokens.filter(t => t.last).length).toEqual(1)
+    expect(tokens[0].first).toEqual(false)
+    expect(tokens[tokens.length - 1].last).toEqual(false)
+    expect(tokens.filter(t => t.first).length).toEqual(0)
+    expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
   it("test inconsistency as first token", async () => {
@@ -208,19 +252,19 @@ describe("Highlighting.vue", () => {
     await wrapper.vm.$nextTick()
     const tokens = wrapper.vm.tokens
     expect(tokens.map(t => t.content).join("")).toEqual("tralala YOLO")
-    expect(tokens[0].first).toEqual(true)
-    expect(tokens[tokens.length - 1].last).toEqual(true)
-    expect(tokens.filter(t => t.first).length).toEqual(1)
-    expect(tokens.filter(t => t.last).length).toEqual(1)
+    expect(tokens[0].first).toEqual(false)
+    expect(tokens[tokens.length - 1].last).toEqual(false)
+    expect(tokens.filter(t => t.first).length).toEqual(0)
+    expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
   it("test inconsistency as last token", async () => {
     const wrapper = shallowMount(Highlighting, {
       propsData: {
-        content: "YOLO tralala",
+        content: "-YOLO tralala",
         locale: "en-GB",
-        firstCharType: ["letter", "letter"],
-        lastCharType: ["letter", "letter"],
+        firstCharType: ["dash", "letter"],
+        lastCharType: ["letter", "dot"],
         typos: ["tralala"],
       },
       localVue,
@@ -228,7 +272,7 @@ describe("Highlighting.vue", () => {
     })
     await wrapper.vm.$nextTick()
     const tokens = wrapper.vm.tokens
-    expect(tokens.map(t => t.content).join("")).toEqual("YOLO tralala")
+    expect(tokens.map(t => t.content).join("")).toEqual("-YOLO tralala")
     expect(tokens[0].first).toEqual(true)
     expect(tokens[tokens.length - 1].last).toEqual(true)
     expect(tokens.filter(t => t.first).length).toEqual(1)
@@ -250,10 +294,10 @@ describe("Highlighting.vue", () => {
     await wrapper.vm.$nextTick()
     const tokens = wrapper.vm.tokens
     expect(tokens.map(t => t.content).join("")).toEqual("• vorbildung")
-    expect(tokens[0].first).toEqual(true)
-    expect(tokens[tokens.length - 1].last).toEqual(true)
-    expect(tokens.filter(t => t.first).length).toEqual(1)
-    expect(tokens.filter(t => t.last).length).toEqual(1)
+    expect(tokens[0].first).toEqual(false)
+    expect(tokens[tokens.length - 1].last).toEqual(false)
+    expect(tokens.filter(t => t.first).length).toEqual(0)
+    expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
   it("test entity as last token", async () => {
@@ -271,10 +315,11 @@ describe("Highlighting.vue", () => {
     await wrapper.vm.$nextTick()
     const tokens = wrapper.vm.tokens
     expect(tokens.map(t => t.content).join("")).toEqual("<div>Hell yeah</div>")
-    expect(tokens[0].first).toEqual(true)
-    expect(tokens[tokens.length - 1].last).toEqual(true)
-    expect(tokens.filter(t => t.first).length).toEqual(1)
-    expect(tokens.filter(t => t.last).length).toEqual(1)
+    expect(tokens.length > 2).toEqual(true)
+    expect(tokens[0].first).toEqual(false)
+    expect(tokens[tokens.length - 1].last).toEqual(false)
+    expect(tokens.filter(t => t.first).length).toEqual(0)
+    expect(tokens.filter(t => t.last).length).toEqual(0)
   })
 
   it("test entity as middle token (zh-CN-Hans)", async () => {
@@ -292,10 +337,10 @@ describe("Highlighting.vue", () => {
     await wrapper.vm.$nextTick()
     const tokens = wrapper.vm.tokens
     expect(tokens.map(t => t.content).join("")).toEqual("注意，您预订的行程可能重复。继续预订之前，请通过电子邮箱查看另一行程的详情。您是否确认要继续处理此订单？如需帮助，请<a target=\\\"_blank\\\" href=\\\"/content/feedback\\\">联系我们</a>")
-    expect(tokens[0].first).toEqual(true)
-    expect(tokens[tokens.length - 1].last).toEqual(true)
-    expect(tokens.filter(t => t.first).length).toEqual(1)
-    expect(tokens.filter(t => t.last).length).toEqual(1)
+    expect(tokens[0].first).toEqual(false)
+    expect(tokens[tokens.length - 1].last).toEqual(false)
+    expect(tokens.filter(t => t.first).length).toEqual(0)
+    expect(tokens.filter(t => t.last).length).toEqual(0)
     expect(tokens.filter(t => t.type === "_entity_tags").length).toEqual(2)
   })
 
@@ -305,7 +350,7 @@ describe("Highlighting.vue", () => {
         content: "Rand text:: to to <u>I</u>> mean that this tpo is __placeholder__ policemen. Aniway 12 <div>Hell yeah</div>!",
         locale: "en-GB",
         firstCharType: ["letter", "letter"],
-        lastCharType: ["exclamation mark", "exclamation mark"],
+        lastCharType: ["letter mark", "exclamation mark"],
         disallowedTags: ["<u>", "</u>"],
         tags: ["<div>", "</div>"],
         typos: ["Rand", "tpo", "Aniway"],
@@ -320,9 +365,10 @@ describe("Highlighting.vue", () => {
     await wrapper.vm.$nextTick()
     const tokens = wrapper.vm.tokens
     expect(tokens.map(t => t.content).join("")).toEqual("Rand text:: to to <u>I</u>> mean that this tpo is __placeholder__ policemen. Aniway 12 <div>Hell yeah</div>!")
-    expect(tokens[0].first).toEqual(true)
+    expect(tokens.length > 10).toEqual(true)
+    expect(tokens[0].first).toEqual(false)
     expect(tokens[tokens.length - 1].last).toEqual(true)
-    expect(tokens.filter(t => t.first).length).toEqual(1)
+    expect(tokens.filter(t => t.first).length).toEqual(0)
     expect(tokens.filter(t => t.last).length).toEqual(1)
     expect(tokens.filter(t => t.content === "</u>").length).toEqual(1)
     expect(tokens.filter(t => t.type === "_inconsistencies_typos").length).toEqual(3)
