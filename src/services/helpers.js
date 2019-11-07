@@ -2,23 +2,6 @@
 import _ from "lodash"
 import * as R from "ramda"
 
-// exact match for en translations
-export function strictSearch(items, query) {
-  const regex = new RegExp(`.*${_.escapeRegExp(query)}.*`, "i")
-  const matchContent = _.reduce(items, (acc, val, key) => {
-    if (val["en-GB"] && typeof val["en-GB"] === "string" && val["en-GB"].match(regex)) { // type string because of plurals object
-      acc[key] = val
-    }
-    return acc
-  }, {})
-  return _.reduce(items, (acc, val, key) => {
-    if (val.key && typeof val.key === "string" && val.key.match(regex)) {
-      acc[key] = val
-    }
-    return acc
-  }, matchContent)
-}
-
 // sort by property either "asc" or "desc"
 export function sortTranslationKeys(translations, sortProperty, ascOrDesc) {
   return _.orderBy(translations, sortProperty, ascOrDesc)
