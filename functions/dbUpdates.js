@@ -37,7 +37,16 @@ const {
   DEFAULT_ALLOWED_TAGS,
 } = require("../common/config")
 
-function computeTranslationInconsistencies(translation, locale, fbKey, writeGoodSettings, placeholderRegex, insensitivenessConfig, allowedTags, cache) {
+function computeTranslationInconsistencies(
+  translation,
+  locale,
+  fbKey,
+  writeGoodSettings,
+  placeholderRegex,
+  insensitivenessConfig,
+  allowedTags,
+  cache,
+) {
   // eslint-disable-next-line no-nested-ternary
   const content = translation ?
     typeof translation !== "string" ?

@@ -72,7 +72,6 @@
             <b-button
               class="action-b"
               v-b-tooltip.hover
-              :disabled="!reportConfig.active"
               :title="`Copy ${locale} translation to clipboard`"
               size="sm"
               variant="outline-dark"
@@ -341,7 +340,6 @@ export default {
     width: 30px;
     height: 20px;
     text-align: center;
-    margin-top: -33px;
   }
   .transparent {
     opacity: 0.3;

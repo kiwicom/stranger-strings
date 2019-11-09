@@ -145,8 +145,8 @@ function loadDicts(dictsExpansion, activatedDicts) {
         dict = nspell(nspellDicts[lang])
       }
       _.concat(
-        custom.global || [],
-        custom[lang] || [],
+        Object.values(custom.global),
+        Object.values(custom[lang]),
       ).forEach(word => dict.add(word))
       acc[lang] = dict
       return acc
@@ -246,7 +246,7 @@ function updateDictsExpansion(dictsExpansion, dicts) {
   }
   const updatedDictExpansion = { ...dictsExpUpdate, ...dictsExpansion }
   return _.reduce(updatedDictExpansion, (acc, dict, lang) => { // remove unnecessary placeholders
-    acc[lang] = dict.length > 1 ? dict.filter(word => word !== "**PLACEHOLDER**") : dict
+    acc[lang] = Object.values(dict).length > 1 ? Object.values(dict).filter(v => v !== "**PLACEHOLDER**") : dict
     return acc
   }, {})
 }

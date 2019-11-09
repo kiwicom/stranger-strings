@@ -1,7 +1,6 @@
 // eslint-disable-next-line import/first
 import {
   sortTranslationKeys,
-  strictSearch,
   getPlaceholders,
 } from "./helpers"
 
