@@ -1,3 +1,5 @@
+const NO_LOGIN = false
+
 const IMPORTANT_LOCALES = [ // eslint-disable-line
   "en-GB",
   "cs-CZ",
@@ -94,6 +96,7 @@ const DEFAULT_ALLOWED_TAGS = ["br", "a", "strong", "em", "span", "i"]
 const baseUrl = `https://us-central1-${process.env.VUE_APP_FIREBASE_PROJECT_ID}.cloudfunctions.net`
 
 module.exports = {
+  NO_LOGIN,
   IMPORTANT_LOCALES,
   DEFAULT_SPELLCHECKING_DICT_SUPPORT,
   DEFAULT_WRITE_GOOD_SETTINGS,

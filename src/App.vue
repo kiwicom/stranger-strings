@@ -31,6 +31,7 @@ import Status from "./components/Status"
 import * as gcFunctions from "./modules/functionsApi"
 import { FbAuthProvider } from "./modules/firebase"
 import WHITELIST from "./consts/whiltelist"
+import { NO_LOGIN } from "../common/config"
 
 export default {
   components: {
@@ -60,7 +61,9 @@ export default {
     })
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        if (WHITELIST.some(x => user.email.endsWith(x))) {
+        if (NO_LOGIN && user.isAnonymous) {
+          this.user = { email: "unknown" }
+        } else if (WHITELIST.some(x => user.email.endsWith(x))) {
           this.user = user
         } else {
           this.user = {}
@@ -76,7 +79,13 @@ export default {
   },
   methods: {
     handleSignIn() {
-      firebase.auth().signInWithRedirect(FbAuthProvider)
+      this.loading = true
+      NProgress.start()
+      if (!NO_LOGIN) {
+        firebase.auth().signInWithRedirect(FbAuthProvider)
+      } else {
+        firebase.auth().signInAnonymously()
+      }
     },
     handleSignOut() {
       firebase.auth().signOut().then(() => {
