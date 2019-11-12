@@ -3,13 +3,14 @@
     <div class="banner">
       <h1>Stranger Strings</h1>
       <h2>All your translations in one place.</h2>
-      <b-btn href="#" variant="primary"><a @click="onSignIn">Sign in with Google</a></b-btn>
+      <b-btn href="#" variant="primary"><a @click="onSignIn">{{ loginText }}</a></b-btn>
     </div>
   </div>
 </template>
 
 <script type="text/javascript">
 import "particles.js"
+import { NO_LOGIN } from "../../common/config"
 
 export default {
   props: {
@@ -17,6 +18,11 @@ export default {
   },
   mounted() {
     this.initParticles()
+  },
+  computed: {
+    loginText() {
+      return NO_LOGIN ? "Enter" : "Sign in with Google"
+    },
   },
   methods: {
     initParticles() {
