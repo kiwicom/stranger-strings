@@ -1,6 +1,19 @@
+// !!! MUST ENABLE ANONYMOUS SIGN-IN IN FIREBASE CONSOLE !!!
 const NO_LOGIN = false
 
-const IMPORTANT_LOCALES = [ // eslint-disable-line
+// insert whole emails of administrators
+// !!! CURRENTLY ONLY WORKS IF YOU ENABLE GOOGLE AS SIGN-IN PROVIDER IN FIREBASE CONSOLE !!!
+const ADMIN = [""]
+
+// add emails that can login to your Stranger Strings app e.g. ["bob@company.com", jake@company.com]
+// also works for whitelisting certain domains ["gmail.com"]
+// if you want to allow everyone enter [""]
+// !!! CURRENTLY ONLY WORKS IF YOU ENABLE GOOGLE AS SIGN-IN PROVIDER IN FIREBASE CONSOLE !!!
+const WHITELIST = [""]
+
+
+// default user setting for new users
+const IMPORTANT_LOCALES = [
   "en-GB",
   "cs-CZ",
   "da-DK",
@@ -21,6 +34,8 @@ const IMPORTANT_LOCALES = [ // eslint-disable-line
   "nl-NL",
 ]
 
+// set true for languages you want to activate spellchecking
+// to set custom dictionaries see ./functions/dicts
 const DEFAULT_SPELLCHECKING_DICT_SUPPORT = {
   "bg-BG": false,
   "cs-CZ": true,
@@ -48,20 +63,24 @@ const DEFAULT_SPELLCHECKING_DICT_SUPPORT = {
   "vi-VN": false,
 }
 
+// default user setting for new users
 const DEFAULT_DISABLED_CHECKS = []
 
+// default user setting for new users
 const DEFAULT_IMPORTANT_CHECKS = [
   "_inconsistencies_placeholders",
   "_inconsistencies_typos",
   "_inconsistencies_tags",
 ]
 
+// default user setting for new users
 const DEFAULT_UNIMPORTANT_CHECKS = [
   "_inconsistencies_writeGood",
   "_inconsistencies_insensitiveness",
   "_inconsistencies_dynamic",
 ]
 
+// default admin setting for new users
 const DEFAULT_WRITE_GOOD_SETTINGS = {
   "de-DE": {
     tooWordy: true,
@@ -80,23 +99,30 @@ const DEFAULT_WRITE_GOOD_SETTINGS = {
   },
 }
 
+// default admin setting for new users
 const DEFAULT_INSENSITIVENESS_CONFIG = {
   profanitySureness: 2,
   allow: [],
 }
 
+// default user setting for new users
 const DEFAULT_VIEW = {
   hardWrap: false,
 }
 
+// default admin setting for new users
 const DEFAULT_PLACEHOLDER_REGEX = "(__\\w+__)"
 
+// default admin setting for new users
 const DEFAULT_ALLOWED_TAGS = ["br", "a", "strong", "em", "span", "i"]
 
+// DO NOT CHANGE
 const baseUrl = `https://us-central1-${process.env.VUE_APP_FIREBASE_PROJECT_ID}.cloudfunctions.net`
 
 module.exports = {
   NO_LOGIN,
+  ADMIN,
+  WHITELIST,
   IMPORTANT_LOCALES,
   DEFAULT_SPELLCHECKING_DICT_SUPPORT,
   DEFAULT_WRITE_GOOD_SETTINGS,

@@ -131,7 +131,7 @@ import { FbDb } from "../modules/firebase"
 import * as reporting from "../services/reporting"
 import * as defaults from "../../common/config"
 import * as gcFunctions from "../modules/functionsApi"
-import ADMIN from "../consts/admin"
+import { ADMIN } from "../../common/config"
 import FirebaseListManager from "./FirebaseListManager"
 
 export default {

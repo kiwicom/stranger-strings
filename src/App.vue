@@ -30,8 +30,7 @@ import Welcome from "./components/Welcome"
 import Status from "./components/Status"
 import * as gcFunctions from "./modules/functionsApi"
 import { FbAuthProvider } from "./modules/firebase"
-import WHITELIST from "./consts/whiltelist"
-import { NO_LOGIN } from "../common/config"
+import { NO_LOGIN, WHITELIST } from "../common/config"
 
 export default {
   components: {
