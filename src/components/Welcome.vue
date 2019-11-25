@@ -3,14 +3,30 @@
     <div class="banner">
       <h1>Stranger Strings</h1>
       <h2>All your translations in one place.</h2>
-      <b-btn href="#" variant="primary"><a @click="onSignIn">{{ loginText }}</a></b-btn>
+      <b-form v-if="signInMethod === 'email link'">
+        <b-form-group
+          id="input-group-email-link"
+          label="Email address:"
+          label-for="input-email-link"
+        >
+          <b-form-input
+            id="input-email-link"
+            v-model="user.email"
+            type="email"
+            required
+            class="mx-auto email"
+            placeholder="user@gmail.com"
+          ></b-form-input>
+        </b-form-group>
+      </b-form>
+      <b-btn href="#" variant="primary"><a @click="onSignIn(user)">{{ loginText }}</a></b-btn>
     </div>
   </div>
 </template>
 
 <script type="text/javascript">
 import "particles.js"
-import { NO_LOGIN } from "../../common/config"
+import { SIGN_IN_METHOD } from "../../common/config"
 
 export default {
   props: {
@@ -19,9 +35,27 @@ export default {
   mounted() {
     this.initParticles()
   },
+  data() {
+    return {
+      user: {
+        email: null,
+        password: null,
+      },
+    }
+  },
   computed: {
     loginText() {
-      return NO_LOGIN ? "Enter" : "Sign in with Google"
+      switch (SIGN_IN_METHOD) {
+      case "email link":
+        return "Send sign-up link to email"
+      case "google":
+        return "Sign in with Google"
+      default:
+        return "Enter"
+      }
+    },
+    signInMethod() {
+      return SIGN_IN_METHOD
     },
   },
   methods: {
@@ -160,5 +194,9 @@ export default {
     margin-bottom: 20px;
     font-size: 2vw;
     font-weight: 300;
+  }
+  .email {
+    width: 30%;
+    text-align: center;
   }
 </style>

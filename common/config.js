@@ -1,15 +1,17 @@
-// !!! MUST ENABLE ANONYMOUS SIGN-IN IN FIREBASE CONSOLE !!!
-const NO_LOGIN = false
+// IMPORTANT:
+// whatever sign-in method is selected make sure it's also allowed in firebase console
+// in section Develop/Authentication/Sign-in method
+// note: for none sign-in method you need to anable anonymous sign-in provider
+const SIGN_IN_METHOD = "none" // "email link" | "google" | "none"
+//-----------------------------------------------------------------
 
 // insert whole emails of administrators
-// !!! CURRENTLY ONLY WORKS IF YOU ENABLE GOOGLE AS SIGN-IN PROVIDER IN FIREBASE CONSOLE !!!
-const ADMIN = [""]
+const ADMIN = [""] // e.g. ["translationmanager@amazingstartup.com"]
 
 // add emails that can login to your Stranger Strings app e.g. ["bob@company.com", jake@company.com]
 // also works for whitelisting certain domains ["gmail.com"]
 // if you want to allow everyone enter [""]
-// !!! CURRENTLY ONLY WORKS IF YOU ENABLE GOOGLE AS SIGN-IN PROVIDER IN FIREBASE CONSOLE !!!
-const WHITELIST = [""]
+const WHITELIST = [""] // e.g ["translator@externalcompany.com", "amazingstartup.com"]
 
 
 // default user setting for new users
@@ -120,7 +122,7 @@ const DEFAULT_ALLOWED_TAGS = ["br", "a", "strong", "em", "span", "i"]
 const baseUrl = `https://us-central1-${process.env.VUE_APP_FIREBASE_PROJECT_ID}.cloudfunctions.net`
 
 module.exports = {
-  NO_LOGIN,
+  SIGN_IN_METHOD,
   ADMIN,
   WHITELIST,
   IMPORTANT_LOCALES,
