@@ -1,14 +1,14 @@
 # Stranger Strings
 
 ![image](https://user-images.githubusercontent.com/26377907/55490923-de565a00-5634-11e9-9349-0f5f0dc90336.png)
-### Demo: <https://stranger-strings-showcase.firebaseapp.com> 
-## Description
+### Demo 👉 <https://stranger-strings-showcase.firebaseapp.com> 
+## 📝 Description
 **Stranger Strings** is open-source Firebase web application for analyzing localisation and exploring inconsistencies and
  mistakes in translations. It currently supports Github repos with JSON loc files or Phrase loc projects.
  
 <img width="50%" src="https://user-images.githubusercontent.com/26377907/67780983-245a8b80-fa67-11e9-82de-6bbcfe9bc96d.png"><img width="50%" alt="config_preview2" src="https://user-images.githubusercontent.com/26377907/67783430-836dcf80-fa6a-11e9-8939-747230fe366a.png">
  
- ### Checks:
+ ### ✅ Checks:
  * **Placeholders** - Detects missing / excess / inconsistent placeholders
  * **HTML tags** - Detects invalid / inconsistent / prohibited HTML tags
  * **Length** - Detects suspicious variations in length
@@ -19,15 +19,15 @@
  * **First character** - Detects inconsistencies of first character
  * **Last character** - Detects inconsistencies of last character
 
-## Project setup
-### Requirements
+## 🛠 Project setup
+### 📌 Requirements
 * [Firebase project](https://console.firebase.google.com) with (Flame/Blaze Plan*)
 * Firebase Realtime Database
 * GitHub repository with localizations in JSON format **or** Phrase account
 
 *\* Flame and Blaze plans are required for Google Cloud Functions outbound API calls (e.g. GitHub). Stranger Strings is a very lightweight application so if you choose Blaze plan you shouldn't pay anything at all* 
 
-### Installation
+### 🧩 Installation
 **1.** Configure ``.env`` file (e.g.:)
 ```
 # note: select one data source and fill it's data
@@ -72,17 +72,17 @@ yarn deploy
 
 ![authproviderss](https://user-images.githubusercontent.com/26377907/50009509-76153700-ffb7-11e8-9666-224da7c46ca9.gif)
 
-## Data sources
+## 💽 Data sources
 **Stranger Strings** supports importing translations from Phrase or GitHub.
 
-### GitHub repository structure
+### :octocat: GitHub repository structure
 ```
 .
 ├── en-GB.json              # file containing en-GB localization
 ├── ...
 └── xx-XX.json
 ```
-### JSON format
+### :octocat: JSON format
 Supports only basic key-value format where key is translation key and value is translation content.
 
 flat form:
