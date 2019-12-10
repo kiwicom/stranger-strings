@@ -35,7 +35,7 @@
 import { FbDb } from "../modules/firebase"
 import * as gcFunctions from "../modules/functionsApi"
 import FirebaseListManager from "./FirebaseListManager"
-import ADMIN from "../consts/admin"
+import { ADMIN } from "../../common/config"
 
 export default {
   name: "DictionaryExpansion",

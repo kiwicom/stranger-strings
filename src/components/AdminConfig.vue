@@ -131,7 +131,6 @@ import { FbDb } from "../modules/firebase"
 import * as reporting from "../services/reporting"
 import * as defaults from "../../common/config"
 import * as gcFunctions from "../modules/functionsApi"
-import ADMIN from "../consts/admin"
 import FirebaseListManager from "./FirebaseListManager"
 
 export default {
@@ -239,7 +238,7 @@ export default {
       return matches || []
     },
     isAdmin() {
-      return ADMIN.includes(this.email)
+      return defaults.ADMIN.includes(this.email)
     },
   },
   methods: {
