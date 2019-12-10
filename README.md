@@ -68,7 +68,9 @@ firebase use *your_Firebase_project_ID*
 ```
 yarn deploy
 ```
-**5.** Enable sign-in providers in Firebase Console (Google)
+**5.** (Optional) Adjust access rights and sign-in method in`/common/config.js`
+
+**6.** Enable sign-in providers accordingly to config `const SIGN_IN_METHOD` in `/common/config.js` in Firebase Console (default Anonymous)
 
 ![authproviderss](https://user-images.githubusercontent.com/26377907/50009509-76153700-ffb7-11e8-9666-224da7c46ca9.gif)
 
