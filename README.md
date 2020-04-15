@@ -64,11 +64,11 @@ yarn install --all && yarn --cwd ./functions
 firebase login
 firebase use *your_Firebase_project_ID*
 ```
-**4.** Deploy
+**4.** (Optional) Adjust access rights and sign-in method in`/common/config.js`
+**5.** Deploy
 ```
 yarn deploy
 ```
-**5.** (Optional) Adjust access rights and sign-in method in`/common/config.js`
 
 **6.** Enable sign-in providers accordingly to config `const SIGN_IN_METHOD` in `/common/config.js` in Firebase Console (default Anonymous)
 
