@@ -64,7 +64,9 @@ yarn install --all && yarn --cwd ./functions
 firebase login
 firebase use *your_Firebase_project_ID*
 ```
+
 **4.** (Optional) Adjust access rights and sign-in method in`/common/config.js`
+
 **5.** Deploy
 ```
 yarn deploy
