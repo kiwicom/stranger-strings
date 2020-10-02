@@ -14,7 +14,7 @@ const sanitizeHtml = require("sanitize-html")
 
 const dbMutex = require("./dbMutex")
 const database = require("./database")
-
+const { DISALLOW_INCONSISTENCY_COMPUTATION_FOR_NON_EN_LOCALES } = require("../common/config")
 const { loader, loaderType } = require("./loaderManager")
 
 const {
@@ -104,16 +104,20 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
   Object.keys(val)
     .filter(locale => locale !== enLoc)
     .forEach((_key) => {
-      mappedEnTranslations[fbKey][_key] = computeTranslationInconsistencies(
-        val[_key],
-        _key,
-        fbKey,
-        writeGoodSettings,
-        placeholderRegex,
-        insensitivenessConfig,
-        allowedTags,
-        cache,
-      )
+      if (!DISALLOW_INCONSISTENCY_COMPUTATION_FOR_NON_EN_LOCALES) {
+        mappedEnTranslations[fbKey][_key] = computeTranslationInconsistencies(
+          val[_key],
+          _key,
+          fbKey,
+          writeGoodSettings,
+          placeholderRegex,
+          insensitivenessConfig,
+          allowedTags,
+          cache,
+        )
+      } else {
+        mappedEnTranslations[fbKey][_key].content = val[_key]
+      }
     })
   return { ...mappedTranslations, ...mappedEnTranslations }
 }
