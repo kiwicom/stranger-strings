@@ -24,6 +24,7 @@ const nspellDicts = {
   "de-DE": loadNspell("dictionary-de"),
   "el-GR": loadNspell("dictionary-el"),
   "en-GB": loadNspell("dictionary-en-gb"),
+  "en-US": loadNspell("dictionary-en"),
   "es-ES": loadNspell("dictionary-es"),
   "fr-FR": loadNspell("dictionary-fr"),
   "he-IL": loadNspell("dictionary-he"),
