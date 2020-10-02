@@ -58,7 +58,7 @@ module.exports = (projectId, token) => {
             }
           })
       }),
-      { concurrency: 2 },
+      { concurrency: 4 },
     )
     // [
     //   {
