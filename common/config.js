@@ -118,6 +118,9 @@ const DEFAULT_PLACEHOLDER_REGEX = "(__\\w+__)"
 // default admin setting for new users
 const DEFAULT_ALLOWED_TAGS = ["br", "a", "strong", "em", "span", "i"]
 
+// default admin setting for new users
+const DISALLOW_INCONSISTENCY_COMPUTATION_FOR_NON_EN_LOCALES = false
+
 // DO NOT CHANGE
 const baseUrl = `https://us-central1-${process.env.VUE_APP_FIREBASE_PROJECT_ID}.cloudfunctions.net`
 
@@ -135,6 +138,7 @@ module.exports = {
   DEFAULT_VIEW,
   DEFAULT_PLACEHOLDER_REGEX,
   DEFAULT_ALLOWED_TAGS,
+  DISALLOW_INCONSISTENCY_COMPUTATION_FOR_NON_EN_LOCALES,
   UPDATE_FUNCTION_ENDPOINT: `${baseUrl}/update`,
   INCONSISTENCIES_UPDATE_FUNCTION_ENDPOINT: `${baseUrl}/inconsistenciesUpdate`,
   COLLECTIONS_UPDATE_FUNCTION_ENDPOINT: `${baseUrl}/collectionsUpdate`,
