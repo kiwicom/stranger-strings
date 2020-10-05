@@ -116,13 +116,16 @@ function computeInconsistenciesOfTranslations(val, fbKey, writeGoodSettings, pla
           cache,
         )
       } else {
-        mappedEnTranslations[fbKey][_key].content = val[_key]
+        mappedEnTranslations[fbKey][_key] = { content: val[_key] }
       }
     })
   return { ...mappedTranslations, ...mappedEnTranslations }
 }
 
 function computeInconsistenciesOfKey(mappedTranslations, fbKey) {
+  if (DISALLOW_INCONSISTENCY_COMPUTATION_FOR_NON_EN_LOCALES) {
+    return null
+  }
   const val = {}
 
   // - thai lang doesn't have sentence ending punctation
