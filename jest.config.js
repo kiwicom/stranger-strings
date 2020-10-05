@@ -18,6 +18,7 @@ module.exports = {
     "/functions/tests/spellcheck", // TODO: solve circleci pipeline failing
     "/functions/tests/utils", // TODO: solve fs directory problem
     "/functions/loaders/PhraseappLoader", // TODO
+    "/src/tests/highlighting",
   ],
 }
 
