@@ -5,19 +5,6 @@
 ## 📝 Description
 **Stranger Strings** is open-source Firebase web application for analyzing localisation and exploring inconsistencies and
  mistakes in translations. It currently supports Github repos with JSON loc files or Phrase loc projects.
- 
-<img width="50%" src="https://user-images.githubusercontent.com/26377907/67780983-245a8b80-fa67-11e9-82de-6bbcfe9bc96d.png"><img width="50%" alt="config_preview2" src="https://user-images.githubusercontent.com/26377907/67783430-836dcf80-fa6a-11e9-8939-747230fe366a.png">
- 
- ### Checks:
- * **Placeholders** - Detects missing / excess / inconsistent placeholders
- * **HTML tags** - Detects invalid / inconsistent / prohibited HTML tags
- * **Length** - Detects suspicious variations in length
- * **Spelling** - Detects spelling mistakes (supported languages can be chosen by enabling dictionaries in config file, uses <a href='https://github.com/wooorm/nspell'>nspell</a>)
- * **Style** - Detects stylistic issues – passive voice, weasel words, overuse of adverbs, cliches and similar (available only for english and german translations, uses <a href='https://github.com/btford/write-good'>write-good</a>)
- * **Insensitiveness** - Detects gender favouring, polarising, race related, religion inconsiderate, or other unequal phrasing (available only for english translations, uses <a href='https://github.com/get-alex/alex'>Alex</a>)
- * **Values** - Detects values, that should/could be replaced by placeholders, because values are likely to change over time
- * **First character** - Detects inconsistencies of first character
- * **Last character** - Detects inconsistencies of last character
 
 <img width="50%" src="https://user-images.githubusercontent.com/26377907/67780983-245a8b80-fa67-11e9-82de-6bbcfe9bc96d.png"><img width="50%" alt="config_preview2" src="https://user-images.githubusercontent.com/26377907/67783430-836dcf80-fa6a-11e9-8939-747230fe366a.png">
  ### ✅ Checks:
