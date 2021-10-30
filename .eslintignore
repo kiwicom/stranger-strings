@@ -1,0 +1,4 @@
+node_modules
+public
+functions/dist
+functions/node_modules

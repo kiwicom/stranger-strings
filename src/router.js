@@ -16,7 +16,7 @@ export default new Router({
       // route level code-splitting
       // this generates a separate chunk (about.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ "./views/Items.vue"),
+      component: () => import(/* webpackChunkName: "about" */ "./views/Items"),
     },
     {
       path: "/collections/:all?",
@@ -24,7 +24,7 @@ export default new Router({
       // route level code-splitting
       // this generates a separate chunk (about.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ "./views/Collections.vue"),
+      component: () => import(/* webpackChunkName: "about" */ "./views/Collections"),
     },
   ],
 })
